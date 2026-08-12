@@ -1,0 +1,2968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+  <title>Sunlight</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ── Reset & base ── */
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    html{height:-webkit-fill-available;}
+    body{
+      height:100dvh;min-height:-webkit-fill-available;
+      background:#141210;
+      display:flex;justify-content:center;
+      font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Helvetica,Arial,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+    #root{max-width:390px;width:100%;height:100%;}
+    textarea,input,select{font-family:inherit;-webkit-font-smoothing:antialiased;color:#ede4d0;}
+    ::-webkit-scrollbar{display:none;}
+
+    /* ── Button feel ── */
+    button{cursor:pointer;transition:transform 0.15s cubic-bezier(0.34,1.56,0.64,1),opacity 0.12s;}
+    button:active{transform:scale(0.95) !important;opacity:0.8;}
+
+    /* ── Animations ── */
+    @keyframes fall        {from{transform:translateY(-10px) rotate(0deg);}to{transform:translateY(110vh) rotate(360deg);}}
+    @keyframes slideUp     {from{transform:translateY(50px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+    @keyframes springUp    {from{transform:translateY(100%);}to{transform:translateY(0);}}
+    @keyframes fadeIn      {from{opacity:0;}to{opacity:1;}}
+    @keyframes springPop   {0%{transform:scale(0.4);opacity:0;}70%{transform:scale(1.06);}100%{transform:scale(1);opacity:1;}}
+    @keyframes slideDown   {from{transform:translateY(-60px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+    @keyframes slideInRight{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:translateX(0);}}
+    @keyframes pulse       {0%,100%{box-shadow:0 0 0 0 rgba(157,61,46,0.55);}50%{box-shadow:0 0 0 22px rgba(157,61,46,0);}}
+    @keyframes amberGlow   {0%,100%{box-shadow:0 0 18px rgba(200,145,60,0.18);}50%{box-shadow:0 0 38px rgba(200,145,60,0.38);}}
+    @keyframes breathe     {0%,100%{transform:scale(1);opacity:0.7;}50%{transform:scale(1.06);opacity:1;}}
+    @keyframes glow        {0%,100%{opacity:0.5;}50%{opacity:1;}}
+    @keyframes countUp     {0%{transform:translateY(10px);opacity:0;}100%{transform:translateY(0);opacity:1;}}
+
+    /* ── Frosted glass ── */
+    .frosted-dark {
+      background:rgba(12,10,8,0.9);
+      backdrop-filter:blur(28px) saturate(140%);
+      -webkit-backdrop-filter:blur(28px) saturate(140%);
+    }
+    .frosted-light {
+      background:rgba(20,17,13,0.94);
+      backdrop-filter:blur(28px) saturate(130%);
+      -webkit-backdrop-filter:blur(28px) saturate(130%);
+    }
+
+    /* ── Card ── */
+    .card{
+      background:#1e1b17;
+      border-radius:18px;
+      border:1px solid rgba(255,210,140,0.07);
+      box-shadow:0 2px 20px rgba(0,0,0,0.35);
+    }
+
+    /* ── Input fields ── */
+    input,textarea,select{
+      background:#252118 !important;
+      border-color:rgba(255,210,140,0.12) !important;
+      color:#ede4d0 !important;
+    }
+    input::placeholder,textarea::placeholder{color:#6a6058 !important;}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── Supabase ─────────────────────────────────────────────────────────────────
+const SUPABASE_URL = "https://bjqwmftypthuqvnzhvoh.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqcXdtZnR5cHRodXF2bnpodm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NjYyMDIsImV4cCI6MjEwMDE0MjIwMn0.iqHMTv1n0yKgb_oLs4Zulozq4GtHsT5PKHMHQTMssU4";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Helper: convert DB row → app profile shape
+const rowToProfile = r => ({
+  id:        r.id,
+  name:      r.name,
+  email:     r.email||"",
+  phone:     r.phone||"",
+  bio:       r.bio||"",
+  photo:     r.photo_url||null,
+  color:     r.color||"#3b82f6",
+  urges:     r.urges_count||0,
+  badges:    r.badges||[],
+  isAdmin:   r.is_admin||false,
+  partnerId: r.partner_id||null,
+  why:       r.why||"",
+});
+
+// Helper: convert DB message row → app message shape
+const rowToMsg = (r,allProfiles) => ({
+  id:       r.id,
+  userId:   r.user_id,
+  text:     r.text,
+  isAnn:    r.is_announcement,
+  pinned:   r.is_pinned,
+  anon:     r.is_anonymous,
+  isBadge:  r.is_badge,
+  badgeIcon:r.badge_icon,
+  time:     new Date(r.created_at).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),
+});
+
+// Helper: convert DB urge_log row → app log shape
+const rowToLog = r => ({
+  id:          r.id,
+  ts:          new Date(r.created_at).getTime(),
+  logTime:     r.log_time||"",
+  outcome:     r.outcome,
+  emotion:     r.emotion,
+  location:    r.location,
+  platform:    r.platform,
+  triggerType: r.trigger_type,
+  wh:          r.what_happened,
+  nx:          r.next_time,
+});
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+
+const BADGE_DEFS = [
+  {id:"first",       icon:"🌱", label:"First Fight"},
+  {id:"five",        icon:"🔥", label:"5 Urges"},
+  {id:"ten",         icon:"💪", label:"10 Urges"},
+  {id:"tfive",       icon:"⭐", label:"25 Urges"},
+  {id:"fifty",       icon:"🏆", label:"50 Urges"},
+  {id:"partner",     icon:"🤝", label:"Accountable"},
+  {id:"journal",     icon:"📓", label:"Reflector"},
+  {id:"ch-journal7", icon:"📗", label:"7-Day Journaler", isChallenge:true},
+  {id:"ch-morning",  icon:"🌅", label:"Morning Resetter", isChallenge:true},
+  {id:"ch-redzone",  icon:"🛡",  label:"Red Zone Fighter", isChallenge:true},
+];
+
+const SEED_USERS = [
+  {id:1,name:"Marcus", email:"marcus@example.com",         phone:"555-0101",password:"demo",urges:23,badges:["first","five","ten","ch-journal7"],        isAdmin:false,color:"#3b82f6",photo:null,bio:"Just taking it one day at a time.",partnerId:4, why:"I want to be fully present for my future family."},
+  {id:2,name:"James",  email:"james@example.com",          phone:"555-0102",password:"demo",urges:6, badges:["first","five"],                             isAdmin:false,color:"#8b5cf6",photo:null,bio:"Day by day.",                    partnerId:5, why:"I'm done letting this control me."},
+  {id:3,name:"Hunter", email:"hunter@sunlightjourney.com", phone:"555-0103",password:"demo",urges:41,badges:["first","five","ten","partner"],              isAdmin:true, color:"#ede4d0",photo:null,bio:"Coach. Here to help you win.",  partnerId:null,why:"To show other men it's possible."},
+  {id:4,name:"Tyler",  email:"tyler@example.com",          phone:"555-0104",password:"demo",urges:2, badges:["first"],                                    isAdmin:false,color:"#f59e0b",photo:null,bio:"New here but committed.",        partnerId:1, why:"I want to feel like myself again."},
+  {id:5,name:"Ryan",   email:"ryan@example.com",           phone:"555-0105",password:"demo",urges:17,badges:["first","five","ten","journal","ch-journal7"],isAdmin:false,color:"#10b981",photo:null,bio:"17 urges down. Let's go.",       partnerId:2, why:"My mental health depends on this."},
+];
+
+const dmKey = (a,b) => [a,b].sort((x,y)=>x-y).join("-");
+
+const SEED_GROUP = [
+  {id:1,userId:3,text:"Welcome to Sunlight — this is a safe space. Let's do this together. 🌅",time:"9:00 AM",pinned:true,isAnn:true},
+  {id:2,userId:1,text:"Just overcame my 23rd urge. Each one gets a little easier.",time:"9:15 AM"},
+  {id:3,userId:2,text:"Had a tough night but I hit the button and made it through.",time:"10:02 AM"},
+  {id:4,userId:5,text:"17 urges overcome. Logging each one has been a game changer.",time:"10:30 AM"},
+  {id:5,userId:4,text:"Day 3. Used the button twice already. It helps.",time:"11:15 AM"},
+  {id:6,userId:3,text:"📌 Weekly challenge: Journal after every urge this week.",time:"12:00 PM",isAnn:true},
+  {id:7,userId:1,text:"✅",time:"12:10 PM"},
+];
+
+const SEED_DMS = {
+  [dmKey(2,5)]:[
+    {id:1,from:5,text:"Hey man, how are you holding up today?",time:"8:30 AM"},
+    {id:2,from:2,text:"Doing better than yesterday. Thanks for checking in.",time:"8:45 AM"},
+    {id:3,from:5,text:"That's what I'm here for. We've got this 💪",time:"8:46 AM"},
+  ],
+  [dmKey(1,4)]:[
+    {id:1,from:4,text:"Hey Marcus, Tyler here. Coach paired us up.",time:"Yesterday"},
+    {id:2,from:1,text:"Welcome! Happy to be your partner. Text me anytime.",time:"Yesterday"},
+  ],
+};
+
+const SEED_LIBRARY = [
+  {id:1,type:"article",  title:"Understanding Your Triggers",       body:"Most urges don't come out of nowhere. They're predictable patterns tied to specific emotional states, times of day, or situations.\n\nCommon trigger categories:\n• Emotional: stress, loneliness, boredom, anxiety\n• Situational: late nights, being alone, device use\n• Physical: tired, hungover, sick\n\nSpend this week paying attention to what comes RIGHT BEFORE an urge. Write it down. That data will change everything.",date:"Jun 1",authorId:3,completions:[]},
+  {id:2,type:"video",    title:"5-Minute Morning Reset",            url:"https://www.youtube.com",body:"Start every morning with this 5-minute reset to wire your brain for the day. Watch this before your phone — before anything else.",date:"Jun 3",authorId:3,completions:[]},
+  {id:3,type:"challenge",title:"7-Day Journal Challenge",           body:"Journal within 30 minutes of every urge this week — whether you overcame it or gave in. The insight compounds fast.\n\nComplete all 7 days to earn the 📗 7-Day Journaler badge.",date:"Jun 8",authorId:3,completions:[1,5],badgeId:"ch-journal7",badgeIcon:"📗",badgeLabel:"7-Day Journaler"},
+  {id:4,type:"article",  title:"Why the 30-Minute Rule Works",      body:"When you feel an urge, your brain floods with dopamine anticipation. That neurochemical state peaks — then subsides — usually within 20-30 minutes if you don't act on it.\n\nThe 30-minute rule is based on this biology. Every time you wait it out, you're literally rewiring the neural pathway. That's why the Red Button matters. It's not just a distraction — it's neuroplasticity in action.",date:"Jun 10",authorId:3,completions:[2,4,5]},
+  {id:5,type:"challenge",title:"5-Day Morning Reset Challenge",     body:"Watch the Morning Reset video for 5 days straight — before you pick up your phone each morning.\n\nIt takes 3 minutes. Do it before anything else. Complete all 5 days to earn the 🌅 Morning Resetter badge.",date:"Jun 12",authorId:3,completions:[],badgeId:"ch-morning",badgeIcon:"🌅",badgeLabel:"Morning Resetter"},
+  {id:6,type:"challenge",title:"Red Zone Plan Challenge",           body:"Write out your personal Red Zone Plan: the 3 situations that most often trigger urges, and exactly what you'll do in each one.\n\nPost it in group chat when you're done. Complete this to earn the 🛡 Red Zone Fighter badge.",date:"Jun 14",authorId:3,completions:[1],badgeId:"ch-redzone",badgeIcon:"🛡","badgeLabel":"Red Zone Fighter"},
+];
+
+const SEED_LOGS = [
+  {id:1,ts:Date.now()-86400000*4,logTime:"11:30 PM",location:"Bedroom",   triggerType:"saw",  platform:"Instagram",       emotion:"😰 Anxious",   outcome:"overcome"},
+  {id:2,ts:Date.now()-86400000*3,logTime:"2:15 PM", location:"Home",      triggerType:"thought",platform:null,             emotion:"😤 Frustrated",outcome:"overcome"},
+  {id:3,ts:Date.now()-86400000*2,logTime:"10:45 PM",location:"Bedroom",   triggerType:"saw",  platform:"TikTok",          emotion:"🥱 Bored",     outcome:"gave-in"},
+  {id:4,ts:Date.now()-86400000,  logTime:"9:00 PM", location:"Home",      triggerType:"saw",  platform:"TikTok",          emotion:"😴 Tired",     outcome:"overcome"},
+  {id:5,ts:Date.now()-43200000,  logTime:"11:15 PM",location:"Bedroom",   triggerType:"saw",  platform:"TikTok",          emotion:"😴 Tired",     outcome:"overcome"},
+];
+
+const MILESTONES = [1,5,10,25,50,100];
+const BLOCKLIST  = ["Instagram","Reddit","Twitter / X","Safari"];
+const DEMO_SECS  = 30;
+const TRIGGERS   = ["Boredom","Stress","Loneliness","Anxiety","Late night","Alcohol","Social media","Other"];
+const EMOTIONS   = ["😰 Anxious","😔 Sad","😤 Frustrated","😴 Tired","🥱 Bored","😊 Okay"];
+const LOCATIONS  = ["🏠 Home","🛏 Bedroom","🚿 Bathroom","💼 Work","🚗 In the car","🌍 Out in public","📱 Just me & phone"];
+const PLATFORMS  = ["Instagram","TikTok","YouTube","Twitter / X","TV","Internet browsing"];
+const COLORS     = ["#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899","#111827"];
+const MOODS      = [{emoji:"😔",label:"Rough"},{emoji:"😐",label:"Okay"},{emoji:"😊",label:"Good"},{emoji:"💪",label:"Strong"},{emoji:"🔥",label:"Locked in"}];
+
+const LEVELS = [
+  {id:"beginner", name:"Beginner", emoji:"🌱", tagline:"Build your foundation.",
+   items:[
+     {id:"onboarding", type:"check", label:"Complete your onboarding", detail:"Answer a few quick questions to personalize your experience."},
+     {id:"charger",    type:"check", label:"Move your charger out of the bedroom", detail:"Charge your phone in the hallway or kitchen tonight."},
+     {id:"timelimits", type:"check", label:"Set app time limits with a passcode", detail:"Go to Screen Time → App Limits. Set a passcode someone else knows."},
+     {id:"firsturge",  type:"check", label:"Log your first urge", detail:"Hit the red button next time an urge hits — no matter the outcome."},
+     {id:"partner",    type:"check", label:"Connect with an accountability partner", detail:"Ask Coach Hunter to pair you up in the Group chat."},
+   ]},
+  {id:"fighter",  name:"Fighter",  emoji:"🥊", tagline:"Learn the tools that actually work.",
+   items:[
+     {id:"double-rm",      type:"lesson", checkId:"double-rm-understood",  label:"The Double-R M Method",      detail:"How to process a slip and move on with your day. Relax → Reflect → Move On."},
+     {id:"roadmap",        type:"lesson", checkId:"roadmap-understood",     label:"The Road Map for Success",   detail:"Your complete blueprint for where this journey goes."},
+     {id:"tell-3-friends", type:"task",   checkId:"told-3-friends",         label:"Tell 3 friends",             detail:"Share where you're at with 3 people. You don't need to do this alone."},
+   ]},
+  {id:"warrior",  name:"Warrior",  emoji:"⚔️", tagline:"Advanced strategies for the long game.", items:[]},
+  {id:"master",   name:"Master",   emoji:"🏆", tagline:"Lead yourself and others.", items:[]},
+];
+
+const QUOTES = [
+  "The urge is loud. Your future self is louder.",
+  "Every time you wait it out, you're rewiring your brain.",
+  "Real strength isn't the absence of struggle — it's what you do with it.",
+  "You've beaten this before. You'll beat it again.",
+  "30 minutes. That's all it asks of you.",
+  "The man you're becoming doesn't give in to this.",
+  "Pick up the phone for this. Put it down for everything else.",
+  "Your partner is counting on you. So is your future self.",
+];
+
+const ONBOARDING = [
+  {emoji:"☀️", title:"Welcome to\nSunlight",       body:"You're in the right place. This is a community built for men who are serious about breaking free."},
+  {emoji:"🔴", title:"The Red Button",               body:"Feeling an urge? One tap. We'll guide you through a 30-min step-away and reflection. Every time you use it, you win."},
+  {emoji:"🤝", title:"Your Accountability\nPartner",body:"You'll be paired with a partner who gets it. Message them anytime. Hit SOS when you need them immediately — no explanation required."},
+  {emoji:"📚", title:"The Library",                  body:"Resources, challenges, and 1:1 coaching calls. Complete challenges to earn badges that show next to your name."},
+  {emoji:"💭", title:"One last thing.",              body:"The men who win know exactly why they're fighting. It keeps you grounded when the pull is loud.", isWhy:true},
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const ini = n => (n||"?")[0].toUpperCase();
+const now = () => new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+const fmt = s => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+
+const nextMilestone = urges => {
+  const n = MILESTONES.find(m => m > urges);
+  return n ? {next:n, away:n-urges} : null;
+};
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+// iOS-style notification that slides in from top
+
+function Toast({toast,onDismiss}){
+  useEffect(()=>{
+    if(!toast) return;
+    const t=setTimeout(onDismiss, 3800);
+    return()=>clearTimeout(t);
+  },[toast]);
+  if(!toast) return null;
+  return(
+    <div onClick={onDismiss} style={{
+      position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",zIndex:999,
+      width:"calc(100% - 32px)",maxWidth:358,
+      background:"rgba(30,30,40,0.92)",
+      backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",
+      borderRadius:18,padding:"14px 16px",
+      display:"flex",alignItems:"center",gap:14,
+      boxShadow:"0 8px 32px rgba(0,0,0,0.32),0 0 0 0.5px rgba(255,255,255,0.08)",
+      animation:"slideDown 0.4s cubic-bezier(0.34,1.56,0.64,1)",cursor:"pointer"
+    }}>
+      <div style={{fontSize:32,flexShrink:0,animation:"springPop 0.5s 0.2s both"}}>{toast.icon}</div>
+      <div>
+        <div style={{fontWeight:700,fontSize:14,color:"#fff",marginBottom:2}}>{toast.title}</div>
+        <div style={{fontSize:12,color:"rgba(255,255,255,0.6)",lineHeight:1.4}}>{toast.body}</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Onboarding ───────────────────────────────────────────────────────────────
+
+function OnboardingFlow({onDone}){
+  const [slide,setSlide]=useState(0);
+  const [why,  setWhy]  =useState("");
+  const s=ONBOARDING[slide];
+  const isLast=slide===ONBOARDING.length-1;
+  const canAdvance=!s.isWhy||(why.trim().length>4);
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:999,background:"#0a0a14",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"48px 32px 56px"}}>
+      <button onClick={()=>onDone(why)} style={{position:"absolute",top:56,right:24,background:"rgba(255,255,255,0.1)",border:"none",color:"rgba(255,255,255,0.45)",fontSize:13,fontWeight:500,padding:"7px 16px",borderRadius:20}}>Skip</button>
+
+      <div key={slide} style={{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",gap:28,animation:"slideInRight 0.32s cubic-bezier(0.34,1.2,0.64,1)",width:"100%"}}>
+        <div style={{fontSize:80,lineHeight:1,filter:"drop-shadow(0 4px 24px rgba(255,255,255,0.15))"}}>{s.emoji}</div>
+        <div style={{width:"100%"}}>
+          <div style={{fontWeight:800,fontSize:30,color:"#fff",letterSpacing:"-0.03em",marginBottom:16,lineHeight:1.15,whiteSpace:"pre-line"}}>{s.title}</div>
+          <div style={{fontSize:17,color:"rgba(255,255,255,0.58)",lineHeight:1.65,maxWidth:290,margin:"0 auto"}}>{s.body}</div>
+          {s.isWhy&&(
+            <div style={{marginTop:22,width:"100%",maxWidth:320,margin:"22px auto 0"}}>
+              <div style={{fontSize:13,color:"rgba(255,255,255,0.4)",fontWeight:700,marginBottom:10,letterSpacing:"0.04em",textAlign:"left"}}>I'M DOING THIS BECAUSE…</div>
+              <textarea value={why} onChange={e=>setWhy(e.target.value)} rows={3}
+                placeholder="Be honest. This is for you."
+                style={{width:"100%",background:"rgba(255,255,255,0.08)",border:"1.5px solid rgba(255,255,255,0.15)",borderRadius:14,padding:"13px 16px",fontSize:15,color:"#fff",outline:"none",resize:"none",lineHeight:1.6,fontFamily:"inherit"}}
+                autoFocus/>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{display:"flex",gap:6,marginTop:40,marginBottom:28}}>
+        {ONBOARDING.map((_,i)=>(
+          <div key={i} onClick={()=>setSlide(i)} style={{height:4,borderRadius:999,background:i===slide?"#fff":"rgba(255,255,255,0.2)",width:i===slide?28:8,cursor:"pointer",transition:"all 0.3s cubic-bezier(0.34,1.56,0.64,1)"}}/>
+        ))}
+      </div>
+
+      <button onClick={()=>isLast?onDone(why):setSlide(s=>s+1)} disabled={!canAdvance} style={{
+        width:"100%",maxWidth:320,padding:18,borderRadius:18,
+        background:isLast?(canAdvance?"#c8913c":"rgba(255,255,255,0.12)"):"rgba(255,255,255,0.1)",
+        color:"rgba(255,255,255,0.85)",
+        border:(isLast&&canAdvance)?"none":"1px solid rgba(255,255,255,0.15)",
+        fontSize:17,fontWeight:700,letterSpacing:"-0.01em",
+        transition:"all 0.2s"
+      }}>{isLast?"Let's go →":"Continue"}</button>
+    </div>
+  );
+}
+
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+
+function Avatar({user,size=36,onClick,ring=false}){
+  return(
+    <div onClick={onClick} style={{
+      width:size,height:size,borderRadius:"50%",flexShrink:0,overflow:"hidden",
+      background:user?.photo?"transparent":(user?.color||"#111827"),
+      display:"flex",alignItems:"center",justifyContent:"center",
+      color:"#fff",fontWeight:700,fontSize:size*0.38,
+      cursor:onClick?"pointer":"default",
+      boxShadow:ring?"0 0 0 2.5px #c8913c,0 0 0 4px "+(user?.color||"#1e1b17"):"none",
+    }}>
+      {user?.photo?<img src={user.photo} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:ini(user?.name)}
+    </div>
+  );
+}
+
+// ─── Sheet ────────────────────────────────────────────────────────────────────
+
+function Sheet({onClose,children,maxH="88vh"}){
+  return(
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.45)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:"rgba(252,252,254,0.96)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",
+        borderRadius:"24px 24px 0 0",width:"100%",maxWidth:390,maxHeight:maxH,
+        display:"flex",flexDirection:"column",
+        animation:"springUp 0.36s cubic-bezier(0.34,1.2,0.64,1)",
+        boxShadow:"0 -4px 40px rgba(0,0,0,0.18)"
+      }}>
+        <div style={{width:36,height:4,borderRadius:2,background:"rgba(0,0,0,0.15)",margin:"14px auto 0",flexShrink:0}}/>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─── Patterns Modal ───────────────────────────────────────────────────────────
+
+function PatternsModal({logs,onClose}){
+  const overcome = logs.filter(l=>l.outcome==="overcome").length;
+  const gaveIn   = logs.filter(l=>l.outcome==="gave-in").length;
+  const total    = logs.length||1;
+
+  // Platform counts
+  const platCount={};
+  logs.forEach(l=>{if(l.platform) platCount[l.platform]=(platCount[l.platform]||0)+1;});
+  const topPlats=Object.entries(platCount).sort((a,b)=>b[1]-a[1]);
+  const maxP=topPlats[0]?.[1]||1;
+
+  // Platform recommendations: any platform 3+ times in last 10 logs
+  const recent=logs.slice(-10);
+  const recPlat={};
+  recent.forEach(l=>{if(l.platform) recPlat[l.platform]=(recPlat[l.platform]||0)+1;});
+  const recs=Object.entries(recPlat).filter(([,c])=>c>=3).sort((a,b)=>b[1]-a[1]);
+
+  // Location counts
+  const locCount={};
+  logs.forEach(l=>{if(l.location) locCount[l.location]=(locCount[l.location]||0)+1;});
+  const topLocs=Object.entries(locCount).sort((a,b)=>b[1]-a[1]).slice(0,4);
+
+  // Time-of-day buckets
+  const timeBuckets={"Morning (6-12)":0,"Afternoon (12-6)":0,"Evening (6-10)":0,"Late night (10+)":0};
+  logs.forEach(l=>{
+    if(!l.logTime) return;
+    const h=parseInt(l.logTime);
+    const pm=l.logTime.includes("PM");
+    const hr=pm&&h!==12?h+12:(!pm&&h===12?0:h);
+    if(hr>=6&&hr<12)  timeBuckets["Morning (6-12)"]++;
+    else if(hr>=12&&hr<18) timeBuckets["Afternoon (12-6)"]++;
+    else if(hr>=18&&hr<22) timeBuckets["Evening (6-10)"]++;
+    else timeBuckets["Late night (10+)"]++;
+  });
+  const maxT=Math.max(...Object.values(timeBuckets),1);
+
+  // Thought vs saw
+  const thoughtCount=logs.filter(l=>l.triggerType==="thought").length;
+  const sawCount    =logs.filter(l=>l.triggerType==="saw").length;
+
+  const Bar=({val,max,color="#c8913c"})=>(
+    <div style={{height:7,borderRadius:999,background:"#1a1714",overflow:"hidden",flex:1}}>
+      <div style={{height:"100%",borderRadius:999,background:color,width:`${Math.max(val/max*100,3)}%`,transition:"width 0.9s cubic-bezier(0.34,1.2,0.64,1)"}}/>
+    </div>
+  );
+
+  return(
+    <Sheet onClose={onClose} maxH="90vh">
+      <div style={{padding:"18px 22px 0",flexShrink:0}}>
+        <div style={{fontWeight:800,fontSize:20,color:"#ede4d0",marginBottom:3,letterSpacing:"-0.02em"}}>My Patterns</div>
+        <div style={{fontSize:13,color:"#8a8078",marginBottom:14}}>Based on {logs.length} urge log{logs.length!==1?"s":""}</div>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"0 22px 40px",display:"flex",flexDirection:"column",gap:20}}>
+
+        {/* Overcome vs Gave In */}
+        <div className="card" style={{padding:18}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#7a7068",marginBottom:12,letterSpacing:"0.06em"}}>WIN RATE</div>
+          <div style={{display:"flex",gap:4,height:10,borderRadius:999,overflow:"hidden",marginBottom:10}}>
+            <div style={{flex:overcome,background:"#c8913c",borderRadius:999,transition:"flex 0.8s cubic-bezier(0.34,1.2,0.64,1)"}}/>
+            <div style={{flex:Math.max(gaveIn,0.01),background:"rgba(255,210,140,0.1)",borderRadius:999}}/>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#8a8078"}}>
+            <span style={{fontWeight:700,color:"#c8913c"}}>💪 {overcome} overcome ({Math.round(overcome/total*100)}%)</span>
+            <span>😔 {gaveIn} gave in</span>
+          </div>
+        </div>
+
+        {/* Platform recommendations */}
+        {recs.length>0&&(
+          <div style={{background:"rgba(200,145,60,0.1)",border:"1.5px solid rgba(200,145,60,0.3)",borderRadius:18,padding:18}}>
+            <div style={{fontSize:12,fontWeight:800,color:"#c4a882",marginBottom:8,letterSpacing:"0.06em"}}>💡 PATTERN SPOTTED</div>
+            {recs.map(([p,c])=>(
+              <div key={p} style={{marginBottom:recs.length>1?10:0}}>
+                <div style={{fontSize:15,fontWeight:700,color:"#c4a882",marginBottom:4,letterSpacing:"-0.01em"}}>{p} triggered {c} of your last {recent.length} urges.</div>
+                <div style={{fontSize:13,color:"#a16207",lineHeight:1.6}}>Consider a short break — not forever, just 3–5 days. See how you feel without it. You might be surprised.</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Time of day */}
+        <div className="card" style={{padding:18}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#7a7068",marginBottom:14,letterSpacing:"0.06em"}}>WHEN DO URGES HIT?</div>
+          {Object.entries(timeBuckets).map(([label,count])=>(
+            <div key={label} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+              <div style={{fontSize:12,color:"#c0b8a8",fontWeight:500,minWidth:120}}>{label}</div>
+              <Bar val={count} max={maxT}/>
+              <div style={{fontSize:12,color:"#7a7068",minWidth:20,textAlign:"right"}}>{count}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* What triggered it */}
+        <div className="card" style={{padding:18}}>
+          <div style={{fontSize:12,fontWeight:700,color:"#7a7068",marginBottom:14,letterSpacing:"0.06em"}}>TRIGGER TYPE</div>
+          <div style={{display:"flex",gap:10}}>
+            <div style={{flex:1,background:"#1a1714",borderRadius:14,padding:"14px 12px",textAlign:"center"}}>
+              <div style={{fontSize:24,marginBottom:5}}>💭</div>
+              <div style={{fontWeight:800,fontSize:20,color:"#ede4d0"}}>{thoughtCount}</div>
+              <div style={{fontSize:11,color:"#7a7068",fontWeight:600,marginTop:2}}>A thought</div>
+            </div>
+            <div style={{flex:1,background:"#1a1714",borderRadius:14,padding:"14px 12px",textAlign:"center"}}>
+              <div style={{fontSize:24,marginBottom:5}}>👁</div>
+              <div style={{fontWeight:800,fontSize:20,color:"#ede4d0"}}>{sawCount}</div>
+              <div style={{fontSize:11,color:"#7a7068",fontWeight:600,marginTop:2}}>Something I saw</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Platform breakdown */}
+        {topPlats.length>0&&(
+          <div className="card" style={{padding:18}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#7a7068",marginBottom:14,letterSpacing:"0.06em"}}>WHERE YOU SAW IT</div>
+            {topPlats.map(([p,c])=>(
+              <div key={p} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                <div style={{fontSize:13,color:"#c0b8a8",fontWeight:600,minWidth:110}}>{p}</div>
+                <Bar val={c} max={maxP} color={recs.find(r=>r[0]===p)?"#c8541a":"#c8913c"}/>
+                <div style={{fontSize:12,color:"#7a7068",minWidth:20,textAlign:"right"}}>{c}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Location */}
+        {topLocs.length>0&&(
+          <div className="card" style={{padding:18}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#7a7068",marginBottom:14,letterSpacing:"0.06em"}}>WHERE ARE YOU WHEN IT HITS?</div>
+            {topLocs.map(([loc,c])=>(
+              <div key={loc} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                <div style={{fontSize:13,color:"#c0b8a8",fontWeight:500,minWidth:130}}>{loc}</div>
+                <Bar val={c} max={topLocs[0][1]}/>
+                <div style={{fontSize:12,color:"#7a7068",minWidth:20,textAlign:"right"}}>{c}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {logs.length<3&&(
+          <div style={{background:"#252118",border:"1.5px dashed rgba(255,210,140,0.15)",borderRadius:14,padding:18,textAlign:"center"}}>
+            <div style={{fontSize:13,color:"#7a7068",lineHeight:1.6}}>Log {3-logs.length} more urge{3-logs.length!==1?"s":""} to unlock your patterns.</div>
+          </div>
+        )}
+      </div>
+    </Sheet>
+  );
+}
+
+// ─── SOS Modal ────────────────────────────────────────────────────────────────
+
+function SOSModal({partner,onClose}){
+  const [sent,setSent]=useState(false);
+  return(
+    <Sheet onClose={onClose} maxH="62vh">
+      <div style={{padding:24,display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",gap:18,paddingBottom:36}}>
+        {sent?(
+          <>
+            <div style={{fontSize:56,animation:"springPop 0.5s cubic-bezier(0.34,1.56,0.64,1)"}}>✅</div>
+            <div>
+              <div style={{fontWeight:800,fontSize:22,color:"#ede4d0",marginBottom:6,letterSpacing:"-0.02em"}}>SOS Sent</div>
+              <div style={{fontSize:15,color:"#8a8078",lineHeight:1.5}}>{partner?.name||"Your partner"} has been notified. They'll reach out soon.</div>
+            </div>
+            {partner?.phone&&(
+              <div style={{background:"#1a1714",borderRadius:14,padding:"14px 22px",width:"100%"}}>
+                <div style={{fontSize:11,color:"#7a7068",fontWeight:700,marginBottom:3,letterSpacing:"0.06em"}}>CALL THEM NOW</div>
+                <div style={{fontSize:20,fontWeight:700,color:"#ede4d0"}}>{partner.phone}</div>
+              </div>
+            )}
+            <button onClick={onClose} style={{width:"100%",padding:16,borderRadius:14,background:"#1e1b17",color:"#fff",border:"none",fontSize:15,fontWeight:700}}>Done</button>
+          </>
+        ):(
+          <>
+            <div style={{fontSize:56}}>🚨</div>
+            <div>
+              <div style={{fontWeight:800,fontSize:22,color:"#ede4d0",marginBottom:6,letterSpacing:"-0.02em"}}>Send SOS to {partner?.name||"your partner"}?</div>
+              <div style={{fontSize:15,color:"#8a8078",lineHeight:1.6}}>They'll be notified immediately. No explanation needed — that's what partners are for.</div>
+            </div>
+            <button onClick={()=>setSent(true)} style={{width:"100%",padding:18,borderRadius:16,background:"#9d3d2e",color:"#fff",border:"none",fontSize:17,fontWeight:800,letterSpacing:"-0.01em"}}>🚨 Send SOS Now</button>
+            <button onClick={onClose} style={{background:"none",border:"none",fontSize:15,color:"#7a7068",fontWeight:500}}>Cancel</button>
+          </>
+        )}
+      </div>
+    </Sheet>
+  );
+}
+
+// ─── Profile Modal ────────────────────────────────────────────────────────────
+
+function ProfileModal({user,me,onClose,onDm,onPatterns}){
+  if(!user) return null;
+  const badges=user.badges.map(id=>BADGE_DEFS.find(b=>b.id===id)).filter(Boolean);
+  const isSelf=user.id===me.id;
+  const nm=nextMilestone(user.urges);
+  return(
+    <Sheet onClose={onClose} maxH="88vh">
+      <div style={{flex:1,overflowY:"auto",padding:"18px 22px 36px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:18}}>
+          <Avatar user={user} size={68} ring/>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:800,fontSize:22,color:"#ede4d0",letterSpacing:"-0.02em"}}>{user.name}</div>
+            {user.isAdmin&&<div style={{fontSize:12,color:"#c8913c",fontWeight:700,marginTop:2,letterSpacing:"0.04em"}}>👑 ADMIN</div>}
+            <div style={{fontSize:13,color:"#8a8078",marginTop:4,fontWeight:500}}>🔴 {user.urges} urges overcome</div>
+            {nm&&<div style={{fontSize:11,color:"#7a7068",marginTop:2}}>{nm.away} away from next badge</div>}
+          </div>
+        </div>
+        {user.bio&&<div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.65,marginBottom:16,padding:"12px 16px",background:"#252118",borderRadius:14}}>{user.bio}</div>}
+        {badges.length>0&&(
+          <div style={{marginBottom:20}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#7a7068",marginBottom:10,letterSpacing:"0.06em"}}>BADGES</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {badges.map(b=>(
+                <div key={b.id} style={{display:"flex",alignItems:"center",gap:5,background:b.isChallenge?"rgba(200,145,60,0.12)":"rgba(255,210,140,0.06)",border:b.isChallenge?"1px solid rgba(200,145,60,0.3)":"none",borderRadius:22,padding:"5px 12px",fontSize:12,fontWeight:600,color:"#c0b8a8"}}>
+                  {b.icon} {b.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {isSelf&&<button onClick={()=>{onClose();onPatterns();}} style={{width:"100%",padding:15,borderRadius:14,background:"#1e1b17",color:"#fff",fontSize:15,fontWeight:700,border:"none",marginBottom:10,letterSpacing:"-0.01em"}}>📊 View My Patterns</button>}
+        {!isSelf&&<button onClick={()=>{onDm(user.id);onClose();}} style={{width:"100%",padding:15,borderRadius:14,background:"#1e1b17",color:"#fff",fontSize:15,fontWeight:700,border:"none",marginBottom:10,letterSpacing:"-0.01em"}}>✉️ Send Message</button>}
+        <button onClick={onClose} style={{width:"100%",padding:13,borderRadius:14,background:"#1a1714",color:"#8a8078",fontSize:15,border:"none",fontWeight:500}}>Close</button>
+      </div>
+    </Sheet>
+  );
+}
+
+// ─── Admin Panel ──────────────────────────────────────────────────────────────
+
+function AdminPanel({users,callLink,setCallLink,onClose,onUpdate,me}){
+  const [tab,       setTab]      =useState("members");
+  const [editing,   setEditing]  =useState(null);
+  const [form,      setForm]     =useState({});
+  const [linkDraft, setLinkDraft]=useState(callLink);
+  const setF=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const startEdit=u=>{setEditing(u.id);setForm({name:u.name,email:u.email,phone:u.phone,bio:u.bio||"",partnerId:u.partnerId||""});};
+  const save=()=>{onUpdate(editing,{...form,partnerId:Number(form.partnerId)||null});setEditing(null);};
+  const toggleAdmin=u=>{onUpdate(u.id,{isAdmin:!u.isAdmin});}
+
+  return(
+    <Sheet onClose={onClose} maxH="92vh">
+      <div style={{padding:"18px 22px 0",flexShrink:0}}>
+        <div style={{fontWeight:800,fontSize:20,color:"#ede4d0",marginBottom:14,letterSpacing:"-0.02em"}}>Admin Panel</div>
+        <div style={{display:"flex",borderBottom:"1px solid #f0f0f3"}}>
+          {["members","settings"].map(t=>(
+            <button key={t} onClick={()=>setTab(t)} style={{flex:1,padding:"9px 0",background:"none",border:"none",fontSize:13,fontWeight:700,color:tab===t?"#c8913c":"#4a4038",borderBottom:tab===t?"2px solid #c8913c":"2px solid transparent",textTransform:"capitalize",letterSpacing:"0.01em"}}>
+              {t==="members"?"👥 Members":"🔗 Settings"}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"0 22px 36px"}}>
+        {tab==="members"&&users.map(u=>(
+          <div key={u.id} style={{borderBottom:"1px solid rgba(255,210,140,0.07)",padding:"16px 0"}}>
+            {editing===u.id?(
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {[["Name","name"],["Email","email"],["Phone","phone"],["Bio","bio"]].map(([l,k])=>(
+                  <div key={k}>
+                    <div style={{fontSize:11,color:"#7a7068",fontWeight:700,marginBottom:4,letterSpacing:"0.05em"}}>{l.toUpperCase()}</div>
+                    <input value={form[k]||""} onChange={e=>setF(k,e.target.value)} style={{width:"100%",padding:"10px 14px",border:"1px solid rgba(255,210,140,0.08)",borderRadius:10,fontSize:14,outline:"none",color:"#ede4d0",background:"#1e1b17"}}/>
+                  </div>
+                ))}
+                {!u.isAdmin&&(
+                  <div>
+                    <div style={{fontSize:11,color:"#7a7068",fontWeight:700,marginBottom:4,letterSpacing:"0.05em"}}>PARTNER</div>
+                    <select value={form.partnerId||""} onChange={e=>setF("partnerId",e.target.value)} style={{width:"100%",padding:"10px 14px",border:"1px solid rgba(255,210,140,0.08)",borderRadius:10,fontSize:14,outline:"none",background:"#1e1b17",color:"#ede4d0"}}>
+                      <option value="">None</option>
+                      {users.filter(x=>x.id!==u.id&&!x.isAdmin).map(x=><option key={x.id} value={x.id}>{x.name}</option>)}
+                    </select>
+                  </div>
+                )}
+                <div style={{display:"flex",gap:8,marginTop:4}}>
+                  <button onClick={save} style={{flex:1,padding:11,borderRadius:10,background:"#1e1b17",color:"#fff",border:"none",fontSize:14,fontWeight:700}}>Save</button>
+                  <button onClick={()=>setEditing(null)} style={{flex:1,padding:11,borderRadius:10,background:"#1a1714",color:"#c0b8a8",border:"none",fontSize:14}}>Cancel</button>
+                </div>
+              </div>
+            ):(
+              <div style={{display:"flex",alignItems:"center",gap:14}}>
+                <Avatar user={u} size={44}/>
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap"}}>
+                    <span style={{fontWeight:700,fontSize:15,color:"#ede4d0"}}>{u.name}</span>
+                    <span style={{fontSize:10,fontWeight:800,letterSpacing:"0.06em",borderRadius:20,padding:"2px 9px",
+                      background:u.isAdmin?"rgba(200,145,60,0.18)":"rgba(255,255,255,0.07)",
+                      color:u.isAdmin?"#c8913c":"#7a7068"}}>
+                      {u.isAdmin?"👑 ADMIN":"MEMBER"}
+                    </span>
+                  </div>
+                  <div style={{fontSize:12,color:"#8a8078",marginTop:2}}>{u.email}</div>
+                  {!u.isAdmin&&<div style={{fontSize:11,color:"#7a7068",marginTop:1}}>Partner: {users.find(x=>x.id===u.partnerId)?.name||"None"}</div>}
+                </div>
+                <div style={{display:"flex",gap:6,flexShrink:0}}>
+                  {/* Role toggle — can't demote yourself */}
+                  {u.id!==me?.id&&(
+                    <button onClick={()=>toggleAdmin(u)}
+                      style={{padding:"6px 12px",borderRadius:10,
+                        background:u.isAdmin?"rgba(157,61,46,0.3)":"rgba(200,145,60,0.15)",
+                        color:u.isAdmin?"#c07060":"#c8913c",
+                        border:"none",fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>
+                      {u.isAdmin?"− Admin":"+ Admin"}
+                    </button>
+                  )}
+                  <button onClick={()=>startEdit(u)} style={{padding:"6px 12px",borderRadius:10,background:"#1a1714",color:"#c0b8a8",border:"none",fontSize:12,fontWeight:600}}>Edit</button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        {tab==="settings"&&(
+          <div style={{paddingTop:18}}>
+            <div style={{fontSize:13,fontWeight:700,color:"#c0b8a8",marginBottom:5}}>📅 Coaching Call Booking Link</div>
+            <div style={{fontSize:12,color:"#7a7068",marginBottom:12,lineHeight:1.6}}>Paste your Calendly, Cal.com, or any scheduling link. Members will see a Book a Call button.</div>
+            <input value={linkDraft} onChange={e=>setLinkDraft(e.target.value)} placeholder="https://calendly.com/your-link"
+              style={{width:"100%",padding:"11px 14px",border:"1px solid rgba(255,210,140,0.08)",borderRadius:12,fontSize:14,outline:"none",color:"#ede4d0",marginBottom:10,background:"#1e1b17"}}/>
+            <button onClick={()=>setCallLink(linkDraft)} style={{width:"100%",padding:13,borderRadius:12,background:"#1e1b17",color:"#fff",border:"none",fontSize:14,fontWeight:700}}>Save Link</button>
+            {callLink&&<div style={{fontSize:12,color:"#c8913c",marginTop:10,textAlign:"center",fontWeight:600}}>✓ Live — members can book now</div>}
+          </div>
+        )}
+      </div>
+    </Sheet>
+  );
+}
+
+// ─── Login ────────────────────────────────────────────────────────────────────
+
+const inpStyle={width:"100%",padding:"15px 18px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:14,fontSize:16,outline:"none",marginBottom:12,color:"#ede4d0",background:"#1e1b17",boxSizing:"border-box",fontFamily:"inherit"};
+
+function LoginScreen({onLogin,onSignup}){
+  const [email,   setEmail]   =useState("");
+  const [pass,    setPass]    =useState("");
+  const [err,     setErr]     =useState("");
+  const [loading, setLoading] =useState(false);
+
+  const submit=async()=>{
+    if(!email.trim()){setErr("Enter your email.");return;}
+    if(!pass){setErr("Enter your password.");return;}
+    setLoading(true);
+    setErr("");
+    const error=await onLogin(email.trim().toLowerCase(),pass);
+    if(error){
+      setErr(error==="Invalid login credentials"?"Wrong email or password.":error);
+      setLoading(false);
+    }
+    // On success, login() sets screen to "app" directly
+  };
+
+  const handleKey=e=>{if(e.key==="Enter") submit();};
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#1e1b17",padding:"56px 28px 40px"}}>
+      <div style={{flex:1,display:"flex",flexDirection:"column",justifyContent:"center"}}>
+        <div style={{textAlign:"center",marginBottom:48}}>
+          <div style={{fontSize:64,marginBottom:14,filter:"drop-shadow(0 4px 16px rgba(255,180,0,0.3))"}}>☀️</div>
+          <div style={{fontWeight:800,fontSize:34,color:"#ede4d0",letterSpacing:"-0.03em",marginBottom:8}}>Sunlight</div>
+          <div style={{fontSize:16,color:"#7a7068",fontWeight:400}}>Sign in to continue</div>
+        </div>
+        <input type="email" placeholder="Email address" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={handleKey} style={inpStyle} autoComplete="email"/>
+        <input type="password" placeholder="Password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={handleKey} style={{...inpStyle,letterSpacing:"0.05em"}} autoComplete="current-password"/>
+        {err&&<div style={{fontSize:13,color:"#c07060",marginBottom:10,fontWeight:500}}>{err}</div>}
+        <button onClick={submit} disabled={loading}
+          style={{width:"100%",padding:17,borderRadius:16,background:loading?"#8a4018":"#c8541a",color:"#fff",fontSize:17,fontWeight:800,border:"none",marginBottom:12,letterSpacing:"-0.01em",opacity:loading?0.8:1}}>
+          {loading?"Signing in…":"Sign In"}
+        </button>
+        <button onClick={onSignup} style={{width:"100%",padding:15,borderRadius:16,background:"#1a1714",color:"#c0b8a8",fontSize:16,fontWeight:600,border:"none"}}>Create Account</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Signup ───────────────────────────────────────────────────────────────────
+
+function SignupScreen({onSignup,onBack}){
+  const [f,  setF]=useState({name:"",email:"",phone:"",password:"",bio:"",photo:null,color:"#3b82f6"});
+  const [err,setErr]=useState("");
+  const [loading,setLoading]=useState(false);
+  const fileRef=useRef();
+  const set=(k,v)=>setF(p=>({...p,[k]:v}));
+  const handlePhoto=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=ev=>set("photo",ev.target.result);r.readAsDataURL(file);};
+  const submit=async()=>{
+    if(!f.name.trim()){setErr("Name is required.");return;}
+    if(!f.email.trim()){setErr("Email is required.");return;}
+    if(!f.phone.trim()){setErr("Phone is required.");return;}
+    if(!f.password||f.password.length<6){setErr("Password must be at least 6 characters.");return;}
+    setLoading(true);
+    setErr("");
+    const error=await onSignup(f);
+    if(error){setErr(error);setLoading(false);}
+  };
+  const fld=(ph,k,t="text")=><input type={t} placeholder={ph} value={f[k]} onChange={e=>set(k,e.target.value)} style={{width:"100%",padding:"13px 16px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:13,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#1e1b17"}}/>;
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#1e1b17"}}>
+      <div style={{padding:"18px 22px",borderBottom:"1px solid rgba(255,210,140,0.07)",display:"flex",alignItems:"center",gap:14}}>
+        <button onClick={onBack} style={{background:"none",border:"none",fontSize:24,color:"#c0b8a8",lineHeight:1,padding:0}}>←</button>
+        <div style={{fontWeight:800,fontSize:18,color:"#ede4d0",letterSpacing:"-0.02em"}}>Create Account</div>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"22px 22px 40px"}}>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:28}}>
+          <div onClick={()=>fileRef.current.click()} style={{position:"relative",cursor:"pointer"}}>
+            <div style={{width:90,height:90,borderRadius:"50%",background:f.color,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:34,boxShadow:"0 4px 20px rgba(0,0,0,0.15)"}}>
+              {f.photo?<img src={f.photo} style={{width:"100%",height:"100%",objectFit:"cover"}}/>:(f.name?ini(f.name):"?")}
+            </div>
+            <div style={{position:"absolute",bottom:0,right:0,width:28,height:28,borderRadius:"50%",background:"#1e1b17",color:"#fff",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",border:"2.5px solid #141210",boxShadow:"0 2px 8px rgba(0,0,0,0.3)"}}>+</div>
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} style={{display:"none"}}/>
+          <div style={{fontSize:12,color:"#7a7068",marginTop:10,marginBottom:12,fontWeight:500}}>Tap to upload photo</div>
+          <div style={{display:"flex",gap:8}}>{COLORS.map(c=><button key={c} onClick={()=>set("color",c)} style={{width:28,height:28,borderRadius:"50%",background:c,border:f.color===c?"3px solid #c8913c":"2.5px solid transparent",boxShadow:f.color===c?"0 0 0 2px rgba(200,145,60,0.4) inset":""}}/>)}</div>
+        </div>
+        {fld("Full name *","name")}
+        {fld("Email address *","email","email")}
+        {fld("Phone number *","phone","tel")}
+        {fld("Password *","password","password")}
+        <textarea placeholder="Short bio (optional)" value={f.bio} onChange={e=>set("bio",e.target.value)} rows={2}
+          style={{width:"100%",padding:"13px 16px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:13,fontSize:15,outline:"none",resize:"none",marginBottom:10,color:"#ede4d0",background:"#1e1b17",fontFamily:"inherit"}}/>
+        {err&&<div style={{fontSize:13,color:"#c07060",marginBottom:10,fontWeight:500}}>{err}</div>}
+        <button onClick={submit} disabled={loading} style={{width:"100%",padding:16,borderRadius:16,background:loading?"#8a4018":"#c8541a",color:"#fff",fontSize:16,fontWeight:800,border:"none",letterSpacing:"-0.01em",opacity:loading?0.8:1}}>{loading?"Creating account…":"Create Account"}</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Completion Ring Badge ─────────────────────────────────────────────────────
+
+function CompletionRingBadge({done,total}){
+  const size=54,r=21,cx=27,cy=27;
+  const circ=2*Math.PI*r;
+  const pct=total>0?Math.min(done/total,1):0;
+  const dash=circ*pct;
+  return(
+    <div style={{position:"relative",width:size,height:size,flexShrink:0}}>
+      <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
+        <circle cx={cx} cy={cy} r={r} fill="rgba(0,0,0,0.35)" stroke="rgba(255,255,255,0.1)" strokeWidth={3.5}/>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#c8913c" strokeWidth={3.5}
+          strokeDasharray={`${dash} ${circ-dash}`} strokeLinecap="round"
+          style={{transition:"stroke-dasharray 0.8s cubic-bezier(0.34,1.2,0.64,1)"}}/>
+      </svg>
+      <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",
+        fontSize:11,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.01em",lineHeight:1,flexDirection:"column",gap:0}}>
+        <span style={{fontSize:13,fontWeight:900}}>{done}</span>
+        <span style={{fontSize:8.5,color:"rgba(255,255,255,0.45)",fontWeight:700}}>/{total}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+
+function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,callLink,myWhy,setMyWhy,checkIns,onCheckIn,levelChecks,setLevelChecks,onCheckChange,onboardingDone}){
+
+  // ── Smart tips engine → returns array of short punchy insights ──
+  const tips=[];
+  const recent=logs.slice(-10);
+
+  const platCount={};
+  recent.forEach(l=>{if(l.platform) platCount[l.platform]=(platCount[l.platform]||0)+1;});
+  const topPlat=Object.entries(platCount).sort((a,b)=>b[1]-a[1])[0];
+  if(topPlat&&topPlat[1]>=2) tips.push({icon:"📱",short:`${topPlat[0]} triggered ${topPlat[1]} of your last urges.`,body:`Delete it for 7 days — not forever. See how you feel.`});
+
+  const lateNight=recent.filter(l=>{
+    if(!l.logTime) return false;
+    const h=parseInt(l.logTime),pm=l.logTime.includes("PM");
+    const hr=pm&&h!==12?h+12:(!pm&&h===12?0:h);
+    return hr>=22||hr<5;
+  });
+  if(lateNight.length>=2) tips.push({icon:"🌙",short:`${lateNight.length} urges hit after 10 PM.`,body:`Plug your phone in outside the bedroom tonight. Protect that space.`});
+
+  const bedroomLogs=recent.filter(l=>l.location?.includes("Bedroom"));
+  if(bedroomLogs.length>=2&&lateNight.length<2) tips.push({icon:"🛏",short:`${bedroomLogs.length} urges happened in your bedroom.`,body:`Charge your phone in the hallway. A $10 alarm clock is enough.`});
+
+  const carLogs=recent.filter(l=>l.location?.includes("car"));
+  if(carLogs.length>=2) tips.push({icon:"🚗",short:`Urges keep hitting in the car.`,body:`Start an audiobook or podcast you only play while driving.`});
+
+  const thoughtLogs=recent.filter(l=>l.triggerType==="thought");
+  if(thoughtLogs.length>=3&&(!topPlat||thoughtLogs.length>topPlat[1])) tips.push({icon:"💭",short:`Most urges come from thoughts, not content.`,body:`60-second cold shower when a thought hits resets your nervous system.`});
+
+  const partner=users.find(u=>u.id===me.partnerId);
+  if(!partner) tips.push({icon:"🤝",short:`No accountability partner yet.`,body:`Men with partners overcome significantly more urges. Ask Coach Hunter.`});
+
+  const recentGaveIn=logs.slice(-4).filter(l=>l.outcome==="gave-in");
+  if(recentGaveIn.length>=2&&partner) tips.push({icon:"💬",short:`Rough patch — ${recentGaveIn.length} give-ins recently.`,body:`One message to ${partner.name} can shift the whole thing.`});
+
+  const recentWins=logs.slice(-5).filter(l=>l.outcome==="overcome");
+  if(recentWins.length>=4&&recentGaveIn.length===0) tips.push({icon:"🔥",short:`${recentWins.length} overcomes in a row.`,body:`You know how this fight ends. Keep going.`});
+
+  // Data-driven insight line
+  const getDataInsight=()=>{
+    const gaveInByDay={};
+    logs.forEach(l=>{if(l.outcome==="gave-in") gaveInByDay[new Date(l.ts).getDay()]=(gaveInByDay[new Date(l.ts).getDay()]||0)+1;});
+    const dnames=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+    const cleanDays=dnames.filter((_,i)=>!gaveInByDay[i]&&logs.some(l=>new Date(l.ts).getDay()===i));
+    if(cleanDays.length>0) return{icon:"📅",short:`You've never given in on a ${cleanDays[0]}.`,body:`That's a real pattern — protect that day.`};
+    const locW={};logs.filter(l=>l.outcome==="overcome").forEach(l=>{if(l.location)locW[l.location]=(locW[l.location]||0)+1;});
+    const topL=Object.entries(locW).sort((a,b)=>b[1]-a[1])[0];
+    if(topL) return{icon:"📍",short:`You fight best at ${topL[0].replace(/^[^\s]+\s/,"").toLowerCase()}.`,body:`${topL[1]} of your wins happened there.`};
+    if(urges>=5) return{icon:"💪",short:`${urges} urges overcome.`,body:`Each one is a vote for the man you're becoming.`};
+    return{icon:"🌅",short:`Log urges to unlock personal insights.`,body:`Every press of the Red Button teaches us your patterns.`};
+  };
+
+  if(tips.length===0) tips.push({icon:"🌅",short:`Log your first urge to unlock insights.`,body:`Every time you press the Red Button, we learn your patterns.`});
+
+  // Prepend data insight at front
+  const dataInsight=getDataInsight();
+  const allTips=[dataInsight,...tips];
+
+  // ── Progress data ──
+  const nm=nextMilestone(urges);
+  const prevMS=nm?MILESTONES[MILESTONES.indexOf(nm.next)-1]||0:null;
+  const progressPct=nm?Math.round((urges-prevMS)/(nm.next-prevMS)*100):100;
+  const nextBadge=nm?BADGE_DEFS.find(b=>b.id===["first","five","ten","tfive","fifty"][MILESTONES.indexOf(nm.next)]):null;
+
+  // ── Badges & challenges ──
+  const earnedBadges=me.badges.map(id=>BADGE_DEFS.find(b=>b.id===id)).filter(Boolean);
+  const activeChallenges=library.filter(l=>l.type==="challenge"&&!l.completions.includes(me.id));
+
+  // Latest group chat message
+  const latestMsg=groupMsgs.filter(m=>!m.isAnn).at(-1);
+  const latestMsgUser=latestMsg?users.find(u=>u.id===latestMsg.userId):null;
+
+  // ── Insights expand state ──
+  const [insightsOpen,setInsightsOpen]=React.useState(false);
+
+  // ── Level logic ──
+  // Auto-check onboarding item and first-urge item based on real state
+  const effectiveChecks={
+    ...levelChecks,
+    onboarding: onboardingDone||levelChecks.onboarding,
+    firsturge:  logs.length>0||levelChecks.firsturge,
+    partner:    !!partner||levelChecks.partner,
+  };
+  const toggleCheck=(id)=>{
+    // Never un-check auto-detected items
+    if(id==="onboarding"&&onboardingDone) return;
+    if(id==="firsturge"&&logs.length>0) return;
+    if(id==="partner"&&!!partner) return;
+    const newVal=!levelChecks[id];
+    setLevelChecks(p=>({...p,[id]:newVal}));
+    if(onCheckChange) onCheckChange(id,newVal);
+  };
+  const l1Items=LEVELS[0].items;
+  const l1Done=l1Items.filter(it=>effectiveChecks[it.id]).length;
+  const l1Complete=l1Done===l1Items.length;
+  const l2Items=LEVELS[1].items;
+  const l2Done=l2Items.filter(it=>effectiveChecks[it.checkId]).length;
+  const l2Complete=l2Done===l2Items.length;
+
+  // ── Sub-page navigation (level detail / method deep-dive / journal) ──
+  const [subPage,setSubPage]=React.useState(null); // null | {type:"level",id} | {type:"method",id} | {type:"journal"}
+
+  // ── Journal page render ──
+  if(subPage?.type==="journal"){
+    const sorted=[...logs].sort((a,b)=>b.ts-a.ts);
+    const fmtDate=ts=>{
+      const d=new Date(ts);
+      return d.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});
+    };
+    return(
+      <div style={{height:"100%",display:"flex",flexDirection:"column",background:"#141210"}}>
+        {/* Back header */}
+        <div className="frosted-dark" style={{padding:"14px 18px",display:"flex",alignItems:"center",gap:14,flexShrink:0,borderBottom:"0.5px solid rgba(255,210,140,0.07)"}}>
+          <button onClick={()=>setSubPage(null)} style={{background:"none",border:"none",fontSize:24,color:"#c0b8a8",padding:0,lineHeight:1}}>←</button>
+          <div>
+            <div style={{fontWeight:800,fontSize:18,color:"#ede4d0",letterSpacing:"-0.02em"}}>Urge Journal</div>
+            <div style={{fontSize:12,color:"#7a7068",marginTop:1}}>{logs.length} entry{logs.length!==1?"s":""} logged</div>
+          </div>
+        </div>
+        <div style={{flex:1,overflowY:"auto",padding:"16px 16px 48px",display:"flex",flexDirection:"column",gap:12}}>
+          {sorted.length===0&&(
+            <div style={{textAlign:"center",padding:"60px 20px"}}>
+              <div style={{fontSize:40,marginBottom:14}}>📓</div>
+              <div style={{fontWeight:700,fontSize:17,color:"#ede4d0",marginBottom:6}}>No urges logged yet</div>
+              <div style={{fontSize:14,color:"#7a7068",lineHeight:1.6}}>When you hit the urge button, your entries will appear here.</div>
+            </div>
+          )}
+          {sorted.map((log,i)=>{
+            const overcame=log.outcome==="overcome";
+            return(
+              <div key={log.id} className="card" style={{padding:"16px 16px",animation:`slideUp 0.25s ${i*0.04}s both`}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <div style={{fontSize:18}}>{overcame?"💪":"😔"}</div>
+                    <div style={{fontWeight:700,fontSize:15,color:overcame?"#c8913c":"#c07060",letterSpacing:"-0.01em"}}>
+                      {overcame?"Overcome":"Gave in"}
+                    </div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontSize:12,color:"#7a7068",fontWeight:600}}>{fmtDate(log.ts)}</div>
+                    {log.logTime&&<div style={{fontSize:11,color:"#4a4038",marginTop:1}}>{log.logTime}</div>}
+                  </div>
+                </div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:log.wh?10:0}}>
+                  {log.emotion&&(
+                    <span style={{fontSize:12,fontWeight:600,color:"#8a8078",background:"rgba(255,210,140,0.06)",border:"1px solid rgba(255,210,140,0.1)",borderRadius:20,padding:"3px 10px"}}>{log.emotion}</span>
+                  )}
+                  {log.location&&(
+                    <span style={{fontSize:12,fontWeight:600,color:"#8a8078",background:"rgba(255,210,140,0.06)",border:"1px solid rgba(255,210,140,0.1)",borderRadius:20,padding:"3px 10px"}}>{log.location}</span>
+                  )}
+                  {log.platform&&(
+                    <span style={{fontSize:12,fontWeight:600,color:"#8a8078",background:"rgba(255,210,140,0.06)",border:"1px solid rgba(255,210,140,0.1)",borderRadius:20,padding:"3px 10px"}}>📱 {log.platform}</span>
+                  )}
+                </div>
+                {log.wh&&(
+                  <div style={{fontSize:13,color:"#c0b8a8",lineHeight:1.6,borderTop:"0.5px solid rgba(255,210,140,0.07)",paddingTop:10,marginTop:2}}>
+                    <span style={{fontWeight:700,color:"#7a7068",fontSize:11,letterSpacing:"0.04em"}}>WHAT HAPPENED  </span>
+                    {log.wh}
+                  </div>
+                )}
+                {log.nx&&(
+                  <div style={{fontSize:13,color:"#c0b8a8",lineHeight:1.6,marginTop:6}}>
+                    <span style={{fontWeight:700,color:"#7a7068",fontSize:11,letterSpacing:"0.04em"}}>NEXT TIME  </span>
+                    {log.nx}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Level page render ──
+  if(subPage?.type==="level"){
+    const lv=LEVELS.find(l=>l.id===subPage.id);
+    const lvIndex=LEVELS.indexOf(lv);
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        {/* Back header */}
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage(null)} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>YOUR JOURNEY</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:18}}>
+          {/* Level hero */}
+          <div style={{background:"#1e1b17",borderRadius:22,padding:"22px 20px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.18)"}}>
+            <div style={{fontSize:38,marginBottom:10}}>{lv.emoji}</div>
+            <div style={{fontSize:26,fontWeight:800,letterSpacing:"-0.03em",marginBottom:4}}>Level {lvIndex+1} — {lv.name}</div>
+            <div style={{fontSize:14,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{lv.tagline}</div>
+            {lvIndex===0&&(
+              <>
+                <div style={{marginTop:16,height:5,borderRadius:999,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:999,background:"linear-gradient(90deg,#c8913c,rgba(200,145,60,0.6))",width:`${Math.round(l1Done/l1Items.length*100)}%`,transition:"width 0.8s ease"}}/>
+                </div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:6,fontWeight:600}}>{l1Done}/{l1Items.length} complete</div>
+              </>
+            )}
+            {lvIndex===1&&(
+              <>
+                <div style={{marginTop:16,height:5,borderRadius:999,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:999,background:"linear-gradient(90deg,#c8913c,rgba(200,145,60,0.6))",width:`${Math.round(l2Done/l2Items.length*100)}%`,transition:"width 0.8s ease"}}/>
+                </div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:6,fontWeight:600}}>{l2Done}/{l2Items.length} complete</div>
+              </>
+            )}
+          </div>
+
+          {/* Level 1: checklist */}
+          {lvIndex===0&&(
+            <div className="card" style={{padding:"16px 16px"}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:12,letterSpacing:"0.08em"}}>YOUR CHECKLIST</div>
+              <div style={{display:"flex",flexDirection:"column",gap:1}}>
+                {l1Items.map((item,i)=>{
+                  const checked=!!effectiveChecks[item.id];
+                  return(
+                    <button key={item.id} onClick={()=>toggleCheck(item.id)}
+                      style={{display:"flex",alignItems:"flex-start",gap:13,padding:"12px 2px",background:"none",border:"none",textAlign:"left",width:"100%",
+                        borderTop:i>0?"0.5px solid rgba(255,210,140,0.05)":"none",cursor:"pointer"}}>
+                      <div style={{width:24,height:24,borderRadius:8,flexShrink:0,marginTop:1,
+                        border:`2px solid ${checked?"#c8913c":"rgba(255,210,140,0.18)"}`,
+                        background:checked?"#c8913c":"transparent",
+                        display:"flex",alignItems:"center",justifyContent:"center",
+                        transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                        {checked&&<span style={{color:"#141210",fontSize:13,fontWeight:800,lineHeight:1}}>✓</span>}
+                      </div>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:15,fontWeight:checked?500:700,color:checked?"#4a4038":"#ede4d0",
+                          textDecoration:checked?"line-through":"none",letterSpacing:"-0.01em",lineHeight:1.3}}>{item.label}</div>
+                        {!checked&&<div style={{fontSize:13,color:"#7a7068",marginTop:3,lineHeight:1.5}}>{item.detail}</div>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              {l1Complete&&(
+                <div style={{marginTop:14,padding:"14px",background:"rgba(200,145,60,0.14)",borderRadius:14,textAlign:"center",animation:"springPop 0.5s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                  <div style={{fontSize:20,marginBottom:4}}>🎉</div>
+                  <div style={{fontWeight:800,fontSize:15,color:"#c8913c"}}>Level 1 complete! Level 2 is now unlocked.</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Level 2+: lesson/task cards */}
+          {lvIndex>0&&lv.items.length>0&&(
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em",paddingLeft:2}}>LESSONS & TASKS</div>
+              {lv.items.map(item=>{
+                const done=!!effectiveChecks[item.checkId];
+                const icons={"double-rm":"📖","roadmap":"🗺️","tell-3-friends":"👥"};
+                return(
+                  <button key={item.id} onClick={()=>setSubPage({type:"method",id:item.id})}
+                    style={{display:"flex",alignItems:"center",gap:14,background:"#1e1b17",borderRadius:18,padding:"18px 16px",
+                      border:done?"1.5px solid rgba(200,145,60,0.35)":"1.5px solid rgba(255,210,140,0.07)",
+                      textAlign:"left",width:"100%",cursor:"pointer",
+                      boxShadow:done?"0 2px 12px rgba(200,145,60,0.12)":"0 2px 8px rgba(0,0,0,0.2)"}}>
+                    <div style={{width:46,height:46,borderRadius:14,
+                      background:done?"rgba(200,145,60,0.18)":"#252118",
+                      display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>
+                      {done?"✓":icons[item.id]||"📖"}
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:800,fontSize:16,color:done?"#c8913c":"#ede4d0",letterSpacing:"-0.01em",lineHeight:1.2}}>{item.label}</div>
+                      <div style={{fontSize:13,color:done?"#c8913c":"#7a7068",marginTop:4,lineHeight:1.5}}>{done?"Completed ✓":item.detail}</div>
+                    </div>
+                    <div style={{fontSize:18,color:"#4a4038",flexShrink:0}}>→</div>
+                  </button>
+                );
+              })}
+              {l2Complete&&(
+                <div style={{padding:"14px",background:"rgba(200,145,60,0.14)",borderRadius:14,textAlign:"center",animation:"springPop 0.5s cubic-bezier(0.34,1.56,0.64,1)"}}>
+                  <div style={{fontSize:20,marginBottom:4}}>🎉</div>
+                  <div style={{fontWeight:800,fontSize:15,color:"#c8913c"}}>Level 2 complete! Level 3 is now unlocked.</div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {lvIndex>0&&lv.items.length===0&&(
+            <div style={{background:"#1e1b17",borderRadius:18,padding:"28px 20px",textAlign:"center",border:"1.5px solid rgba(255,210,140,0.08)"}}>
+              <div style={{fontSize:36,marginBottom:10}}>🔧</div>
+              <div style={{fontWeight:700,fontSize:16,color:"#ede4d0",marginBottom:6}}>Content in progress</div>
+              <div style={{fontSize:13,color:"#7a7068",lineHeight:1.6}}>You're ahead of schedule. Check back soon.</div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Double-R M method deep dive ──
+  if(subPage?.type==="method"&&subPage?.id==="double-rm"){
+    const understood=!!effectiveChecks["double-rm-understood"];
+    const steps=[
+      {num:1, letter:"R", word:"Relax", color:"#3b82f6", bg:"#eff6ff", border:"#bfdbfe",
+       headline:"Don't spiral. Just breathe.",
+       body:"After a slip, your brain wants to go into shame mode — replaying what happened, calling yourself weak, catastrophizing. That's not useful and it's not accurate. Before you do anything, just breathe. Take 3 slow breaths. Drop your shoulders. The event already happened and it doesn't define you. Relax first.",
+       tip:"In 4 seconds, hold 4, out for 6. Repeat 3 times. Seriously — do it right now."},
+      {num:2, letter:"R", word:"Reflect", color:"#8b5cf6", bg:"#f5f3ff", border:"#ddd6fe",
+       headline:"Get curious. Not critical.",
+       body:"Now that you're calm, ask yourself honestly: what was going on before this happened? What were you feeling — bored, stressed, lonely, tired? What triggered it? You're not looking for reasons to feel bad. You're looking for information. Every slip has a pattern. Understanding it is the only way to break it.",
+       tip:"Open the journal and write one sentence: \"I think I slipped because ___\". That's it."},
+      {num:3, letter:"M", word:"Move On", color:"#10b981", bg:"#f0fdf4", border:"#bbf7d0",
+       headline:"This doesn't own the rest of your day.",
+       body:"Here's what most guys get wrong: they let a slip become a write-off. \"I already messed up today, so whatever.\" That thinking causes more damage than the slip itself. One moment doesn't cancel your progress. Close this app, go do something normal — make food, call a friend, go for a walk. Your day continues. You continue.",
+       tip:"Say it out loud: \"That happened. I'm still in this.\" Then go do the next right thing."},
+    ];
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage({type:"level",id:"fighter"})} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>LEVEL 2 — FIGHTER</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:18}}>
+
+          {/* Hero */}
+          <div style={{background:"#1e1b17",borderRadius:22,padding:"24px 22px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.2)"}}>
+            <div style={{fontSize:13,fontWeight:800,color:"rgba(255,255,255,0.35)",letterSpacing:"0.1em",marginBottom:10}}>FOR AFTER A SLIP</div>
+            <div style={{fontSize:28,fontWeight:800,letterSpacing:"-0.03em",lineHeight:1.15,marginBottom:10}}>The Double-R M Method</div>
+            <div style={{fontSize:15,color:"rgba(255,255,255,0.6)",lineHeight:1.7}}>
+              When you choose to view, this method keeps it from ruining the rest of your day. Done in under 5 minutes.
+            </div>
+            <div style={{display:"flex",gap:10,marginTop:18}}>
+              {["Relax","Reflect","Move On"].map((s,i)=>(
+                <div key={i} style={{flex:1,background:"rgba(255,255,255,0.08)",borderRadius:12,padding:"10px 8px",textAlign:"center"}}>
+                  <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.4)",letterSpacing:"0.06em",marginBottom:3}}>{i===2?"M":"R"}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:"#fff",lineHeight:1.2}}>{s}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Steps */}
+          {steps.map((step,i)=>(
+            <div key={i} style={{background:step.bg,borderRadius:20,padding:"20px 18px",border:`1.5px solid ${step.border}`,animation:`slideUp 0.3s ${i*0.1}s both`}}>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+                <div style={{width:44,height:44,borderRadius:14,background:step.color,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                  <span style={{fontSize:20,fontWeight:900,color:"#fff"}}>{step.letter}</span>
+                </div>
+                <div>
+                  <div style={{fontSize:10,fontWeight:800,color:step.color,letterSpacing:"0.1em",marginBottom:2}}>STEP {step.num}</div>
+                  <div style={{fontSize:19,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em"}}>{step.word}</div>
+                </div>
+              </div>
+              <div style={{fontSize:14,fontWeight:700,color:"#ede4d0",marginBottom:8,letterSpacing:"-0.005em"}}>{step.headline}</div>
+              <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.75}}>{step.body}</div>
+              <div style={{marginTop:14,background:"rgba(255,210,140,0.06)",borderRadius:12,padding:"11px 14px",borderLeft:`3px solid ${step.color}`}}>
+                <div style={{fontSize:12,fontWeight:700,color:step.color,marginBottom:3,letterSpacing:"0.04em"}}>DO THIS</div>
+                <div style={{fontSize:13,color:"#c0b8a8",lineHeight:1.55}}>{step.tip}</div>
+              </div>
+            </div>
+          ))}
+
+          {/* I understand checkbox */}
+          <button onClick={()=>{if(!understood){setLevelChecks(p=>({...p,"double-rm-understood":true}));if(onCheckChange)onCheckChange("double-rm-understood",true);}}}
+            style={{display:"flex",alignItems:"center",gap:14,background:understood?"rgba(200,145,60,0.14)":"rgba(255,210,140,0.04)",
+              borderRadius:18,padding:"18px 18px",border:understood?"1.5px solid #bbf7d0":"none",
+              textAlign:"left",width:"100%",cursor:understood?"default":"pointer",
+              boxShadow:"0 4px 16px rgba(0,0,0,0.15)",transition:"all 0.3s ease"}}>
+            <div style={{width:28,height:28,borderRadius:9,flexShrink:0,
+              border:`2.5px solid ${understood?"#c8913c":"rgba(255,210,140,0.25)"}`,
+              background:understood?"#c8913c":"transparent",
+              display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)"}}>
+              {understood&&<span style={{color:"#fff",fontSize:15,fontWeight:800}}>✓</span>}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:15,fontWeight:800,color:understood?"#c8913c":"#ede4d0",letterSpacing:"-0.01em"}}>
+                {understood?"Got it. This is in your toolkit.":"I understand the Double-R M Method"}
+              </div>
+              {!understood&&<div style={{fontSize:12,color:"rgba(255,255,255,0.45)",marginTop:2}}>Tap to mark complete and unlock the next lesson</div>}
+            </div>
+          </button>
+
+        </div>
+      </div>
+    );
+  }
+
+  // ── Road Map for Success deep dive ──
+  if(subPage?.type==="method"&&subPage?.id==="roadmap"){
+    const understood=!!effectiveChecks["roadmap-understood"];
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage({type:"level",id:"fighter"})} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>LEVEL 2 — FIGHTER</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:18}}>
+
+          <div style={{background:"#1e1b17",borderRadius:22,padding:"24px 22px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.2)"}}>
+            <div style={{fontSize:36,marginBottom:12}}>🗺️</div>
+            <div style={{fontSize:28,fontWeight:800,letterSpacing:"-0.03em",lineHeight:1.15,marginBottom:10}}>The Road Map for Success</div>
+            <div style={{fontSize:15,color:"rgba(255,255,255,0.6)",lineHeight:1.7}}>Your complete blueprint for where this journey goes — from where you are now to who you're becoming.</div>
+          </div>
+
+          <div style={{background:"rgba(200,145,60,0.08)",border:"1.5px solid rgba(200,145,60,0.25)",borderRadius:18,padding:"18px"}}>
+            <div style={{fontSize:12,fontWeight:800,color:"#c4a882",marginBottom:8,letterSpacing:"0.06em"}}>📎 CONTENT FROM COACH</div>
+            <div style={{fontSize:14,color:"#c4a882",lineHeight:1.7}}>
+              Coach Hunter's Road Map document will be added here. Once attached, this page will contain the full breakdown of the journey — phases, what to expect, what success looks like at each stage.
+            </div>
+          </div>
+
+          {[
+            {phase:"Phase 1",title:"Awareness",body:"You recognize the pattern and decide to change. Most men never get here. You already have."},
+            {phase:"Phase 2",title:"Foundation",body:"You put the basics in place — environment changes, accountability, tools. This is where Level 1 lives."},
+            {phase:"Phase 3",title:"Skill Building",body:"You learn how to handle urges, process slips, and build mental resilience. The Double-R M is a skill. This is where Level 2 lives."},
+            {phase:"Phase 4",title:"Identity Shift",body:"You stop seeing yourself as someone fighting this, and start seeing yourself as someone who's past it. The fight becomes less frequent. The wins stack up."},
+            {phase:"Phase 5",title:"Mastery",body:"You become someone who can help others. Your story is the proof. This is the end goal — and the beginning of something bigger."},
+          ].map((p,i)=>(
+            <div key={i} style={{background:"#1e1b17",borderRadius:18,padding:"16px 18px",border:"1.5px solid rgba(255,210,140,0.08)",animation:`slideUp 0.3s ${i*0.08}s both`}}>
+              <div style={{fontSize:10,fontWeight:800,color:"#7a7068",letterSpacing:"0.1em",marginBottom:4}}>{p.phase}</div>
+              <div style={{fontSize:17,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em",marginBottom:6}}>{p.title}</div>
+              <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.7}}>{p.body}</div>
+            </div>
+          ))}
+
+          {/* I understand checkbox */}
+          <button onClick={()=>{if(!understood){setLevelChecks(p=>({...p,"roadmap-understood":true}));if(onCheckChange)onCheckChange("roadmap-understood",true);}}}
+            style={{display:"flex",alignItems:"center",gap:14,background:understood?"rgba(200,145,60,0.14)":"rgba(255,210,140,0.04)",
+              borderRadius:18,padding:"18px 18px",border:understood?"1.5px solid #bbf7d0":"none",
+              textAlign:"left",width:"100%",cursor:understood?"default":"pointer",
+              boxShadow:"0 4px 16px rgba(0,0,0,0.15)",transition:"all 0.3s ease"}}>
+            <div style={{width:28,height:28,borderRadius:9,flexShrink:0,
+              border:`2.5px solid ${understood?"#c8913c":"rgba(255,210,140,0.25)"}`,
+              background:understood?"#c8913c":"transparent",
+              display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)"}}>
+              {understood&&<span style={{color:"#fff",fontSize:15,fontWeight:800}}>✓</span>}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:15,fontWeight:800,color:understood?"#c8913c":"#ede4d0",letterSpacing:"-0.01em"}}>
+                {understood?"Understood. You know the journey.":"I understand the Road Map"}
+              </div>
+              {!understood&&<div style={{fontSize:12,color:"rgba(255,255,255,0.45)",marginTop:2}}>Tap to mark complete</div>}
+            </div>
+          </button>
+
+        </div>
+      </div>
+    );
+  }
+
+  // ── Tell 3 Friends ──
+  if(subPage?.type==="method"&&subPage?.id==="tell-3-friends"){
+    const done=!!effectiveChecks["told-3-friends"];
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage({type:"level",id:"fighter"})} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>LEVEL 2 — FIGHTER</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:18}}>
+
+          <div style={{background:"#1e1b17",borderRadius:22,padding:"24px 22px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.2)"}}>
+            <div style={{fontSize:36,marginBottom:12}}>👥</div>
+            <div style={{fontSize:28,fontWeight:800,letterSpacing:"-0.03em",lineHeight:1.15,marginBottom:10}}>Tell 3 Friends</div>
+            <div style={{fontSize:15,color:"rgba(255,255,255,0.6)",lineHeight:1.7}}>
+              The men who beat this don't do it in secret. Telling people isn't weakness — it removes the shame that keeps you stuck.
+            </div>
+          </div>
+
+          <div className="card" style={{padding:"20px 18px"}}>
+            <div style={{fontSize:14,fontWeight:800,color:"#ede4d0",marginBottom:14,letterSpacing:"-0.01em"}}>Why 3 friends?</div>
+            <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.8}}>
+              You don't need an official accountability partner for this. You just need 3 people who know you're working on something. Having people in your corner — even passively — removes the isolation and shame that fuels the cycle. It's harder to hide when people know. And it's easier to keep going when you're not alone in it.
+            </div>
+          </div>
+
+          <div className="card" style={{padding:"20px 18px"}}>
+            <div style={{fontSize:14,fontWeight:800,color:"#ede4d0",marginBottom:14,letterSpacing:"-0.01em"}}>How to tell them</div>
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div style={{display:"flex",gap:13,alignItems:"flex-start"}}>
+                <div style={{width:28,height:28,borderRadius:8,background:"#1e1b17",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#fff",flexShrink:0}}>1</div>
+                <div>
+                  <div style={{fontSize:14,fontWeight:700,color:"#ede4d0",marginBottom:3}}>Share your story and where you're at</div>
+                  <div style={{fontSize:13,color:"#8a8078",lineHeight:1.65}}>Don't sugarcoat it. Tell them the real version — how long it's been, what it's been like, and that you're working on changing it. Honesty is what makes this land.</div>
+                </div>
+              </div>
+              <div style={{display:"flex",gap:13,alignItems:"flex-start"}}>
+                <div style={{width:28,height:28,borderRadius:8,background:"#1e1b17",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#fff",flexShrink:0}}>2</div>
+                <div>
+                  <div style={{fontSize:14,fontWeight:700,color:"#ede4d0",marginBottom:3}}>Tell them what you need from them</div>
+                  <div style={{fontSize:13,color:"#8a8078",lineHeight:1.65}}>They don't need to do anything specific for you — other than just be a friend you can talk to. You're not asking them to monitor you or check in daily. You just want them to know.</div>
+                </div>
+              </div>
+              <div style={{display:"flex",gap:13,alignItems:"flex-start"}}>
+                <div style={{width:28,height:28,borderRadius:8,background:"#1e1b17",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#fff",flexShrink:0}}>3</div>
+                <div>
+                  <div style={{fontSize:14,fontWeight:700,color:"#ede4d0",marginBottom:3}}>Choose people who won't judge you</div>
+                  <div style={{fontSize:13,color:"#8a8078",lineHeight:1.65}}>Pick people who are on your side. This isn't a confession — it's you leveling up. Find the friends who will respect you more for being honest, not less.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{background:"rgba(61,95,114,0.18)",border:"1.5px solid #bae6fd",borderRadius:18,padding:"16px 18px"}}>
+            <div style={{fontSize:12,fontWeight:800,color:"#5a9ab8",marginBottom:6,letterSpacing:"0.06em"}}>EXAMPLE OPENER</div>
+            <div style={{fontSize:14,color:"#92b4c8",lineHeight:1.75,fontStyle:"italic"}}>
+              "Hey, I wanted to tell you something I'm working on. I've been dealing with a compulsive porn habit and I'm actively trying to change it. I'm not asking you to do anything — I just wanted someone I trust to know. It's been something I've been carrying alone and I'm done with that."
+            </div>
+          </div>
+
+          {/* Done checkbox */}
+          <button onClick={()=>{if(!done){setLevelChecks(p=>({...p,"told-3-friends":true}));if(onCheckChange)onCheckChange("told-3-friends",true);}}}
+            style={{display:"flex",alignItems:"center",gap:14,background:done?"rgba(200,145,60,0.14)":"rgba(255,210,140,0.04)",
+              borderRadius:18,padding:"18px 18px",border:done?"1.5px solid #bbf7d0":"none",
+              textAlign:"left",width:"100%",cursor:done?"default":"pointer",
+              boxShadow:"0 4px 16px rgba(0,0,0,0.15)",transition:"all 0.3s ease"}}>
+            <div style={{width:28,height:28,borderRadius:9,flexShrink:0,
+              border:`2.5px solid ${done?"#c8913c":"rgba(255,210,140,0.25)"}`,
+              background:done?"#c8913c":"transparent",
+              display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.25s cubic-bezier(0.34,1.56,0.64,1)"}}>
+              {done&&<span style={{color:"#fff",fontSize:15,fontWeight:800}}>✓</span>}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:15,fontWeight:800,color:done?"#c8913c":"#ede4d0",letterSpacing:"-0.01em"}}>
+                {done?"Done. You're not alone anymore.":"I've told 3 friends"}
+              </div>
+              {!done&&<div style={{fontSize:12,color:"rgba(255,255,255,0.45)",marginTop:2}}>Tap to mark complete</div>}
+            </div>
+          </button>
+
+        </div>
+      </div>
+    );
+  }
+
+  // ── Generic training card sub-pages ──
+  if(subPage?.type==="card"){
+    const CARD_META={
+      "overcome-urges":{emoji:"💪",title:"How to Overcome Urges",tagline:"The tools that actually work in the moment — not just willpower.",accent:"#c8541a",items:[
+        {icon:"🧠",h:"Name the urge",b:"Say it out loud: \"This is an urge. It isn't me.\" Naming it creates distance. You're the observer, not the urge."},
+        {icon:"⏱",h:"Surf it — don't fight it",b:"Urges peak and fade in 15–20 minutes. Your job isn't to kill it, it's to outlast it. Every time you do, the next one is weaker."},
+        {icon:"🌬",h:"Box breathe",b:"In 4 seconds. Hold 4. Out 4. Hold 4. This directly lowers arousal and resets your nervous system. Do it 3 times minimum."},
+        {icon:"🚶",h:"Change your location",b:"Get up and move to a different room or outside. Urges are partly environmental — the trigger is where you are. Leave."},
+        {icon:"📞",h:"Call your partner or the group",b:"A 2-minute call breaks the loop. You don't have to explain everything. Just saying \"I'm having a hard moment\" is enough."},
+      ]},
+      "sexual-mastery":{emoji:"🔥",title:"Sexual Mastery",tagline:"Understanding your drive and directing it toward what actually matters.",accent:"#c8913c",items:[
+        {icon:"⚡",h:"Energy is neutral",b:"Your sex drive isn't the problem — it's one of your most powerful sources of motivation and creativity. The question is what you're pointing it at."},
+        {icon:"🎯",h:"Redirect, don't suppress",b:"Cold showers, hard workouts, meaningful work — when you feel the energy, channel it. Suppression builds pressure. Redirection builds power."},
+        {icon:"🤝",h:"Real intimacy vs. synthetic",b:"Porn trains your brain to prefer images over people. Recovery restores your capacity for genuine connection — deeper attraction, better sex, real relationships."},
+        {icon:"🧬",h:"The dopamine reset",b:"Every day clean, your brain recalibrates. Sensitivity returns. What felt boring without porn starts feeling good again. This takes weeks, not days."},
+      ]},
+      "marriage":{emoji:"💍",title:"Marriage & This Fight",tagline:"How to navigate recovery without it destroying — or ignoring — your marriage.",accent:"#9d6ebf",items:[
+        {icon:"🗣",h:"Disclosure — what, when, and how",b:"Your wife may already sense something is off. Secrets create distance. A thoughtful, honest conversation — with support if needed — is almost always better than continued hiding."},
+        {icon:"💔",h:"Give her space to grieve",b:"If she finds out or you tell her, she will feel betrayed. That's real and it's fair. Don't rush her to forgiveness. Let her process at her pace."},
+        {icon:"🔨",h:"Rebuild through action",b:"Trust is rebuilt through consistency over time — not promises. Show up. Be where you say you'll be. Follow through. Every time."},
+        {icon:"🛡",h:"Don't make her your accountability partner",b:"She's your wife, not your sponsor. Get a separate accountability partner. Protect her from being the person who monitors your sobriety."},
+        {icon:"🌱",h:"This can make your marriage stronger",b:"Couples who go through this honestly and commit to repair often report deeper intimacy afterward. The vulnerability required here is the same thing that creates closeness."},
+      ]},
+      "environment":{emoji:"🏠",title:"Environment vs Willpower",tagline:"Your environment wins every time. Build one that fights for you.",accent:"#5a9e7a",items:[
+        {icon:"📱",h:"Your phone is the battlefield",b:"90% of relapses happen on a smartphone. Treat it as a loaded weapon in your bedroom. Charge it in another room. This one change cuts late-night relapses dramatically."},
+        {icon:"🔒",h:"Friction is your friend",b:"Every barrier between you and a trigger buys you time. App blockers, router filters, website blockers — they're not about distrust, they're about buying yourself the 10 seconds to make a real choice."},
+        {icon:"🛏",h:"The bedroom rule",b:"Phones don't sleep where you sleep. This is non-negotiable at the start. A $12 alarm clock changes your environment completely."},
+        {icon:"🧹",h:"Audit your inputs",b:"What shows up in your social feeds? What music, podcasts, conversations are you absorbing? Your brain adapts to what it's repeatedly exposed to. Curate aggressively."},
+        {icon:"🏋",h:"Stack your environment with wins",b:"Fill the spaces that used to be risky with things that build you — workouts, books, calls, projects. An idle environment is a dangerous one."},
+      ]},
+    };
+    const meta=CARD_META[subPage.id];
+    if(!meta) return null;
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage(null)} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>TRAINING</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:16}}>
+          {/* Hero */}
+          <div style={{background:"#1e1b17",borderRadius:22,padding:"24px 22px",boxShadow:"0 8px 32px rgba(0,0,0,0.2)"}}>
+            <div style={{fontSize:38,marginBottom:12}}>{meta.emoji}</div>
+            <div style={{fontSize:26,fontWeight:900,color:"#ede4d0",letterSpacing:"-0.03em",lineHeight:1.15,marginBottom:10}}>{meta.title}</div>
+            <div style={{fontSize:15,color:"#8a8078",lineHeight:1.7}}>{meta.tagline}</div>
+            <div style={{marginTop:16,height:4,borderRadius:999,background:"rgba(255,210,140,0.08)",overflow:"hidden"}}>
+              <div style={{height:"100%",borderRadius:999,background:meta.accent,width:"0%"}}/>
+            </div>
+            <div style={{fontSize:11,color:"#4a4038",marginTop:5,fontWeight:600}}>Content coming soon — check back after next group call</div>
+          </div>
+          {/* Content items */}
+          {meta.items.map((item,i)=>(
+            <div key={i} className="card" style={{padding:"18px 18px",animation:`slideUp 0.3s ${i*0.07}s both`}}>
+              <div style={{display:"flex",gap:13,alignItems:"flex-start"}}>
+                <div style={{width:40,height:40,borderRadius:12,background:"rgba(255,210,140,0.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{item.icon}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:800,fontSize:15,color:"#ede4d0",letterSpacing:"-0.01em",marginBottom:6}}>{item.h}</div>
+                  <div style={{fontSize:13,color:"#8a8078",lineHeight:1.7}}>{item.b}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+          <div style={{background:"rgba(255,210,140,0.04)",border:"1px solid rgba(255,210,140,0.08)",borderRadius:16,padding:"16px 18px",textAlign:"center"}}>
+            <div style={{fontSize:20,marginBottom:6}}>🔧</div>
+            <div style={{fontSize:14,fontWeight:700,color:"#ede4d0",marginBottom:4}}>More content loading</div>
+            <div style={{fontSize:13,color:"#7a7068",lineHeight:1.6}}>Coach Hunter is building out this section. Full lesson content drops soon.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+      <div style={{padding:"14px 16px 56px",display:"flex",flexDirection:"column",gap:20}}>
+
+        {/* ── Training Cards (horizontal scroll) ── */}
+        <div>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em",marginBottom:12,paddingLeft:2}}>TRAINING</div>
+          {/* Scroll row — bleeds to edges */}
+          <div style={{display:"flex",overflowX:"auto",gap:12,
+            marginLeft:-16,marginRight:-16,paddingLeft:16,paddingRight:16,paddingBottom:6,
+            WebkitOverflowScrolling:"touch"}}>
+
+            {[
+              {title:["START","HERE"],badge:"🌱 Level 1",
+               bg:"linear-gradient(145deg,#2e1b0d 0%,#1c1007 60%,#110a04 100%)",
+               border:"rgba(200,84,26,0.22)",glow:"rgba(200,84,26,0.2)",badgeBg:"#c8541a",
+               done:l1Done,total:l1Items.length,
+               action:()=>setSubPage({type:"level",id:"beginner"})},
+
+              {title:["MESSED","UP?","RESET","HERE"],badge:"🔄 Recovery",
+               bg:"linear-gradient(145deg,#1c0d0a 0%,#120807 60%,#0c0706 100%)",
+               border:"rgba(157,61,46,0.3)",glow:"rgba(157,61,46,0.2)",badgeBg:"rgba(157,61,46,0.9)",
+               done:effectiveChecks["double-rm-understood"]?1:0,total:1,
+               titleColor:"#c8541a",titleColorLine:2,
+               action:()=>setSubPage({type:"method",id:"double-rm"})},
+
+              {title:["OVERCOME","URGES"],badge:"💪 Tools",
+               bg:"linear-gradient(145deg,#0c1a10 0%,#081209 60%,#050c06 100%)",
+               border:"rgba(80,160,90,0.22)",glow:"rgba(80,160,90,0.18)",badgeBg:"rgba(55,120,65,0.9)",
+               done:0,total:5,
+               action:()=>setSubPage({type:"card",id:"overcome-urges"})},
+
+              {title:["SEXUAL","MASTERY"],badge:"🔥 Mastery",
+               bg:"linear-gradient(145deg,#1a140a 0%,#110d05 60%,#0a0803 100%)",
+               border:"rgba(200,145,60,0.22)",glow:"rgba(200,145,60,0.18)",badgeBg:"#c8913c",
+               done:0,total:4,
+               action:()=>setSubPage({type:"card",id:"sexual-mastery"})},
+
+              {title:["MARRIAGE","& THIS","FIGHT"],badge:"💍 Relationships",
+               bg:"linear-gradient(145deg,#150a14 0%,#0e0710 60%,#080508 100%)",
+               border:"rgba(180,80,200,0.2)",glow:"rgba(180,80,200,0.14)",badgeBg:"rgba(130,55,145,0.9)",
+               done:0,total:5,
+               action:()=>setSubPage({type:"card",id:"marriage"})},
+
+              {title:["ENVIRON-","MENT VS","WILLPOWER"],badge:"🏠 Strategy",
+               bg:"linear-gradient(145deg,#0a1218 0%,#070d14 60%,#060a0e 100%)",
+               border:"rgba(80,140,210,0.2)",glow:"rgba(80,140,210,0.14)",badgeBg:"rgba(55,105,175,0.9)",
+               done:0,total:5,
+               action:()=>setSubPage({type:"card",id:"environment"})},
+
+            ].map((card,i)=>(
+              <button key={i} onClick={card.action}
+                style={{flex:"0 0 158px",height:215,background:card.bg,
+                  borderRadius:22,padding:"13px 13px 13px",border:`1px solid ${card.border}`,
+                  textAlign:"left",cursor:"pointer",position:"relative",overflow:"hidden",
+                  display:"flex",flexDirection:"column",
+                  boxShadow:`0 8px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)`}}>
+                {/* Corner glow */}
+                <div style={{position:"absolute",top:-18,right:-18,width:70,height:70,borderRadius:"50%",
+                  background:card.glow,filter:"blur(18px)",pointerEvents:"none"}}/>
+                {/* Completion ring */}
+                <CompletionRingBadge done={card.done} total={card.total}/>
+                {/* Title */}
+                <div style={{flex:1,display:"flex",alignItems:"flex-end",paddingBottom:10}}>
+                  <div style={{fontSize:22,fontWeight:900,color:"#fff",letterSpacing:"-0.03em",lineHeight:1.1,textTransform:"uppercase"}}>
+                    {card.title.map((line,li)=>(
+                      <React.Fragment key={li}>
+                        <span style={{color:(card.titleColorLine===li&&card.titleColor)?card.titleColor:"#fff"}}>{line}</span>
+                        {li<card.title.length-1&&<br/>}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+                {/* Bottom badge */}
+                <div style={{alignSelf:"flex-start",background:card.badgeBg,borderRadius:20,padding:"4px 11px",
+                  fontSize:10,fontWeight:800,color:"#fff",letterSpacing:"0.03em",whiteSpace:"nowrap"}}>
+                  {card.badge}
+                </div>
+              </button>
+            ))}
+
+          </div>
+        </div>
+
+        {/* ── Compact Urge Tracker ── */}
+        <div className="card" style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:13}}>
+          <div style={{textAlign:"center",minWidth:42}}>
+            <div style={{fontSize:30,fontWeight:900,color:"#ede4d0",lineHeight:1,letterSpacing:"-0.03em"}}>{urges}</div>
+            <div style={{fontSize:9,fontWeight:800,color:"#7a7068",letterSpacing:"0.07em",marginTop:1}}>OVERCOME</div>
+          </div>
+          <div style={{flex:1}}>
+            {nm&&(
+              <div style={{height:4,borderRadius:999,background:"rgba(255,210,140,0.08)",overflow:"hidden",marginBottom:5}}>
+                <div style={{height:"100%",borderRadius:999,background:"#c8541a",width:`${progressPct}%`,transition:"width 1s ease"}}/>
+              </div>
+            )}
+            <div style={{fontSize:11,color:"#7a7068",fontWeight:600}}>
+              {nm?`${nm.away} to next badge`:"All milestones reached 🏆"}
+            </div>
+          </div>
+          <div style={{display:"flex",gap:7,flexShrink:0}}>
+            <button onClick={()=>onTabChange("urge")} style={{padding:"8px 13px",borderRadius:12,background:"#c8541a",color:"#fff",border:"none",fontSize:13,fontWeight:700,boxShadow:"0 3px 12px rgba(200,84,26,0.3)"}}>
+              🌬 Track
+            </button>
+            <button onClick={()=>setSubPage({type:"journal"})} style={{padding:"8px 12px",borderRadius:12,background:"rgba(255,210,140,0.07)",color:"#c0b8a8",border:"1px solid rgba(255,210,140,0.1)",fontSize:13,fontWeight:600}}>
+              📓
+            </button>
+          </div>
+        </div>
+
+        {/* ── Accountability partner ── */}
+        {partner&&(
+          <div className="card" style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:13,cursor:"pointer"}} onClick={()=>onTabChange("chat")}>
+            <div style={{position:"relative"}}>
+              <Avatar user={partner} size={46} ring/>
+              <div style={{position:"absolute",bottom:1,right:1,width:12,height:12,borderRadius:"50%",background:"#c8913c",border:"2.5px solid #1e1b17"}}/>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:10,fontWeight:800,color:"#7a7068",letterSpacing:"0.07em",marginBottom:2}}>ACCOUNTABILITY PARTNER</div>
+              <div style={{fontWeight:700,fontSize:15,color:"#ede4d0",letterSpacing:"-0.01em"}}>{partner.name}</div>
+            </div>
+            <div style={{fontSize:13,color:"#4a4038",fontWeight:700}}>→</div>
+          </div>
+        )}
+
+        {/* ── Calendar widget ── */}
+        <NextEventWidget onTabChange={onTabChange}/>
+
+        {/* ── Coaching call CTA ── */}
+        {callLink&&(
+          <a href={callLink} target="_blank" rel="noreferrer" style={{
+            display:"flex",alignItems:"center",justifyContent:"space-between",
+            background:"#1e1b17",borderRadius:18,padding:"16px 20px",
+            textDecoration:"none",boxShadow:"0 4px 16px rgba(0,0,0,0.18)"
+          }}>
+            <div>
+              <div style={{fontSize:10,fontWeight:800,color:"rgba(255,255,255,0.35)",letterSpacing:"0.1em",marginBottom:4}}>READY TO GO DEEPER?</div>
+              <div style={{fontSize:15,fontWeight:700,color:"#fff",letterSpacing:"-0.01em"}}>Book a 1:1 with Coach Hunter</div>
+              <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:2}}>30 minutes. Free for members.</div>
+            </div>
+            <div style={{fontSize:24,marginLeft:12}}>📅</div>
+          </a>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+// ─── Group Chat ───────────────────────────────────────────────────────────────
+
+function GroupChat({me,users,msgs,setMsgs,onProfile}){
+  const [inp, setInp]=useState("");
+  const [anon,setAnon]=useState(false);
+  const endRef=useRef(null);
+  useEffect(()=>endRef.current?.scrollIntoView({behavior:"smooth"}),[msgs]);
+  const getU=id=>users.find(u=>u.id===id);
+  const send=async()=>{
+    if(!inp.trim()) return;
+    const text=inp.trim();
+    setInp("");
+    // Optimistic: show immediately
+    const tempId="opt_"+Date.now();
+    setMsgs(p=>[...p,{id:tempId,userId:me.id,text,isAnn:false,pinned:false,anon,isBadge:false,badgeIcon:null,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}]);
+    // Insert and get real row back directly (no real-time dependency)
+    const {data,error}=await sb.from("group_messages").insert({
+      user_id:me.id,text,is_anonymous:anon,is_announcement:false,
+    }).select();
+    if(error){
+      console.error("[Sunlight] send error:",error.message);
+      setMsgs(p=>p.filter(m=>m.id!==tempId));
+      alert("Send failed: "+error.message);
+    } else if(data&&data[0]){
+      // Replace optimistic with confirmed row
+      setMsgs(p=>p.map(m=>m.id===tempId?rowToMsg(data[0]):m));
+    }
+  };
+  const challengeBadges=u=>(u.badges||[]).map(id=>BADGE_DEFS.find(b=>b.id===id&&b.isChallenge)).filter(Boolean);
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#141210"}}>
+      <div style={{flex:1,overflowY:"auto",padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
+        {msgs.map(msg=>{
+          const u=getU(msg.userId); if(!u) return null;
+          const isMe=u.id===me.id;
+          const showAnon=msg.anon&&!isMe;
+          const cBadges=showAnon?[]:challengeBadges(u);
+
+          if(msg.isAnn) return(
+            <div key={msg.id} style={{background:"#1e1b17",border:"1px solid rgba(255,210,140,0.1)",borderRadius:18,padding:"13px 16px",textAlign:"center",boxShadow:"0 2px 12px rgba(0,0,0,0.3)"}}>
+              {msg.pinned&&<div style={{fontSize:11,fontWeight:700,color:"#8a8078",marginBottom:5,letterSpacing:"0.08em"}}>📌 PINNED</div>}
+              <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:7,marginBottom:5}}>
+                <Avatar user={u} size={20}/><span style={{fontSize:11,fontWeight:700,color:"#c0b8a8"}}>Coach {u.name}</span>
+              </div>
+              <div style={{fontSize:13,color:"#ede4d0",lineHeight:1.55}}>{msg.text}</div>
+              <div style={{fontSize:11,color:"#7a7068",marginTop:7}}>{msg.time}</div>
+            </div>
+          );
+
+          if(msg.isMilestone) return(
+            <div key={msg.id} style={{background:"#1e1b17",borderRadius:18,padding:"15px 16px",textAlign:"center",boxShadow:"0 4px 20px rgba(0,0,0,0.2)"}}>
+              <div style={{fontSize:28,marginBottom:5}}>🎉</div>
+              <div style={{fontWeight:800,fontSize:15,color:"#fff",marginBottom:2,letterSpacing:"-0.01em"}}>{msg.text}</div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginTop:5}}>{msg.time}</div>
+            </div>
+          );
+
+          if(msg.isBadge) return(
+            <div key={msg.id} style={{background:"rgba(107,136,112,0.12)",border:"1.5px solid rgba(200,145,60,0.28)",borderRadius:18,padding:"14px 16px",textAlign:"center",animation:"springPop 0.5s cubic-bezier(0.34,1.56,0.64,1)"}}>
+              <div style={{fontSize:32,marginBottom:5}}>{msg.badgeIcon}</div>
+              <div style={{fontWeight:700,fontSize:14,color:"#c8913c",lineHeight:1.4}}>{msg.text}</div>
+              <div style={{fontSize:11,color:"#8a8078",marginTop:5}}>{msg.time}</div>
+            </div>
+          );
+
+          return(
+            <div key={msg.id} style={{display:"flex",alignItems:"flex-end",gap:8,flexDirection:isMe?"row-reverse":"row"}}>
+              {!isMe&&(
+                showAnon
+                  ?<div style={{width:32,height:32,borderRadius:"50%",background:"#2a2018",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,flexShrink:0}}>👤</div>
+                  :<Avatar user={u} size={32} onClick={()=>onProfile(u)}/>
+              )}
+              <div style={{display:"flex",flexDirection:"column",alignItems:isMe?"flex-end":"flex-start",maxWidth:"76%"}}>
+                {!isMe&&(
+                  <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
+                    <span style={{fontSize:12,fontWeight:700,color:showAnon?"#4a4038":"#c0b8a8",cursor:showAnon?"default":"pointer"}}
+                      onClick={()=>!showAnon&&onProfile(u)}>{showAnon?"Anonymous":u.name}</span>
+                    {!showAnon&&<span style={{fontSize:11,color:"#7a7068",fontWeight:500}}>🔴 {u.urges}</span>}
+                    {cBadges.map(b=><span key={b.id} title={b.label} style={{fontSize:12,lineHeight:1}}>{b.icon}</span>)}
+                  </div>
+                )}
+                <div style={{
+                  borderRadius:20,padding:"9px 15px",fontSize:15,lineHeight:1.45,
+                  background:isMe?"#2a2018":"#252118",color:isMe?"#ede4d0":"#c0b8a8",
+                  borderBottomRightRadius:isMe?5:20,borderBottomLeftRadius:isMe?20:5,
+                  boxShadow:isMe?"0 2px 8px rgba(0,0,0,0.18)":"0 1px 4px rgba(0,0,0,0.07)",
+                  fontWeight:400,letterSpacing:"-0.005em"
+                }}>{msg.text}</div>
+                <div style={{fontSize:11,color:"#7a7068",marginTop:4,fontWeight:400}}>{msg.time}</div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={endRef}/>
+      </div>
+
+      <div className="frosted-light" style={{padding:"10px 14px",borderTop:"0.5px solid rgba(255,210,140,0.07)",display:"flex",flexDirection:"column",gap:6}}>
+        {anon&&<div style={{fontSize:11,color:"#7a7068",textAlign:"center",fontWeight:600}}>👤 Posting anonymously</div>}
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <button onClick={()=>setAnon(a=>!a)} style={{width:36,height:36,borderRadius:"50%",background:anon?"#c8541a":"rgba(255,210,140,0.06)",border:"none",fontSize:15,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",color:anon?"#fff":"#4a4038"}}>👤</button>
+          <input style={{flex:1,background:"rgba(255,210,140,0.05)",borderRadius:22,padding:"9px 16px",fontSize:15,border:"1px solid rgba(255,210,140,0.08)",outline:"none",color:"#ede4d0",letterSpacing:"-0.005em"}}
+            placeholder={anon?"Message anonymously...":"Message the group..."} value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}/>
+          <button onClick={send} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"none",color:"#fff",fontSize:18,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>↑</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Messages ─────────────────────────────────────────────────────────────────
+
+function Messages({me,users,dms,setDms,activeDm,setActiveDm,onProfile,onSOS}){
+  const [inp,setInp]=useState("");
+  const endRef=useRef(null);
+  const partner=users.find(u=>u.id===me.partnerId);
+  const k=activeDm?dmKey(me.id,activeDm):null;
+  const thread=k?(dms[k]||[]):[];
+  const other=activeDm?users.find(u=>u.id===activeDm):null;
+  useEffect(()=>endRef.current?.scrollIntoView({behavior:"smooth"}),[thread,activeDm]);
+  const send=()=>{
+    if(!inp.trim()||!k) return;
+    setDms(p=>({...p,[k]:[...(p[k]||[]),{id:Date.now(),from:me.id,text:inp,time:now()}]}));
+    setInp("");
+  };
+  const myConvos=Object.entries(dms)
+    .filter(([key])=>{const[a,b]=key.split("-").map(Number);return a===me.id||b===me.id;})
+    .map(([key,msgs])=>{const[a,b]=key.split("-").map(Number);const uid=a===me.id?b:a;return{uid,user:users.find(u=>u.id===uid),last:msgs.at(-1)};});
+
+  if(activeDm&&other) return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+      <div className="frosted-light" style={{borderBottom:"0.5px solid rgba(0,0,0,0.1)",padding:"12px 18px",display:"flex",alignItems:"center",gap:12}}>
+        <button onClick={()=>setActiveDm(null)} style={{background:"none",border:"none",fontSize:24,color:"#c0b8a8",padding:0,fontWeight:300}}>←</button>
+        <Avatar user={other} size={38} onClick={()=>onProfile(other)}/>
+        <div style={{cursor:"pointer",flex:1}} onClick={()=>onProfile(other)}>
+          <div style={{fontWeight:700,fontSize:16,color:"#ede4d0",letterSpacing:"-0.01em"}}>{other.name}{other.id===me.partnerId?" 🤝":""}</div>
+          <div style={{fontSize:11,color:"#7a7068",fontWeight:500}}>🔴 {other.urges} urges overcome</div>
+        </div>
+        {other.id===me.partnerId&&<button onClick={onSOS} style={{background:"rgba(157,61,46,0.15)",border:"1.5px solid rgba(157,61,46,0.4)",color:"#e07060",borderRadius:22,padding:"7px 13px",fontSize:12,fontWeight:800}}>🚨 SOS</button>}
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"12px 14px",display:"flex",flexDirection:"column",gap:10,background:"#141210"}}>
+        {thread.map(msg=>{
+          const isMe=msg.from===me.id;
+          return(
+            <div key={msg.id} style={{display:"flex",alignItems:"flex-end",gap:8,flexDirection:isMe?"row-reverse":"row"}}>
+              {!isMe&&<Avatar user={other} size={28}/>}
+              <div style={{display:"flex",flexDirection:"column",alignItems:isMe?"flex-end":"flex-start",maxWidth:"76%"}}>
+                <div style={{borderRadius:20,padding:"9px 15px",fontSize:15,lineHeight:1.45,
+                  background:isMe?"#2a2018":"#252118",color:isMe?"#ede4d0":"#c0b8a8",
+                  borderBottomRightRadius:isMe?5:20,borderBottomLeftRadius:isMe?20:5,
+                  boxShadow:isMe?"0 2px 8px rgba(0,0,0,0.18)":"0 1px 4px rgba(0,0,0,0.07)"}}>{msg.text}</div>
+                <div style={{fontSize:11,color:"#7a7068",marginTop:4}}>{msg.time}</div>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={endRef}/>
+      </div>
+      <div className="frosted-light" style={{padding:"10px 14px",borderTop:"0.5px solid rgba(255,210,140,0.07)",display:"flex",gap:8,alignItems:"center"}}>
+        <input style={{flex:1,background:"rgba(255,210,140,0.05)",borderRadius:22,padding:"9px 16px",fontSize:15,border:"1px solid rgba(255,210,140,0.08)",outline:"none",color:"#ede4d0"}}
+          placeholder={`Message ${other.name}...`} value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}/>
+        <button onClick={send} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"none",color:"#fff",fontSize:18,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>↑</button>
+      </div>
+    </div>
+  );
+
+  return(
+    <div style={{background:"#141210",height:"100%",overflowY:"auto"}}>
+      {partner&&(
+        <>
+          <div style={{padding:"14px 18px 5px",fontSize:11,fontWeight:700,color:"#7a7068",letterSpacing:"0.08em"}}>ACCOUNTABILITY PARTNER</div>
+          <div onClick={()=>setActiveDm(partner.id)} style={{margin:"0 14px 4px",background:"#1e1b17",borderRadius:18,padding:"14px 16px",display:"flex",alignItems:"center",gap:13,cursor:"pointer",boxShadow:"0 1px 6px rgba(0,0,0,0.06)"}}>
+            <div style={{position:"relative"}}>
+              <Avatar user={partner} size={52} ring/>
+              <div style={{position:"absolute",bottom:1,right:1,width:13,height:13,borderRadius:"50%",background:"#c8913c",border:"2.5px solid #1e1b17"}}/>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:700,fontSize:16,color:"#ede4d0",letterSpacing:"-0.01em"}}>{partner.name} 🤝</div>
+              <div style={{fontSize:13,color:"#7a7068",marginTop:2}}>{(dms[dmKey(me.id,partner.id)]||[]).at(-1)?.text||"Start a conversation"}</div>
+            </div>
+            <button onClick={e=>{e.stopPropagation();onSOS();}} style={{background:"rgba(157,61,46,0.15)",border:"1.5px solid rgba(157,61,46,0.4)",color:"#e07060",borderRadius:22,padding:"7px 12px",fontSize:12,fontWeight:800,flexShrink:0}}>🚨 SOS</button>
+          </div>
+        </>
+      )}
+      {myConvos.filter(c=>c.uid!==partner?.id&&c.user).length>0&&(
+        <div style={{padding:"16px 18px 5px",fontSize:11,fontWeight:700,color:"#7a7068",letterSpacing:"0.08em"}}>MESSAGES</div>
+      )}
+      {myConvos.filter(c=>c.uid!==partner?.id&&c.user).map(({uid,user:u,last})=>(
+        <div key={uid} onClick={()=>setActiveDm(uid)} style={{margin:"0 14px 4px",background:"#1e1b17",borderRadius:18,padding:"13px 16px",display:"flex",alignItems:"center",gap:13,cursor:"pointer",boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
+          <Avatar user={u} size={50}/>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:700,fontSize:15,color:"#ede4d0"}}>{u.name}</div>
+            <div style={{fontSize:13,color:"#7a7068",marginTop:2}}>{last?.text||""}</div>
+          </div>
+        </div>
+      ))}
+      {myConvos.length===0&&!partner&&(
+        <div style={{textAlign:"center",padding:"60px 32px",color:"#7a7068"}}>
+          <div style={{fontSize:44,marginBottom:14}}>✉️</div>
+          <div style={{fontSize:17,fontWeight:700,color:"#c0b8a8",marginBottom:8,letterSpacing:"-0.01em"}}>No messages yet</div>
+          <div style={{fontSize:14,lineHeight:1.5}}>Tap a name in Group Chat to start a conversation</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Library ──────────────────────────────────────────────────────────────────
+
+function Library({me,library,setLibrary,callLink,onBadgeEarned}){
+  const [open,  setOpen]  =useState(null);
+  const [adding,setAdding]=useState(false);
+  const [newPost,setNewPost]=useState({type:"article",title:"",body:"",url:"",badgeIcon:"",badgeLabel:""});
+  const setNP=(k,v)=>setNewPost(p=>({...p,[k]:v}));
+
+  const typeIcon  ={article:"📄",video:"🎬",challenge:"🏋️"};
+  const typeColor ={article:"#eff6ff",video:"#f5f3ff",challenge:"#f0fdf4"};
+  const typeBorder={article:"#bfdbfe",video:"#ddd6fe",challenge:"#bbf7d0"};
+  const typeLabel ={article:"#1d4ed8",video:"#6d28d9",challenge:"#15803d"};
+
+  const addPost=()=>{
+    if(!newPost.title.trim()) return;
+    const id=Date.now();
+    const badgeId=newPost.type==="challenge"&&newPost.badgeLabel?`ch-custom-${id}`:undefined;
+    setLibrary(p=>[...p,{id,type:newPost.type,title:newPost.title,body:newPost.body,url:newPost.url,date:"Today",authorId:me.id,completions:[],
+      ...(badgeId?{badgeId,badgeIcon:newPost.badgeIcon||"🏅",badgeLabel:newPost.badgeLabel}:{})}]);
+    setAdding(false);
+    setNewPost({type:"article",title:"",body:"",url:"",badgeIcon:"",badgeLabel:""});
+  };
+
+  const toggleComplete=(item)=>{
+    const wasDone=item.completions.includes(me.id);
+    setLibrary(p=>p.map(x=>x.id!==item.id?x:{...x,completions:wasDone?x.completions.filter(c=>c!==me.id):[...x.completions,me.id]}));
+    if(!wasDone&&item.type==="challenge"&&item.badgeId) onBadgeEarned(item);
+  };
+
+  const ContentCard=({item})=>{
+    const isOpen=open===item.id;
+    const done=item.completions.includes(me.id);
+    return(
+      <div className="card" style={{overflow:"hidden",marginBottom:10}}>
+        <div onClick={()=>setOpen(isOpen?null:item.id)} style={{padding:"15px 16px",cursor:"pointer",display:"flex",alignItems:"flex-start",gap:13}}>
+          <div style={{width:40,height:40,borderRadius:12,background:typeColor[item.type],border:`1px solid ${typeBorder[item.type]}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{typeIcon[item.type]}</div>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4,flexWrap:"wrap"}}>
+              <div style={{fontSize:10,fontWeight:800,color:typeLabel[item.type],background:typeColor[item.type],border:`1px solid ${typeBorder[item.type]}`,borderRadius:22,padding:"2px 9px",letterSpacing:"0.04em"}}>{item.type.toUpperCase()}</div>
+              {item.badgeId&&<div style={{fontSize:10,color:"#c8913c",background:"rgba(107,136,112,0.12)",border:"1px solid rgba(200,145,60,0.2)",borderRadius:22,padding:"2px 8px",fontWeight:700}}>+{item.badgeIcon} badge</div>}
+              {done&&<div style={{fontSize:10,fontWeight:800,color:"#c8913c"}}>✓ Done</div>}
+            </div>
+            <div style={{fontWeight:700,fontSize:15,color:"#ede4d0",lineHeight:1.3,letterSpacing:"-0.01em"}}>{item.title}</div>
+            <div style={{fontSize:11,color:"#7a7068",marginTop:3,fontWeight:500}}>{item.date} · {item.completions.length} completed</div>
+          </div>
+          <div style={{fontSize:13,color:"#4a4038",marginTop:4,fontWeight:700,transition:"transform 0.2s",transform:isOpen?"rotate(180deg)":"none"}}>▼</div>
+        </div>
+        {isOpen&&(
+          <div style={{padding:"0 16px 16px",borderTop:"0.5px solid rgba(0,0,0,0.07)"}}>
+            {item.body&&<div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.7,marginTop:14,whiteSpace:"pre-line"}}>{item.body}</div>}
+            {item.type==="video"&&item.url&&(
+              <a href={item.url} target="_blank" rel="noreferrer" style={{display:"block",marginTop:14,padding:"13px 16px",background:"#1a1714",borderRadius:12,fontSize:14,color:"#ede4d0",fontWeight:700,textDecoration:"none",textAlign:"center",letterSpacing:"-0.01em"}}>▶ Watch Video →</a>
+            )}
+            <button onClick={()=>toggleComplete(item)} style={{width:"100%",marginTop:12,padding:12,borderRadius:12,
+              background:done?"rgba(200,145,60,0.14)":"#252118",color:done?"#c8913c":"#ede4d0",
+              border:done?"1.5px solid rgba(200,145,60,0.35)":"1.5px solid rgba(255,210,140,0.07)",fontSize:14,fontWeight:700,letterSpacing:"-0.01em"}}>
+              {done?"✓ Marked complete":(item.type==="challenge"&&item.badgeId?`Complete & earn ${item.badgeIcon}`:"Mark as done")}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const challenges=library.filter(i=>i.type==="challenge");
+  const resources =library.filter(i=>i.type!=="challenge");
+
+  return(
+    <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+
+      {/* Challenges */}
+      <div style={{padding:"18px 16px 8px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{fontWeight:800,fontSize:17,color:"#ede4d0",letterSpacing:"-0.02em"}}>🏋️ Challenges</div>
+        {me.isAdmin&&<button onClick={()=>setAdding(true)} style={{background:"#1e1b17",color:"#fff",border:"none",borderRadius:22,padding:"7px 16px",fontSize:12,fontWeight:700}}>+ Add</button>}
+      </div>
+      <div style={{padding:"0 16px 2px",fontSize:12,color:"#7a7068",fontWeight:500,marginBottom:8}}>Complete challenges to earn badges next to your name.</div>
+      <div style={{padding:"0 16px"}}>{challenges.map(item=><ContentCard key={item.id} item={item}/>)}</div>
+
+      {/* Resources */}
+      <div style={{padding:"16px 16px 8px"}}>
+        <div style={{fontWeight:800,fontSize:17,color:"#ede4d0",letterSpacing:"-0.02em"}}>📚 Resources</div>
+      </div>
+      <div style={{padding:"0 16px"}}>{resources.map(item=><ContentCard key={item.id} item={item}/>)}</div>
+
+      {/* Book a Call */}
+      <div style={{padding:"8px 16px 0"}}>
+        <div style={{fontWeight:800,fontSize:17,color:"#ede4d0",marginBottom:5,letterSpacing:"-0.02em"}}>📅 Book a 1:1 Call</div>
+        <div style={{fontSize:13,color:"#7a7068",marginBottom:14,fontWeight:500}}>30 min with Coach Hunter</div>
+        {callLink?(
+          <a href={callLink} target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:18,borderRadius:16,background:"#1e1b17",color:"#fff",fontSize:16,fontWeight:800,textDecoration:"none",letterSpacing:"-0.01em",boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}>
+            📅 Book a Call →
+          </a>
+        ):(
+          <div style={{background:"#1e1b17",border:"1.5px dashed #e5e7eb",borderRadius:16,padding:22,textAlign:"center",boxShadow:"0 1px 4px rgba(0,0,0,0.04)"}}>
+            <div style={{fontSize:13,color:"#7a7068",lineHeight:1.6}}>{me.isAdmin?"Add your booking link in ⚙️ Admin → Settings.":"Booking link coming soon."}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Add content */}
+      {adding&&(
+        <div onClick={()=>setAdding(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"rgba(252,252,254,0.96)",borderRadius:"24px 24px 0 0",padding:"22px 22px 44px",width:"100%",maxWidth:390,animation:"springUp 0.36s cubic-bezier(0.34,1.2,0.64,1)",maxHeight:"80vh",overflowY:"auto"}}>
+            <div style={{fontWeight:800,fontSize:18,color:"#ede4d0",marginBottom:18,letterSpacing:"-0.02em"}}>Add Content</div>
+            <div style={{display:"flex",gap:6,marginBottom:14}}>
+              {["article","video","challenge"].map(t=>(
+                <button key={t} onClick={()=>setNP("type",t)} style={{flex:1,padding:"9px 4px",borderRadius:10,border:"1.5px solid",fontSize:12,fontWeight:700,
+                  background:newPost.type===t?"#c8541a":"rgba(255,210,140,0.05)",color:newPost.type===t?"#fff":"#8a8078",borderColor:newPost.type===t?"#c8541a":"rgba(255,210,140,0.1)"}}>
+                  {typeIcon[t]} {t}
+                </button>
+              ))}
+            </div>
+            <input placeholder="Title *" value={newPost.title} onChange={e=>setNP("title",e.target.value)} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#1e1b17"}}/>
+            {newPost.type==="video"
+              ?<input placeholder="Video URL" value={newPost.url} onChange={e=>setNP("url",e.target.value)} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#1e1b17"}}/>
+              :<textarea placeholder="Content..." value={newPost.body} onChange={e=>setNP("body",e.target.value)} rows={4} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",resize:"none",marginBottom:10,color:"#ede4d0",background:"#1e1b17",fontFamily:"inherit"}}/>
+            }
+            {newPost.type==="challenge"&&(
+              <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <input placeholder="Badge emoji" value={newPost.badgeIcon} onChange={e=>setNP("badgeIcon",e.target.value)} style={{width:110,padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",color:"#ede4d0",background:"#1e1b17"}}/>
+                <input placeholder="Badge name" value={newPost.badgeLabel} onChange={e=>setNP("badgeLabel",e.target.value)} style={{flex:1,padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",color:"#ede4d0",background:"#1e1b17"}}/>
+              </div>
+            )}
+            <button onClick={addPost} style={{width:"100%",padding:15,borderRadius:14,background:"#1e1b17",color:"#fff",fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em"}}>Publish</button>
+          </div>
+        </div>
+      )}
+      <div style={{height:48}}/>
+    </div>
+  );
+}
+
+// ─── Red Button ───────────────────────────────────────────────────────────────
+
+function Confetti(){
+  const em=["🎉","⭐","💪","🌟","✨","🏆","🎊","🌅","🔥","💎"];
+  return(
+    <div style={{position:"absolute",inset:0,pointerEvents:"none",overflow:"hidden"}}>
+      {Array.from({length:20},(_,i)=>(
+        <div key={i} style={{position:"absolute",fontSize:22,left:`${i*5.2}%`,top:"-8%",animation:`fall ${1+Math.random()*0.6}s ${(i*0.07).toFixed(2)}s infinite linear`}}>{em[i%em.length]}</div>
+      ))}
+    </div>
+  );
+}
+
+function RedButton({me,goToMessages,urges,onOvercome,onLogSaved}){
+  const [state,       setState]    =useState("idle");
+  const [left,        setLeft]     =useState(DEMO_SECS);
+  const [wh,          setWh]       =useState("");
+  const [nx,          setNx]       =useState("");
+  const [selEmo,      setEmo]      =useState("");
+  const [bl,          setBl]       =useState(BLOCKLIST.reduce((a,k)=>({...a,[k]:true}),{}));
+  const [blOpen,      setBlOpen]   =useState(false);
+  // reflect form
+  const [logTime,     setLogTime]  =useState("");
+  const [location,    setLocation] =useState("");
+  const [triggerType, setTrigType] =useState(""); // "thought" | "saw"
+  const [platform,    setPlatform] =useState("");
+  // commitment (persists through reset)
+  const [commitment,  setCommitment]=useState(null); // {dueAt, label}
+  const tmr=useRef(null);
+
+  useEffect(()=>{
+    if(state!=="away") return;
+    tmr.current=setInterval(()=>setLeft(t=>{if(t<=1){clearInterval(tmr.current);setState("checkin");return 0;}return t-1;}),1000);
+    return()=>clearInterval(tmr.current);
+  },[state]);
+
+  // Fire commitment check-in once time is up — works even if they've been on another tab
+  useEffect(()=>{
+    if(!commitment||state!=="idle") return;
+    if(Date.now()>=commitment.dueAt){setState("commitment-checkin");return;}
+    const t=setTimeout(()=>setState("commitment-checkin"),commitment.dueAt-Date.now());
+    return()=>clearTimeout(t);
+  },[commitment,state]);
+
+  const saveLog=(outcome)=>{
+    onLogSaved({id:Date.now(),ts:Date.now(),logTime,location,triggerType,platform:triggerType==="saw"?platform:null,emotion:selEmo,wh,nx,outcome});
+    setEmo("");setWh("");setNx("");
+  };
+  const reset=()=>{
+    setState("idle");setWh("");setNx("");setLeft(DEMO_SECS);
+    setEmo("");setLogTime("");setLocation("");setTrigType("");setPlatform("");
+    // NOTE: commitment intentionally not cleared here — it persists until answered
+  };
+
+  const autoTime=()=>new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  const openReflect=()=>{setLogTime(autoTime());setState("reflect");};
+
+  const C={display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",flex:1,padding:"0 28px",textAlign:"center",gap:24};
+  const PBtn=({l,o,c="#c8541a",shadow})=><button onClick={o} style={{width:"100%",padding:17,borderRadius:16,background:c,color:"#fff",border:"none",fontSize:15,fontWeight:700,marginBottom:10,letterSpacing:"0.01em",boxShadow:shadow||`0 4px 20px rgba(0,0,0,0.3)`}}>{l}</button>;
+  const SBtn=({l,o})=><button onClick={o} style={{width:"100%",padding:16,borderRadius:16,background:"rgba(255,210,140,0.05)",color:"#c0b8a8",border:"1px solid rgba(255,210,140,0.1)",fontSize:15,fontWeight:500,marginBottom:10,letterSpacing:"0.01em"}}>{l}</button>;
+  const GBtn=({l,o})=><button onClick={o} style={{background:"none",border:"none",fontSize:14,color:"#4a4038",cursor:"pointer",padding:8,fontWeight:400,letterSpacing:"0.02em"}}>{l}</button>;
+  const Chip=({label,sel,onSel,color="#c8541a"})=>(
+    <button onClick={onSel} style={{padding:"8px 15px",borderRadius:22,fontSize:13,fontWeight:sel?600:400,border:"1px solid",
+      background:sel?color:"rgba(255,210,140,0.04)",color:sel?"#fff":"#8a8078",borderColor:sel?color:"rgba(255,210,140,0.1)",whiteSpace:"nowrap"}}>{label}</button>
+  );
+
+  const nm=nextMilestone(urges);
+
+  // ── Reflect form (immediate after pressing button) ──
+  if(state==="reflect"){
+    const canContinue=logTime&&location&&triggerType&&(triggerType==="thought"||(triggerType==="saw"&&platform));
+    return(
+      <div style={{flex:1,overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"22px 20px 40px",display:"flex",flexDirection:"column",gap:22}}>
+          <div>
+            <div style={{fontWeight:800,fontSize:22,color:"#ede4d0",marginBottom:4,letterSpacing:"-0.02em"}}>Let's understand this urge.</div>
+            <div style={{fontSize:14,color:"#7a7068",fontWeight:500}}>Be honest with yourself.</div>
+          </div>
+
+          {/* What time is it */}
+          <div className="card" style={{padding:"16px 18px"}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:10,letterSpacing:"0.08em"}}>WHAT TIME IS IT?</div>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <input value={logTime} onChange={e=>setLogTime(e.target.value)}
+                style={{flex:1,background:"#252118",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:10,padding:"10px 14px",fontSize:15,outline:"none",color:"#ede4d0",fontWeight:600}}/>
+              <button onClick={()=>setLogTime(autoTime())} style={{background:"#1a1714",border:"none",borderRadius:10,padding:"10px 14px",fontSize:12,color:"#c0b8a8",fontWeight:700}}>Now</button>
+            </div>
+          </div>
+
+          {/* Where are you */}
+          <div className="card" style={{padding:"16px 18px"}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:12,letterSpacing:"0.08em"}}>WHERE ARE YOU?</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+              {LOCATIONS.map(l=><Chip key={l} label={l} sel={location===l} onSel={()=>setLocation(l)}/>)}
+            </div>
+          </div>
+
+          {/* What triggered it */}
+          <div className="card" style={{padding:"16px 18px"}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:12,letterSpacing:"0.08em"}}>WHAT TRIGGERED IT?</div>
+            <div style={{display:"flex",gap:10,marginBottom:triggerType==="saw"?14:0}}>
+              <button onClick={()=>{setTrigType("thought");setPlatform("");}} style={{flex:1,padding:16,borderRadius:14,border:"1.5px solid",textAlign:"center",
+                background:triggerType==="thought"?"#c8541a":"rgba(255,210,140,0.05)",color:triggerType==="thought"?"#fff":"#8a8078",borderColor:triggerType==="thought"?"#c8541a":"rgba(255,210,140,0.1)"}}>
+                <div style={{fontSize:26,marginBottom:5}}>💭</div>
+                <div style={{fontSize:13,fontWeight:700,lineHeight:1.3}}>Something I thought of</div>
+              </button>
+              <button onClick={()=>setTrigType("saw")} style={{flex:1,padding:16,borderRadius:14,border:"1.5px solid",textAlign:"center",
+                background:triggerType==="saw"?"#c8541a":"rgba(255,210,140,0.05)",color:triggerType==="saw"?"#fff":"#8a8078",borderColor:triggerType==="saw"?"#c8541a":"rgba(255,210,140,0.1)"}}>
+                <div style={{fontSize:26,marginBottom:5}}>👁</div>
+                <div style={{fontSize:13,fontWeight:700,lineHeight:1.3}}>Something I saw</div>
+              </button>
+            </div>
+
+            {triggerType==="saw"&&(
+              <div style={{animation:"slideUp 0.25s ease"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:10,letterSpacing:"0.08em"}}>WHERE DID YOU SEE IT?</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+                  {PLATFORMS.map(p=><Chip key={p} label={p} sel={platform===p} onSel={()=>setPlatform(p)}/>)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Continue */}
+          <button onClick={()=>setState("away")} disabled={!canContinue} style={{
+            width:"100%",padding:17,borderRadius:16,background:canContinue?"#c8541a":"rgba(255,210,140,0.06)",
+            color:canContinue?"#fff":"#3a3028",border:"none",fontSize:16,fontWeight:800,letterSpacing:"-0.01em",
+            transition:"background 0.2s,color 0.2s"
+          }}>Step away for 30 minutes →</button>
+          <GBtn l="I already overcame it" o={()=>{onOvercome();setState("celebrate");}}/>
+        </div>
+      </div>
+    );
+  }
+
+  if(state==="away"){
+    const R=58,circ=2*Math.PI*R;
+    const moves=[
+      {icon:"🚶",text:"Go for a walk — even 10 minutes changes your brain chemistry."},
+      {icon:"🏋️",text:"Hit the gym. Channel this energy somewhere real."},
+      {icon:"📞",text:"Call a friend. Not about this — just connect with someone."},
+      {icon:"🧠",text:"Sit with this question: what are you actually looking for from porn?"},
+    ];
+    return(
+      <div style={{flex:1,overflowY:"auto",background:"#141210"}}>
+        <div style={{display:"flex",flexDirection:"column",padding:"28px 20px 40px",gap:20}}>
+          <div>
+            <div style={{fontWeight:800,fontSize:26,color:"#ede4d0",marginBottom:6,letterSpacing:"-0.03em",lineHeight:1.2}}>Good. Make this time yours.</div>
+            <div style={{fontSize:15,color:"#8a8078",lineHeight:1.6}}>You just bought yourself 30 minutes of forward movement. Use it.</div>
+          </div>
+
+          {/* Activity cards */}
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {moves.map(m=>(
+              <div key={m.icon} className="card" style={{padding:"14px 16px",display:"flex",alignItems:"flex-start",gap:14}}>
+                <div style={{fontSize:28,lineHeight:1,marginTop:1,flexShrink:0}}>{m.icon}</div>
+                <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.6,fontWeight:500}}>{m.text}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Timer — secondary, not the focus */}
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"8px 0"}}>
+            <div style={{position:"relative",width:132,height:132,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <svg style={{position:"absolute",transform:"rotate(-90deg)"}} width="132" height="132">
+                <circle cx="66" cy="66" r={R} fill="none" stroke="rgba(255,210,140,0.1)" strokeWidth="7"/>
+                <circle cx="66" cy="66" r={R} fill="none" stroke="#c8913c" strokeWidth="7" strokeDasharray={circ} strokeDashoffset={circ*(1-left/DEMO_SECS)} strokeLinecap="round" style={{transition:"stroke-dashoffset 1s linear"}}/>
+              </svg>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:28,fontWeight:800,color:"#ede4d0",fontVariantNumeric:"tabular-nums",letterSpacing:"-0.03em"}}>{fmt(left)}</div>
+                <div style={{fontSize:10,color:"#7a7068",fontWeight:700,letterSpacing:"0.06em"}}>LEFT</div>
+              </div>
+            </div>
+            <GBtn l="I'm back early →" o={()=>setState("checkin")}/>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if(state==="checkin") return(
+    <div style={C}>
+      <div style={{fontSize:52}}>👋</div>
+      <div>
+        <div style={{fontWeight:800,fontSize:26,color:"#ede4d0",marginBottom:8,letterSpacing:"-0.03em",lineHeight:1.15}}>Welcome back.</div>
+        <div style={{fontSize:15,color:"#8a8078",maxWidth:280,lineHeight:1.65}}>How are you feeling after that break?</div>
+      </div>
+      <div style={{width:"100%",display:"flex",flexDirection:"column",gap:10}}>
+        <button onClick={()=>{onOvercome();setState("celebrate");}} style={{width:"100%",padding:18,borderRadius:16,fontSize:16,fontWeight:800,background:"#c8913c",color:"#fff",border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10,letterSpacing:"-0.01em",boxShadow:"0 4px 20px rgba(200,145,60,0.35)"}}>
+          ✓ No longer have the urge
+        </button>
+        <button onClick={()=>setState("still-urge")} style={{width:"100%",padding:17,borderRadius:16,fontSize:16,fontWeight:600,background:"#1e1b17",color:"#c0b8a8",border:"1.5px solid rgba(255,210,140,0.1)",letterSpacing:"-0.005em"}}>
+          The urge is still there
+        </button>
+      </div>
+    </div>
+  );
+
+  if(state==="still-urge"){
+    const now8PM =()=>{const d=new Date();d.setHours(22,0,0,0);return d.getTime()<Date.now()?d.getTime()+86400000:d.getTime();};
+    const tomorrow=()=>{const d=new Date();d.setDate(d.getDate()+1);d.setHours(8,0,0,0);return d.getTime();};
+    const thisWeek=()=>{const d=new Date();d.setDate(d.getDate()+7);d.setHours(8,0,0,0);return d.getTime();};
+    const opts=[
+      {label:"In 30 minutes",   dueAt:Date.now()+DEMO_SECS*1000},
+      {label:"Later today",     dueAt:now8PM()},
+      {label:"Tomorrow",        dueAt:tomorrow()},
+      {label:"This week",       dueAt:thisWeek()},
+    ];
+    return(
+      <div style={{flex:1,overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"28px 22px 40px",display:"flex",flexDirection:"column",gap:24}}>
+          <div>
+            <div style={{fontWeight:800,fontSize:24,color:"#ede4d0",marginBottom:10,letterSpacing:"-0.02em",lineHeight:1.2}}>It's okay.</div>
+            <div style={{fontSize:15,color:"#c0b8a8",lineHeight:1.75}}>
+              The urge is still there — and you know what? <strong>You can act on it if you choose to.</strong> You're not locked out. You're not in a cage.
+            </div>
+            <div style={{fontSize:15,color:"#c0b8a8",lineHeight:1.75,marginTop:12}}>
+              Say this to yourself: <span style={{fontStyle:"italic",color:"#8a8078"}}>"I can, if I choose to."</span>
+            </div>
+            <div style={{fontSize:15,color:"#c0b8a8",lineHeight:1.75,marginTop:12}}>
+              Now — when do you want to revisit this? Pick a time. If the urge is still real then, that's your answer. But let it breathe first.
+            </div>
+          </div>
+
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:4,letterSpacing:"0.08em"}}>CHECK BACK IN…</div>
+            {opts.map(opt=>(
+              <button key={opt.label} onClick={()=>{setCommitment(opt);reset();}} style={{
+                width:"100%",padding:"16px 20px",borderRadius:14,
+                background:"#1e1b17",color:"#ede4d0",border:"1.5px solid rgba(255,210,140,0.1)",
+                fontSize:15,fontWeight:700,textAlign:"left",
+                display:"flex",alignItems:"center",justifyContent:"space-between",letterSpacing:"-0.01em"
+              }}>
+                <span>{opt.label}</span>
+                <span style={{fontSize:18,color:"#4a4038"}}>→</span>
+              </button>
+            ))}
+          </div>
+
+          <GBtn l="I chose to view right now" o={()=>setState("gave-in-journal")}/>
+        </div>
+      </div>
+    );
+  }
+
+  if(state==="commitment-checkin") return(
+    <div style={C}>
+      <div style={{fontSize:52,animation:"springPop 0.5s cubic-bezier(0.34,1.56,0.64,1)"}}>⏰</div>
+      <div>
+        <div style={{fontWeight:800,fontSize:22,color:"#ede4d0",marginBottom:8,letterSpacing:"-0.02em",lineHeight:1.2}}>{commitment?.label} is up.</div>
+        <div style={{fontSize:15,color:"#8a8078",maxWidth:280,lineHeight:1.65}}>No judgment either way. Just be honest — that's how you grow.</div>
+      </div>
+      <div style={{width:"100%",display:"flex",flexDirection:"column",gap:10}}>
+        <button onClick={()=>{setCommitment(null);onOvercome();setState("celebrate");}} style={{width:"100%",padding:18,borderRadius:16,fontSize:16,fontWeight:800,background:"#c8913c",color:"#fff",border:"none",display:"flex",alignItems:"center",justifyContent:"center",gap:10,letterSpacing:"-0.01em",boxShadow:"0 4px 20px rgba(200,145,60,0.35)"}}>
+          ✓ Didn't need it anymore
+        </button>
+        <button onClick={()=>{setCommitment(null);setState("gave-in-journal");}} style={{width:"100%",padding:17,borderRadius:16,fontSize:16,fontWeight:600,background:"#1e1b17",color:"#c0b8a8",border:"1.5px solid rgba(255,210,140,0.1)",letterSpacing:"-0.005em"}}>
+          I chose to view
+        </button>
+      </div>
+    </div>
+  );
+
+  if(state==="celebrate") return(
+    <div style={{...C,position:"relative",overflow:"hidden"}}>
+      <Confetti/>
+      <div style={{fontSize:60,animation:"springPop 0.6s cubic-bezier(0.34,1.56,0.64,1)"}}>🏆</div>
+      <div>
+        <div style={{fontWeight:800,fontSize:28,color:"#ede4d0",marginBottom:8,letterSpacing:"-0.03em"}}>You did it.</div>
+        <div style={{fontSize:16,color:"#8a8078",maxWidth:280,lineHeight:1.65}}>That wasn't easy. You chose the harder, better path.</div>
+      </div>
+      <div className="card" style={{padding:"18px 32px",width:"100%",textAlign:"center"}}>
+        <div style={{color:"#7a7068",fontSize:12,fontWeight:700,marginBottom:6,letterSpacing:"0.06em"}}>TOTAL URGES OVERCOME</div>
+        <div style={{color:"#ede4d0",fontWeight:800,fontSize:48,letterSpacing:"-0.04em",animation:"countUp 0.4s cubic-bezier(0.34,1.56,0.64,1)"}}>{urges}</div>
+        {nm&&<div style={{fontSize:12,color:"#7a7068",marginTop:6,fontWeight:500}}>{nm.away} away from your next badge</div>}
+      </div>
+      <div style={{width:"100%"}}>
+        <PBtn l="📓 Reflect on what happened" o={()=>setState("journal")}/>
+        <SBtn l="✉️ Message your partner" o={()=>{goToMessages();reset();}}/>
+        <GBtn l="Done for now" o={reset}/>
+      </div>
+    </div>
+  );
+
+  const JournalFields=({saveLabel,outcome})=>(
+    <div style={{flex:1,overflowY:"auto",padding:"22px 20px"}}>
+      {outcome==="gave-in"?(
+        <div style={{background:"#1e1b17",borderRadius:20,padding:"22px 20px",marginBottom:22,textAlign:"center"}}>
+          <div style={{fontSize:13,color:"rgba(255,255,255,0.45)",fontWeight:700,letterSpacing:"0.06em",marginBottom:12}}>REMEMBER THIS</div>
+          <div style={{fontSize:17,color:"#fff",fontWeight:600,lineHeight:1.65,letterSpacing:"-0.01em"}}>
+            You only truly fail when you stop being curious. Ask yourself what just happened — honestly — and you've already gotten 1% better. That's exactly how this works.
+          </div>
+        </div>
+      ):(
+        <div style={{textAlign:"center",marginBottom:22}}>
+          <div style={{fontSize:30,marginBottom:8}}>📓</div>
+          <div style={{fontWeight:800,fontSize:20,color:"#ede4d0",marginBottom:4,letterSpacing:"-0.02em"}}>Reflect</div>
+          <div style={{fontSize:14,color:"#7a7068",fontWeight:500}}>This is where the real growth happens.</div>
+        </div>
+      )}
+      <div style={{marginBottom:16}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#c0b8a8",marginBottom:10,letterSpacing:"0.04em"}}>HOW WERE YOU FEELING?</div>
+        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+          {EMOTIONS.map(e=>(
+            <button key={e} onClick={()=>setEmo(e)} style={{padding:"7px 14px",borderRadius:22,fontSize:13,fontWeight:600,border:"1.5px solid",
+              background:selEmo===e?"#c8541a":"rgba(255,210,140,0.05)",color:selEmo===e?"#fff":"#8a8078",borderColor:selEmo===e?"#c8541a":"rgba(255,210,140,0.1)"}}>{e}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#c0b8a8",marginBottom:8,letterSpacing:"0.04em"}}>WHAT HAPPENED?</div>
+        <textarea value={wh} onChange={e=>setWh(e.target.value)} rows={3} placeholder="Walk through the moment..."
+          style={{width:"100%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,padding:"11px 14px",fontSize:14,outline:"none",resize:"none",lineHeight:1.6,color:"#ede4d0",fontFamily:"inherit"}}/>
+      </div>
+      <div style={{marginBottom:20}}>
+        <div style={{fontSize:12,fontWeight:700,color:"#c0b8a8",marginBottom:8,letterSpacing:"0.04em"}}>WHAT WILL YOU DO DIFFERENTLY?</div>
+        <textarea value={nx} onChange={e=>setNx(e.target.value)} rows={3} placeholder="One concrete change..."
+          style={{width:"100%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,padding:"11px 14px",fontSize:14,outline:"none",resize:"none",lineHeight:1.6,color:"#ede4d0",fontFamily:"inherit"}}/>
+      </div>
+      <button onClick={()=>{saveLog(outcome);reset();}} style={{width:"100%",padding:16,borderRadius:14,background:"#1e1b17",color:"#fff",border:"none",fontSize:15,fontWeight:800,letterSpacing:"-0.01em"}}>{saveLabel}</button>
+    </div>
+  );
+
+  if(state==="journal")         return <JournalFields saveLabel="Save reflection" outcome="overcome"/>;
+  if(state==="gave-in-journal") return <JournalFields saveLabel="Save & move forward" outcome="gave-in"/>;
+
+  // ── Idle screen ──
+  return(
+    <div style={{flex:1,overflowY:"auto",background:"#141210"}}>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"48px 22px 32px",gap:32}}>
+
+        {/* The button */}
+        <button onClick={openReflect} style={{
+          width:210,height:210,borderRadius:"50%",
+          background:"radial-gradient(circle at 38% 36%,#7a2e1e 0%,#5c1e10 55%,#3d1209 100%)",
+          border:"none",color:"#ede4d0",
+          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10,
+          animation:"pulse 3s infinite",
+          boxShadow:"0 0 0 14px rgba(157,61,46,0.1),0 0 0 28px rgba(157,61,46,0.05),0 16px 48px rgba(100,30,10,0.55)"
+        }}>
+          <div style={{fontSize:28,lineHeight:1,filter:"drop-shadow(0 2px 8px rgba(0,0,0,0.4))"}}>🌬</div>
+          <span style={{fontWeight:700,fontSize:14,letterSpacing:"0.02em",textAlign:"center",lineHeight:1.5,maxWidth:130,color:"rgba(237,228,208,0.85)"}}>Tap if feeling an urge</span>
+        </button>
+
+        {/* Next milestone hook */}
+        {nm&&(
+          <div className="card" style={{width:"100%",padding:"14px 18px",display:"flex",alignItems:"center",gap:12}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:12,color:"#7a7068",fontWeight:600,marginBottom:3}}>NEXT BADGE</div>
+              <div style={{fontSize:15,fontWeight:700,color:"#ede4d0",letterSpacing:"-0.01em"}}>{nm.away} urge{nm.away!==1?"s":""} away from {nm.next} 🎯</div>
+            </div>
+            <div style={{height:36,width:36,borderRadius:"50%",background:"#1a1714",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>
+              {BADGE_DEFS.find(b=>b.id===["first","five","ten","tfive","fifty"][MILESTONES.indexOf(nm.next)])?.icon||"🏅"}
+            </div>
+          </div>
+        )}
+
+        {/* Blocklist — collapsible */}
+        <div className="card" style={{width:"100%",overflow:"hidden"}}>
+          <button onClick={()=>setBlOpen(o=>!o)} style={{
+            width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
+            padding:"14px 18px",background:"none",border:"none",cursor:"pointer",textAlign:"left"
+          }}>
+            <div>
+              <div style={{fontWeight:700,color:"#c0b8a8",fontSize:15,letterSpacing:"-0.01em"}}>📵 App Blocklist</div>
+              <div style={{fontSize:12,color:"#7a7068",marginTop:2,fontWeight:500}}>Active during your 30-min break</div>
+            </div>
+            <div style={{fontSize:16,color:"#4a4038",transition:"transform 0.25s ease",transform:blOpen?"rotate(180deg)":"none"}}>▾</div>
+          </button>
+          {blOpen&&(
+            <div style={{borderTop:"0.5px solid rgba(255,210,140,0.07)",padding:"4px 18px 14px"}}>
+              {BLOCKLIST.map(app=>(
+                <div key={app} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 0",borderBottom:"0.5px solid rgba(255,210,140,0.05)"}}>
+                  <span style={{fontSize:15,color:"#c0b8a8",fontWeight:500}}>{app}</span>
+                  <button onClick={()=>setBl(b=>({...b,[app]:!b[app]}))} style={{width:48,height:28,borderRadius:14,border:"none",padding:"0 3px",
+                    background:bl[app]?"#c8541a":"rgba(255,210,140,0.08)",display:"flex",alignItems:"center",justifyContent:bl[app]?"flex-end":"flex-start",transition:"background 0.25s cubic-bezier(0.34,1.2,0.64,1)"}}>
+                    <div style={{width:22,height:22,borderRadius:"50%",background:"#ede4d0",boxShadow:"0 1px 4px rgba(0,0,0,0.3)"}}/>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ─── Calendar events ──────────────────────────────────────────────────────────
+
+// Recurring: day 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+const RECURRING=[
+  {id:"group-call",   title:"Weekly Group Call",         icon:"📞", day:2, hour:19, minute:0, color:"#c8541a",  desc:"Every Tuesday at 7 PM — join on Zoom with the group."},
+  {id:"nervous-sys",  title:"Nervous System Reset",      icon:"🧘", day:6, hour:9,  minute:0, color:"#c8913c",  desc:"Every Saturday morning — breathwork & regulation practice."},
+];
+
+// One-off special events (date in YYYY-MM-DD)
+const SPECIAL=[
+  {id:"retreat-1",    title:"Summer Retreat",            icon:"🏕", date:"2026-08-14", endDate:"2026-08-16", color:"#9d3d2e", desc:"3-day in-person retreat. Location TBA."},
+  {id:"meetup-jul",   title:"In-Person Meetup",          icon:"🤝", date:"2026-07-26", color:"#c8913c",      desc:"Monthly in-person gathering. Location TBA."},
+  {id:"meetup-aug",   title:"In-Person Meetup",          icon:"🤝", date:"2026-08-29", color:"#c8913c",      desc:"Monthly in-person gathering. Location TBA."},
+];
+
+function nextOccurrence(rec){
+  const now=new Date();
+  const d=new Date(now);
+  const diff=(rec.day-d.getDay()+7)%7;
+  d.setDate(d.getDate()+diff);
+  d.setHours(rec.hour,rec.minute,0,0);
+  if(d<=now) d.setDate(d.getDate()+7);
+  return d;
+}
+
+function getUpcomingEvents(limit=10){
+  const now=new Date();
+  const events=[];
+  // Recurring — next 3 occurrences each
+  RECURRING.forEach(r=>{
+    let d=nextOccurrence(r);
+    for(let i=0;i<3;i++){
+      events.push({...r,_date:new Date(d),_type:"recurring"});
+      d=new Date(d);d.setDate(d.getDate()+7);
+    }
+  });
+  // Special
+  SPECIAL.forEach(s=>{
+    const d=new Date(s.date+"T08:00:00");
+    if(d>now||s.endDate) events.push({...s,_date:d,_type:"special"});
+  });
+  return events.sort((a,b)=>a._date-b._date).slice(0,limit);
+}
+
+function formatCountdown(target){
+  const ms=target-Date.now();
+  if(ms<=0) return "Now";
+  const totalMins=Math.floor(ms/60000);
+  const hours=Math.floor(totalMins/60);
+  const mins=totalMins%60;
+  const days=Math.floor(hours/24);
+  if(days>=2) return `${days} days away`;
+  if(days===1) return `Tomorrow · ${hours%24}h ${mins}m`;
+  if(hours>0)  return `${hours}h ${mins}m away`;
+  return `${mins}m away`;
+}
+
+function NextEventWidget({onTabChange}){
+  const [tick,setTick]=React.useState(0);
+  React.useEffect(()=>{
+    const t=setInterval(()=>setTick(x=>x+1),30000);
+    return()=>clearInterval(t);
+  },[]);
+  const upcoming=getUpcomingEvents(1);
+  if(!upcoming.length) return null;
+  const ev=upcoming[0];
+  const ms=ev._date-Date.now();
+  const totalMins=Math.floor(ms/60000);
+  const hours=Math.floor(totalMins/60);
+  const mins=totalMins%60;
+  const days=Math.floor(hours/24);
+  const rhours=hours%24;
+
+  let countdownLabel="";
+  let countdownSub="";
+  if(days>=2){
+    countdownLabel=`${days}`;
+    countdownSub="days away";
+  } else if(days===1){
+    countdownLabel=`${days}d ${rhours}h`;
+    countdownSub="away";
+  } else if(hours>0){
+    countdownLabel=`${hours}h ${mins}m`;
+    countdownSub="away";
+  } else {
+    countdownLabel=`${mins}m`;
+    countdownSub="away";
+  }
+
+  const dayNum=ev._date.getDate();
+  const monthAbbr=ev._date.toLocaleString("default",{month:"short"}).toUpperCase();
+  const weekday=ev._date.toLocaleString("default",{weekday:"short"}).toUpperCase();
+  const fmtTime=d=>d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+
+  return(
+    <button onClick={()=>onTabChange("calendar")} style={{
+      width:"100%",background:"none",border:"none",padding:0,textAlign:"left",cursor:"pointer"
+    }}>
+      {/* Section label */}
+      <div style={{fontSize:11,fontWeight:700,color:"#7a7068",letterSpacing:"0.08em",marginBottom:8,paddingLeft:2}}>UPCOMING</div>
+      <div style={{
+        background:"linear-gradient(145deg,#0e1520 0%,#131c2e 60%,#0a1018 100%)",
+        borderRadius:20,
+        border:"1px solid rgba(100,160,255,0.15)",
+        boxShadow:"0 0 0 1px rgba(80,130,220,0.08), 0 8px 32px rgba(0,0,0,0.5), 0 0 40px rgba(60,100,200,0.06)",
+        overflow:"hidden",
+        display:"flex"
+      }}>
+        {/* Date column */}
+        <div style={{
+          width:64,flexShrink:0,
+          background:"linear-gradient(180deg,rgba(80,120,220,0.22) 0%,rgba(60,90,180,0.1) 100%)",
+          borderRight:"1px solid rgba(100,160,255,0.1)",
+          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+          padding:"16px 0",gap:0
+        }}>
+          <div style={{fontSize:10,fontWeight:700,color:"rgba(120,170,255,0.6)",letterSpacing:"0.1em"}}>{weekday}</div>
+          <div style={{fontSize:32,fontWeight:900,color:"#e8f0ff",letterSpacing:"-0.04em",lineHeight:1.05}}>{dayNum}</div>
+          <div style={{fontSize:11,fontWeight:700,color:"rgba(120,170,255,0.55)",letterSpacing:"0.08em"}}>{monthAbbr}</div>
+        </div>
+
+        {/* Main content */}
+        <div style={{flex:1,padding:"14px 16px",display:"flex",flexDirection:"column",justifyContent:"center",gap:4}}>
+          <div style={{fontSize:10,fontWeight:700,color:"rgba(120,170,255,0.45)",letterSpacing:"0.08em"}}>NEXT EVENT</div>
+          <div style={{fontWeight:800,fontSize:16,color:"#e8f0ff",letterSpacing:"-0.02em",lineHeight:1.2}}>{ev.title}</div>
+          <div style={{fontSize:12,color:"rgba(180,210,255,0.5)",marginTop:1}}>{weekday} · {fmtTime(ev._date)}</div>
+        </div>
+
+        {/* Countdown */}
+        <div style={{
+          flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+          padding:"14px 16px 14px 8px",textAlign:"center"
+        }}>
+          <div style={{fontWeight:900,fontSize:26,color:"#7ab3ff",letterSpacing:"-0.04em",lineHeight:1,textShadow:"0 0 20px rgba(100,160,255,0.5)"}}>{countdownLabel}</div>
+          <div style={{fontSize:9,color:"rgba(120,170,255,0.45)",fontWeight:700,marginTop:3,letterSpacing:"0.08em"}}>{countdownSub.toUpperCase()}</div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function CalendarTab(){
+  const [viewDate,setViewDate]=React.useState(new Date());
+  const [selectedDay,setSelectedDay]=React.useState(null);
+  const [tick,setTick]=React.useState(0);
+  React.useEffect(()=>{const t=setInterval(()=>setTick(x=>x+1),30000);return()=>clearInterval(t);},[]);
+
+  const upcoming=getUpcomingEvents(12);
+  const year=viewDate.getFullYear();
+  const month=viewDate.getMonth();
+  const monthName=viewDate.toLocaleString("default",{month:"long"});
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const today=new Date();
+
+  // Build a map of date strings → events for this month
+  const monthEvents={};
+  upcoming.forEach(ev=>{
+    const d=ev._date;
+    if(d.getFullYear()===year&&d.getMonth()===month){
+      const k=d.getDate();
+      if(!monthEvents[k]) monthEvents[k]=[];
+      monthEvents[k].push(ev);
+    }
+  });
+
+  // Also mark recurring events for the whole month
+  RECURRING.forEach(r=>{
+    for(let d=1;d<=daysInMonth;d++){
+      const wd=new Date(year,month,d).getDay();
+      if(wd===r.day){
+        if(!monthEvents[d]) monthEvents[d]=[];
+        if(!monthEvents[d].find(e=>e.id===r.id)){
+          const dt=new Date(year,month,d,r.hour,r.minute);
+          monthEvents[d].push({...r,_date:dt,_type:"recurring"});
+        }
+      }
+    }
+  });
+
+  const selEvents=selectedDay?monthEvents[selectedDay]||[]:[];
+  const fmtTime=d=>d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  const fmtDay=d=>d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+
+  return(
+    <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+      <div style={{padding:"16px 16px 56px",display:"flex",flexDirection:"column",gap:16}}>
+
+        {/* Month nav */}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <button onClick={()=>setViewDate(new Date(year,month-1,1))} style={{background:"none",border:"none",color:"#7a7068",fontSize:22,padding:"4px 10px",cursor:"pointer"}}>‹</button>
+          <div style={{fontWeight:800,fontSize:17,color:"#ede4d0",letterSpacing:"-0.02em"}}>{monthName} {year}</div>
+          <button onClick={()=>setViewDate(new Date(year,month+1,1))} style={{background:"none",border:"none",color:"#7a7068",fontSize:22,padding:"4px 10px",cursor:"pointer"}}>›</button>
+        </div>
+
+        {/* Day headers */}
+        <div className="card" style={{padding:"12px 10px 8px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",textAlign:"center",marginBottom:6}}>
+            {["S","M","T","W","T","F","S"].map((d,i)=>(
+              <div key={i} style={{fontSize:10,fontWeight:700,color:"#4a4038",letterSpacing:"0.06em"}}>{d}</div>
+            ))}
+          </div>
+          {/* Calendar grid */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"2px 0"}}>
+            {Array.from({length:firstDay}).map((_,i)=><div key={`e${i}`}/>)}
+            {Array.from({length:daysInMonth}).map((_,i)=>{
+              const day=i+1;
+              const isToday=today.getDate()===day&&today.getMonth()===month&&today.getFullYear()===year;
+              const isSel=selectedDay===day;
+              const evs=monthEvents[day]||[];
+              const hasMajor=evs.some(e=>e._type==="special");
+              const colors=[...new Set(evs.map(e=>e.color))].slice(0,3);
+              return(
+                <button key={day} onClick={()=>setSelectedDay(isSel?null:day)} style={{
+                  display:"flex",flexDirection:"column",alignItems:"center",padding:"5px 0",background:"none",border:"none",cursor:"pointer",
+                  borderRadius:10,background:isSel?"rgba(200,145,60,0.18)":isToday?"rgba(255,210,140,0.07)":"none",
+                }}>
+                  <div style={{fontSize:13,fontWeight:isToday||isSel?800:400,
+                    color:isSel?"#c8913c":isToday?"#ede4d0":"#c0b8a8",
+                    width:26,height:26,borderRadius:"50%",
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    border:isToday&&!isSel?"1.5px solid rgba(255,210,140,0.25)":"none"
+                  }}>{day}</div>
+                  <div style={{display:"flex",gap:2,marginTop:2,height:5}}>
+                    {colors.map((c,ci)=><div key={ci} style={{width:hasMajor&&ci===0?6:4,height:hasMajor&&ci===0?6:4,borderRadius:"50%",background:c}}/>)}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Selected day events */}
+        {selectedDay&&(
+          <div style={{animation:"slideDown 0.2s ease"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#7a7068",letterSpacing:"0.06em",marginBottom:8}}>
+              {fmtDay(new Date(year,month,selectedDay)).toUpperCase()}
+            </div>
+            {selEvents.length===0?(
+              <div className="card" style={{padding:16,textAlign:"center",color:"#4a4038",fontSize:14}}>Nothing scheduled this day</div>
+            ):(
+              selEvents.map((ev,i)=>(
+                <div key={i} className="card" style={{padding:"14px 16px",marginBottom:10,borderLeft:`3px solid ${ev.color}`}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <span style={{fontSize:22}}>{ev.icon}</span>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:700,fontSize:15,color:"#ede4d0",letterSpacing:"-0.01em"}}>{ev.title}</div>
+                      <div style={{fontSize:12,color:"#7a7068",marginTop:2}}>{fmtTime(ev._date)}</div>
+                    </div>
+                  </div>
+                  {ev.desc&&<div style={{fontSize:13,color:"#8a8078",marginTop:8,lineHeight:1.55}}>{ev.desc}</div>}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Upcoming list */}
+        <div>
+          <div style={{fontSize:11,fontWeight:700,color:"#7a7068",letterSpacing:"0.06em",marginBottom:10}}>COMING UP</div>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {upcoming.slice(0,6).map((ev,i)=>(
+              <div key={i} className="card" style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:12,borderLeft:`3px solid ${ev.color}`}}>
+                <span style={{fontSize:20,flexShrink:0}}>{ev.icon}</span>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:700,fontSize:14,color:"#ede4d0",letterSpacing:"-0.01em"}}>{ev.title}</div>
+                  <div style={{fontSize:12,color:"#7a7068",marginTop:2}}>
+                    {ev._date.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})} · {ev._date.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
+                  </div>
+                </div>
+                <div style={{fontSize:12,color:ev.color,fontWeight:700,textAlign:"right",flexShrink:0}}>{formatCountdown(ev._date)}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// ─── Main App ─────────────────────────────────────────────────────────────────
+
+const TABS=[
+  {id:"home",     icon:"🏠",label:"Home"},
+  {id:"chat",     icon:"💬",label:"Group"},
+  {id:"urge",     icon:"🔴",label:"Urge"},
+  {id:"calendar", icon:"📅",label:"Calendar"},
+  {id:"library",  icon:"📚",label:"Library"},
+];
+
+function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboarding,onLogout,onRefreshUsers}){
+  const [tab,       setTab]      =useState("home");
+  const [urges,     setUrges]    =useState(initMe.urges);
+  const [dms,       setDms]      =useState(SEED_DMS);
+  const [activeDm,  setActiveDm] =useState(null);
+  const [groupMsgs, setGroupMsgs]=useState([]);
+  const [logs,      setLogs]     =useState([]);
+  const [library,   setLibrary]  =useState(SEED_LIBRARY);
+  const [callLink,  setCallLink] =useState("");
+  const [profile,   setProfile]  =useState(null);
+  const [patterns,  setPatterns] =useState(false);
+  const [adminOpen, setAdmin]    =useState(false);
+  const [sosOpen,   setSos]      =useState(false);
+  const [toast,     setToast]    =useState(null);
+  const [checkIns,    setCheckIns]   =useState([]);
+  const [myWhy,       setMyWhy]      =useState(initMe.why||"");
+  const [levelChecks, setLevelChecks]=useState({});
+
+  const me={...allUsers.find(u=>u.id===initMe.id)||initMe,urges};
+  const partner=allUsers.find(u=>u.id===me.partnerId);
+  const nm=nextMilestone(urges);
+
+  // ── Load data from Supabase on mount ──
+  useEffect(()=>{
+    // Urge logs
+    sb.from("urge_logs").select("*").eq("user_id",initMe.id).order("created_at",{ascending:true})
+      .then(({data})=>{ if(data) setLogs(data.map(rowToLog)); });
+
+    // Level checks
+    sb.from("level_checks").select("check_id").eq("user_id",initMe.id)
+      .then(({data})=>{
+        if(data){
+          const checks={};
+          data.forEach(r=>{ checks[r.check_id]=true; });
+          setLevelChecks(checks);
+        }
+      });
+
+    // Group messages (initial load)
+    sb.from("group_messages").select("*").order("created_at",{ascending:true})
+      .then(({data})=>{ if(data) setGroupMsgs(data.map(rowToMsg)); });
+
+    // Real-time: subscribe to new group messages
+    const channel=sb.channel("group-messages")
+      .on("postgres_changes",{event:"INSERT",schema:"public",table:"group_messages"},
+        payload=>{
+          setGroupMsgs(p=>{
+            // Skip if already have this id (own messages handled by send())
+            if(p.some(m=>m.id===payload.new.id)) return p;
+            return [...p,rowToMsg(payload.new)];
+          });
+        })
+      .subscribe();
+
+    return()=>sb.removeChannel(channel);
+  },[initMe.id]);
+
+  const showToast=(icon,title,body)=>setToast({icon,title,body});
+
+  const handleCheckIn=(mood)=>{
+    const today=new Date().toDateString();
+    setCheckIns(p=>[...p,{date:today,mood,ts:Date.now()}]);
+  };
+
+  const handleOnboardingDone=async(why)=>{
+    if(why&&why.trim()){
+      setMyWhy(why.trim());
+      await sb.from("profiles").update({why:why.trim()}).eq("id",initMe.id);
+    }
+    setShowOnboarding(false);
+  };
+
+  const handleDm=uid=>{
+    const k=dmKey(me.id,uid);
+    if(!dms[k]) setDms(p=>({...p,[k]:[]}));
+    setActiveDm(uid);
+    setTab("chat");
+  };
+
+  const handleOvercome=async()=>{
+    const n=urges+1;
+    setUrges(n);
+    // Persist urge count
+    await sb.from("profiles").update({urges_count:n}).eq("id",initMe.id);
+    if(MILESTONES.includes(n)){
+      const msgs={1:"took their first step 🌱",5:"overcame 5 urges 🔥",10:"hit 10 urges overcome 💪",25:"reached 25 urges overcome ⭐",50:"overcame 50 urges 🏆",100:"hit 100 urges overcome 👑"};
+      const badgeLabel=BADGE_DEFS.find(b=>b.id===["first","five","ten","tfive","fifty"][MILESTONES.indexOf(n)])?.label;
+      // Post milestone to group chat
+      await sb.from("group_messages").insert({
+        user_id:initMe.id,
+        text:`${me.name} just ${msgs[n]||`overcame urge #${n}`} — give them some love! 🎉`,
+        is_announcement:false,
+      });
+      if(badgeLabel) showToast("🏅","New badge unlocked!",`${badgeLabel} — you earned it.`);
+    }
+  };
+
+  const handleBadgeEarned=async(item)=>{
+    if(me.badges?.includes(item.badgeId)) return;
+    const newBadges=[...(me.badges||[]),item.badgeId];
+    await sb.from("profiles").update({badges:newBadges}).eq("id",initMe.id);
+    await sb.from("group_messages").insert({
+      user_id:initMe.id,
+      text:`${me.name} earned the ${item.badgeIcon} ${item.badgeLabel} badge by completing "${item.title}"!`,
+      is_badge:true,
+      badge_icon:item.badgeIcon,
+    });
+    showToast(item.badgeIcon,"Badge unlocked!",`${item.badgeLabel} — it shows next to your name.`);
+  };
+
+  // Save urge log to Supabase
+  const handleLogSaved=async(log)=>{
+    const {data}=await sb.from("urge_logs").insert({
+      user_id:    initMe.id,
+      outcome:    log.outcome,
+      emotion:    log.emotion,
+      location:   log.location,
+      platform:   log.platform,
+      trigger_type:log.triggerType,
+      what_happened:log.wh,
+      next_time:  log.nx,
+      log_time:   log.logTime,
+    }).select().single();
+    if(data) setLogs(p=>[...p,rowToLog(data)]);
+  };
+
+  // Save level check to Supabase
+  const handleLevelCheckChange=async(id,checked)=>{
+    if(checked){
+      await sb.from("level_checks").upsert({user_id:initMe.id,check_id:id}).onConflict("user_id,check_id");
+    } else {
+      await sb.from("level_checks").delete().eq("user_id",initMe.id).eq("check_id",id);
+    }
+  };
+
+  // Admin: save profile changes to Supabase
+  const handleAdminSave=async(uid,data)=>{
+    const dbData={};
+    if(data.name!==undefined)     dbData.name=data.name;
+    if(data.email!==undefined)    dbData.email=data.email;
+    if(data.phone!==undefined)    dbData.phone=data.phone;
+    if(data.bio!==undefined)      dbData.bio=data.bio;
+    if(data.partnerId!==undefined)dbData.partner_id=data.partnerId||null;
+    if(data.isAdmin!==undefined)  dbData.is_admin=data.isAdmin;
+    await sb.from("profiles").update(dbData).eq("id",uid);
+    setAllUsers(p=>p.map(u=>u.id===uid?{...u,...data}:u));
+    if(onRefreshUsers) onRefreshUsers();
+  };
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100%",background:"#141210"}}>
+
+      {/* Onboarding */}
+      {showOnboarding&&<OnboardingFlow onDone={handleOnboardingDone}/>}
+
+      {/* Toast */}
+      <Toast toast={toast} onDismiss={()=>setToast(null)}/>
+
+      {/* Header — frosted glass */}
+      <div className="frosted-dark" style={{color:"#fff",paddingTop:"calc(14px + env(safe-area-inset-top))",paddingBottom:"14px",paddingLeft:"18px",paddingRight:"18px",display:"flex",alignItems:"center",justifyContent:"space-between",flexShrink:0,borderBottom:"0.5px solid rgba(255,255,255,0.08)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:26,filter:"drop-shadow(0 2px 8px rgba(255,180,0,0.4))"}}>☀️</span>
+          <div>
+            <div style={{fontWeight:800,fontSize:18,lineHeight:1.1,letterSpacing:"-0.02em"}}>Sunlight</div>
+            {nm&&<div style={{color:"rgba(255,255,255,0.45)",fontSize:11,fontWeight:500,marginTop:1}}>{nm.away} to next badge</div>}
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:10,color:"rgba(255,255,255,0.4)",fontWeight:700,letterSpacing:"0.06em"}}>OVERCOME</div>
+            <div style={{fontWeight:800,fontSize:18,letterSpacing:"-0.02em",animation:urges>initMe.urges?"countUp 0.4s ease":""}}>{urges} 🔴</div>
+          </div>
+          {me.isAdmin&&(
+            <button onClick={()=>setAdmin(true)} style={{width:36,height:36,borderRadius:"50%",background:"rgba(255,255,255,0.1)",border:"0.5px solid rgba(255,255,255,0.15)",color:"#fff",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>⚙️</button>
+          )}
+          {onLogout&&(
+            <button onClick={onLogout} title="Sign out" style={{width:32,height:32,borderRadius:"50%",background:"rgba(255,255,255,0.07)",border:"0.5px solid rgba(255,255,255,0.1)",color:"rgba(255,255,255,0.45)",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>↩</button>
+          )}
+          <button onClick={()=>setProfile(me)} style={{background:"none",border:"none",padding:0}}>
+            <Avatar user={me} size={36} ring/>
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",minHeight:0}}>
+        {tab==="home"     &&<Dashboard  me={me} logs={logs} library={library} users={allUsers} urges={urges} groupMsgs={groupMsgs} onTabChange={setTab} onProfile={setProfile} callLink={callLink} myWhy={myWhy} setMyWhy={setMyWhy} checkIns={checkIns} onCheckIn={handleCheckIn} levelChecks={levelChecks} setLevelChecks={setLevelChecks} onCheckChange={handleLevelCheckChange} onboardingDone={!showOnboarding}/>}
+        {tab==="chat"     &&<GroupChat  me={me} users={allUsers} msgs={groupMsgs} setMsgs={setGroupMsgs} onProfile={setProfile}/>}
+        {tab==="calendar" &&<CalendarTab/>}
+        {tab==="library"  &&<Library    me={me} library={library} setLibrary={setLibrary} callLink={callLink} onBadgeEarned={handleBadgeEarned}/>}
+        {tab==="urge"     &&<RedButton  me={me} goToMessages={()=>setTab("chat")} urges={urges} onOvercome={handleOvercome} onLogSaved={handleLogSaved}/>}
+      </div>
+
+      {/* Nav — frosted glass */}
+      <div className="frosted-light" style={{borderTop:"0.5px solid rgba(255,210,140,0.07)",display:"flex",flexShrink:0,paddingBottom:"env(safe-area-inset-bottom)",alignItems:"flex-end"}}>
+        {TABS.map(t=>{
+          const isUrge=t.id==="urge";
+          const active=tab===t.id;
+          return(
+            <button key={t.id} onClick={()=>{setTab(t.id);}} style={{
+              flex:1,padding:isUrge?"0 0 8px":"9px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:isUrge?0:2,
+              background:"none",border:"none",color:active?"#c8913c":"#3a3028",transition:"color 0.2s"
+            }}>
+              {isUrge?(
+                <div style={{
+                  width:54,height:54,borderRadius:"50%",
+                  background:active?"#9d3d2e":"#2a1e16",
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:22,marginTop:-20,
+                  boxShadow:active?"0 0 28px rgba(157,61,46,0.6), 0 4px 16px rgba(0,0,0,0.4)":"0 4px 16px rgba(0,0,0,0.5)",
+                  border:"3px solid #141210",
+                  animation:active?"none":"none",
+                  transition:"all 0.3s cubic-bezier(0.34,1.2,0.64,1)"
+                }}>
+                  <div style={{width:16,height:16,borderRadius:"50%",background:active?"#ff8c70":"#9d3d2e",boxShadow:active?"0 0 12px rgba(255,140,112,0.8)":"none",transition:"all 0.3s"}}/>
+                </div>
+              ):(
+                <span style={{fontSize:21,lineHeight:1,opacity:active?1:0.35,transition:"opacity 0.2s"}}>{t.icon}</span>
+              )}
+              <span style={{fontSize:9,fontWeight:active?600:400,letterSpacing:"0.06em",marginTop:isUrge?5:0,textTransform:"uppercase",color:active?"#c8913c":"#3a3028",transition:"color 0.2s"}}>{t.label}</span>
+              {active&&!isUrge&&<div style={{width:3,height:3,borderRadius:"50%",background:"#c8913c",marginTop:2}}/>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* SOS pill */}
+      {me.partnerId&&tab!=="messages"&&(
+        <button onClick={()=>setSos(true)} style={{
+          position:"fixed",bottom:84,right:14,zIndex:100,
+          background:"#9d3d2e",color:"#ede4d0",border:"none",borderRadius:26,
+          padding:"9px 15px",fontSize:13,fontWeight:700,
+          boxShadow:"0 4px 20px rgba(157,61,46,0.5)",
+          display:"flex",alignItems:"center",gap:6,
+          letterSpacing:"0.02em"
+        }}>⚡ SOS</button>
+      )}
+
+      {/* Overlays */}
+      {profile   &&<ProfileModal user={profile} me={me} onClose={()=>setProfile(null)} onDm={handleDm} onPatterns={()=>setPatterns(true)}/>}
+      {patterns  &&<PatternsModal logs={logs} onClose={()=>setPatterns(false)}/>}
+      {sosOpen   &&<SOSModal partner={partner} onClose={()=>setSos(false)}/>}
+      {adminOpen &&<AdminPanel users={allUsers} callLink={callLink} setCallLink={setCallLink} onClose={()=>setAdmin(false)} onUpdate={handleAdminSave} me={me}/>}
+    </div>
+  );
+}
+
+// ─── Loading screen ───────────────────────────────────────────────────────────
+function LoadingScreen(){
+  return(
+    <div style={{height:"100%",background:"#1e1b17",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:18}}>
+      <div style={{fontSize:56,filter:"drop-shadow(0 4px 20px rgba(255,180,0,0.35))",animation:"breathe 2s infinite"}}>☀️</div>
+      <div style={{fontSize:15,color:"#7a7068",fontWeight:500,letterSpacing:"0.02em"}}>Loading…</div>
+    </div>
+  );
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+
+function App(){
+  const [screen,         setScreen]         =useState("loading");
+  const [me,             setMe]             =useState(null);
+  const [allUsers,       setAllUsers]       =useState([]);
+  const [showOnboarding, setShowOnboarding] =useState(false);
+
+  // Load profile from Supabase by user id
+  const loadProfile=async(userId)=>{
+    console.log("[Sunlight] loadProfile called:", userId);
+    const [{data:profile},{data:all}]=await Promise.all([
+      sb.from("profiles").select("*").eq("id",userId),
+      sb.from("profiles").select("*"),
+    ]);
+    console.log("[Sunlight] profile result:", profile);
+    if(profile&&profile.length>0){
+      console.log("[Sunlight] profile found, switching to app");
+      setMe(rowToProfile(profile[0]));
+      setAllUsers((all||[]).map(rowToProfile));
+      setScreen("app");
+    } else {
+      console.log("[Sunlight] no profile found, retrying in 2s");
+      setTimeout(async()=>{
+        const {data:d2}=await sb.from("profiles").select("*").eq("id",userId);
+        console.log("[Sunlight] retry result:", d2);
+        if(d2&&d2.length>0){
+          const {data:all2}=await sb.from("profiles").select("*");
+          setMe(rowToProfile(d2[0]));
+          setAllUsers((all2||[]).map(rowToProfile));
+          setScreen("app");
+        } else {
+          setScreen("login");
+        }
+      },2000);
+    }
+  };
+
+  // On mount: restore existing session; sign-out listener
+  useEffect(()=>{
+    // Check for a persisted session (returning visitor)
+    sb.auth.getSession().then(({data:{session}})=>{
+      console.log("[Sunlight] getSession:", session?.user?.id);
+      if(session) loadProfile(session.user.id);
+      else setScreen("login");
+    });
+    // Only watch for sign-out events; login() handles sign-in directly
+    const {data:{subscription}}=sb.auth.onAuthStateChange((_event,session)=>{
+      console.log("[Sunlight] auth event:", _event, session?.user?.id);
+      if(!session){ setMe(null); setAllUsers([]); setScreen("login"); }
+    });
+    return()=>subscription.unsubscribe();
+  },[]);
+
+  // Real Supabase login — directly transitions to app
+  const login=async(email,password)=>{
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error) return error.message;
+    console.log("[Sunlight] signIn success, userId:", data?.user?.id);
+    if(data?.user){
+      let {data:profile}=await sb.from("profiles").select("*").eq("id",data.user.id);
+      console.log("[Sunlight] login profile:", profile);
+      // Auto-create profile if trigger didn't fire
+      if(!profile||profile.length===0){
+        console.log("[Sunlight] no profile, creating one");
+        const name=data.user.user_metadata?.name||email.split("@")[0];
+        await sb.from("profiles").upsert({
+          id:       data.user.id,
+          name,
+          email,
+          is_admin: email==="hunter@sunlightjourney.com",
+        });
+        const {data:p2}=await sb.from("profiles").select("*").eq("id",data.user.id);
+        profile=p2;
+      }
+      const {data:all}=await sb.from("profiles").select("*");
+      if(profile&&profile.length>0){
+        setMe(rowToProfile(profile[0]));
+        setAllUsers((all||[]).map(rowToProfile));
+        setScreen("app");
+      } else {
+        return "Profile setup failed — please contact support.";
+      }
+    }
+    return null;
+  };
+
+  // Real Supabase signup
+  const signup=async(form)=>{
+    const {data,error}=await sb.auth.signUp({
+      email:form.email,
+      password:form.password,
+      options:{data:{name:form.name}},
+    });
+    if(error) return error.message;
+    if(data?.user){
+      // Upsert extra profile fields the trigger doesn't set
+      await sb.from("profiles").upsert({
+        id:        data.user.id,
+        name:      form.name,
+        email:     form.email,
+        phone:     form.phone,
+        bio:       form.bio||"",
+        photo_url: form.photo||null,
+        color:     form.color||"#3b82f6",
+        is_admin:  form.email==="hunter@sunlightjourney.com",
+      });
+      setShowOnboarding(true);
+      await loadProfile(data.user.id);
+    }
+    return null;
+  };
+
+  const logout=async()=>{
+    await sb.auth.signOut();
+    setMe(null);
+    setAllUsers([]);
+    setScreen("login");
+  };
+
+  const refreshUsers=async()=>{
+    const {data}=await sb.from("profiles").select("*");
+    if(data) setAllUsers(data.map(rowToProfile));
+  };
+
+  if(screen==="loading") return <LoadingScreen/>;
+  if(screen==="login")   return <LoginScreen  onLogin={login}  onSignup={()=>setScreen("signup")}/>;
+  if(screen==="signup")  return <SignupScreen onSignup={signup} onBack={()=>setScreen("login")}/>;
+  return <MainApp me={me} allUsers={allUsers} setAllUsers={setAllUsers}
+    showOnboarding={showOnboarding} setShowOnboarding={setShowOnboarding}
+    onLogout={logout} onRefreshUsers={refreshUsers}/>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
