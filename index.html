@@ -2133,6 +2133,49 @@ function Messages({me,users,dms,setDms,activeDm,setActiveDm,onProfile,onSOS}){
   );
 }
 
+// ─── Library helpers (defined outside Library to prevent remount on re-render) ─
+
+const LIB_TYPE_ICON  ={article:"📄",video:"🎬",challenge:"🏋️"};
+const LIB_TYPE_COLOR ={article:"#eff6ff",video:"#f5f3ff",challenge:"#f0fdf4"};
+const LIB_TYPE_BORDER={article:"#bfdbfe",video:"#ddd6fe",challenge:"#bbf7d0"};
+const LIB_TYPE_LABEL ={article:"#1d4ed8",video:"#6d28d9",challenge:"#15803d"};
+
+function LibraryFormFields({vals,set}){
+  return(
+    <>
+      <div style={{display:"flex",gap:6,marginBottom:14}}>
+        {["article","video","challenge"].map(t=>(
+          <button key={t} onClick={()=>set("type",t)} style={{flex:1,padding:"9px 4px",borderRadius:10,border:"1.5px solid",fontSize:12,fontWeight:700,
+            background:vals.type===t?"#c8541a":"rgba(255,210,140,0.05)",color:vals.type===t?"#fff":"#8a8078",borderColor:vals.type===t?"#c8541a":"rgba(255,210,140,0.1)"}}>
+            {LIB_TYPE_ICON[t]} {t}
+          </button>
+        ))}
+      </div>
+      <input placeholder="Title *" value={vals.title} onChange={e=>set("title",e.target.value)} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#252118"}}/>
+      {vals.type==="video"&&<input placeholder="Vimeo or YouTube URL" value={vals.url} onChange={e=>set("url",e.target.value)} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#252118"}}/>}
+      <textarea placeholder="Description / content..." value={vals.body} onChange={e=>set("body",e.target.value)} rows={4} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",resize:"none",marginBottom:10,color:"#ede4d0",background:"#252118",fontFamily:"inherit"}}/>
+      {vals.type==="challenge"&&(
+        <div style={{display:"flex",gap:8,marginBottom:10}}>
+          <input placeholder="Badge emoji" value={vals.badgeIcon} onChange={e=>set("badgeIcon",e.target.value)} style={{width:110,padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",color:"#ede4d0",background:"#252118"}}/>
+          <input placeholder="Badge name" value={vals.badgeLabel} onChange={e=>set("badgeLabel",e.target.value)} style={{flex:1,padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",color:"#ede4d0",background:"#252118"}}/>
+        </div>
+      )}
+    </>
+  );
+}
+
+function LibraryModal({title,onClose,onSave,vals,set}){
+  return(
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#1e1b17",borderRadius:"24px 24px 0 0",padding:"22px 22px 44px",width:"100%",maxWidth:390,animation:"springUp 0.36s cubic-bezier(0.34,1.2,0.64,1)",maxHeight:"85vh",overflowY:"auto"}}>
+        <div style={{fontWeight:800,fontSize:18,color:"#ede4d0",marginBottom:18,letterSpacing:"-0.02em"}}>{title}</div>
+        <LibraryFormFields vals={vals} set={set}/>
+        <button onClick={onSave} style={{width:"100%",padding:15,borderRadius:14,background:"#c8541a",color:"#fff",fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",marginTop:4}}>Save</button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Library ──────────────────────────────────────────────────────────────────
 
 function Library({me,library,setLibrary,callLink,onBadgeEarned}){
@@ -2144,10 +2187,10 @@ function Library({me,library,setLibrary,callLink,onBadgeEarned}){
   const setNP=(k,v)=>setNewPost(p=>({...p,[k]:v}));
   const setEF=(k,v)=>setEditForm(p=>({...p,[k]:v}));
 
-  const typeIcon  ={article:"📄",video:"🎬",challenge:"🏋️"};
-  const typeColor ={article:"#eff6ff",video:"#f5f3ff",challenge:"#f0fdf4"};
-  const typeBorder={article:"#bfdbfe",video:"#ddd6fe",challenge:"#bbf7d0"};
-  const typeLabel ={article:"#1d4ed8",video:"#6d28d9",challenge:"#15803d"};
+  const typeIcon  =LIB_TYPE_ICON;
+  const typeColor =LIB_TYPE_COLOR;
+  const typeBorder=LIB_TYPE_BORDER;
+  const typeLabel =LIB_TYPE_LABEL;
 
   const addPost=async()=>{
     if(!newPost.title.trim()) return;
@@ -2196,27 +2239,6 @@ function Library({me,library,setLibrary,callLink,onBadgeEarned}){
     setLibrary(p=>p.map(x=>x.id!==item.id?x:{...x,completions:wasDone?x.completions.filter(c=>c!==me.id):[...x.completions,me.id]}));
   };
 
-  const FormFields=({vals,set})=>(
-    <>
-      <div style={{display:"flex",gap:6,marginBottom:14}}>
-        {["article","video","challenge"].map(t=>(
-          <button key={t} onClick={()=>set("type",t)} style={{flex:1,padding:"9px 4px",borderRadius:10,border:"1.5px solid",fontSize:12,fontWeight:700,
-            background:vals.type===t?"#c8541a":"rgba(255,210,140,0.05)",color:vals.type===t?"#fff":"#8a8078",borderColor:vals.type===t?"#c8541a":"rgba(255,210,140,0.1)"}}>
-            {typeIcon[t]} {t}
-          </button>
-        ))}
-      </div>
-      <input placeholder="Title *" value={vals.title} onChange={e=>set("title",e.target.value)} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#252118"}}/>
-      {vals.type==="video"&&<input placeholder="Vimeo or YouTube URL" value={vals.url} onChange={e=>set("url",e.target.value)} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#252118"}}/>}
-      <textarea placeholder="Description / content..." value={vals.body} onChange={e=>set("body",e.target.value)} rows={4} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",resize:"none",marginBottom:10,color:"#ede4d0",background:"#252118",fontFamily:"inherit"}}/>
-      {vals.type==="challenge"&&(
-        <div style={{display:"flex",gap:8,marginBottom:10}}>
-          <input placeholder="Badge emoji" value={vals.badgeIcon} onChange={e=>set("badgeIcon",e.target.value)} style={{width:110,padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",color:"#ede4d0",background:"#252118"}}/>
-          <input placeholder="Badge name" value={vals.badgeLabel} onChange={e=>set("badgeLabel",e.target.value)} style={{flex:1,padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",color:"#ede4d0",background:"#252118"}}/>
-        </div>
-      )}
-    </>
-  );
 
   const ContentCard=({item})=>{
     const isOpen=open===item.id;
@@ -2260,15 +2282,6 @@ function Library({me,library,setLibrary,callLink,onBadgeEarned}){
   const challenges=library.filter(i=>i.type==="challenge");
   const resources =library.filter(i=>i.type!=="challenge");
 
-  const Modal=({title,onClose,onSave,vals,set})=>(
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"#1e1b17",borderRadius:"24px 24px 0 0",padding:"22px 22px 44px",width:"100%",maxWidth:390,animation:"springUp 0.36s cubic-bezier(0.34,1.2,0.64,1)",maxHeight:"85vh",overflowY:"auto"}}>
-        <div style={{fontWeight:800,fontSize:18,color:"#ede4d0",marginBottom:18,letterSpacing:"-0.02em"}}>{title}</div>
-        <FormFields vals={vals} set={set}/>
-        <button onClick={onSave} style={{width:"100%",padding:15,borderRadius:14,background:"#c8541a",color:"#fff",fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",marginTop:4}}>Save</button>
-      </div>
-    </div>
-  );
 
   return(
     <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
@@ -2302,8 +2315,8 @@ function Library({me,library,setLibrary,callLink,onBadgeEarned}){
         )}
       </div>
 
-      {adding&&<Modal title="New Training" onClose={()=>setAdding(false)} onSave={addPost} vals={newPost} set={setNP}/>}
-      {editing&&<Modal title="Edit Training" onClose={()=>setEditing(null)} onSave={saveEdit} vals={editForm} set={setEF}/>}
+      {adding&&<LibraryModal title="New Training" onClose={()=>setAdding(false)} onSave={addPost} vals={newPost} set={setNP}/>}
+      {editing&&<LibraryModal title="Edit Training" onClose={()=>setEditing(null)} onSave={saveEdit} vals={editForm} set={setEF}/>}
 
       <div style={{height:48}}/>
     </div>
