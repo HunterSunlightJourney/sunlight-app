@@ -1837,17 +1837,11 @@ function ChatView({me,users,msgs,setMsgs,channelId,dmToId,isChannel}){
 }
 
 function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMsgs,openChannelSlug,setOpenChannelSlug}){
-  const [view,setView]=useState("list");
-  const [activeChannel,setActiveChannel]=useState(null);
+  const initCh=openChannelSlug?channels.find(c=>c.slug===openChannelSlug)||null:null;
+  const [view,setView]=useState(initCh?"channel":"list");
+  const [activeChannel,setActiveChannel]=useState(initCh);
   const [activeDmUid,setActiveDmUid]=useState(null);
-
-  React.useEffect(()=>{
-    if(openChannelSlug&&channels.length>0){
-      const ch=channels.find(c=>c.slug===openChannelSlug);
-      if(ch){setActiveChannel(ch);setView("channel");}
-      setOpenChannelSlug(null);
-    }
-  },[openChannelSlug,channels]);
+  useEffect(()=>{if(openChannelSlug&&setOpenChannelSlug)setOpenChannelSlug(null);},[]);
 
   const hunter=users.find(u=>u.id===HUNTER_UUID);
   const otherUsers=users.filter(u=>u.id!==me.id&&u.id!==HUNTER_UUID);
