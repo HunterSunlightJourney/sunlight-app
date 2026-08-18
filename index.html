@@ -649,11 +649,12 @@ function ProfileModal({user,me,onClose,onDm,onPatterns}){
 
 // ─── Admin Panel ──────────────────────────────────────────────────────────────
 
-function AdminPanel({users,callLink,setCallLink,onClose,onUpdate,me}){
-  const [tab,       setTab]      =useState("members");
-  const [editing,   setEditing]  =useState(null);
-  const [form,      setForm]     =useState({});
-  const [linkDraft, setLinkDraft]=useState(callLink);
+function AdminPanel({users,callLink,setCallLink,startHereVideo,setStartHereVideo,onClose,onUpdate,me}){
+  const [tab,            setTab]          =useState("members");
+  const [editing,        setEditing]      =useState(null);
+  const [form,           setForm]         =useState({});
+  const [linkDraft,      setLinkDraft]    =useState(callLink);
+  const [videoDraft,     setVideoDraft]   =useState(startHereVideo);
   const setF=(k,v)=>setForm(p=>({...p,[k]:v}));
   const startEdit=u=>{setEditing(u.id);setForm({name:u.name,email:u.email,phone:u.phone,bio:u.bio||"",partnerId:u.partnerId||""});};
   const save=()=>{onUpdate(editing,{...form,partnerId:Number(form.partnerId)||null});setEditing(null);};
@@ -736,6 +737,12 @@ function AdminPanel({users,callLink,setCallLink,onClose,onUpdate,me}){
               style={{width:"100%",padding:"11px 14px",border:"1px solid rgba(255,210,140,0.08)",borderRadius:12,fontSize:14,outline:"none",color:"#ede4d0",marginBottom:10,background:"#1e1b17"}}/>
             <button onClick={()=>setCallLink(linkDraft)} style={{width:"100%",padding:13,borderRadius:12,background:"#1e1b17",color:"#fff",border:"none",fontSize:14,fontWeight:700}}>Save Link</button>
             {callLink&&<div style={{fontSize:12,color:"#c8913c",marginTop:10,textAlign:"center",fontWeight:600}}>✓ Live — members can book now</div>}
+            <div style={{marginTop:22,fontSize:13,fontWeight:700,color:"#c0b8a8",marginBottom:5}}>🎬 Start Here — Intro Video</div>
+            <div style={{fontSize:12,color:"#7a7068",marginBottom:12,lineHeight:1.6}}>Paste a Vimeo or YouTube link. Members will see a Watch Video button on the Start Here page.</div>
+            <input value={videoDraft} onChange={e=>setVideoDraft(e.target.value)} placeholder="https://vimeo.com/your-video"
+              style={{width:"100%",padding:"11px 14px",border:"1px solid rgba(255,210,140,0.08)",borderRadius:12,fontSize:14,outline:"none",color:"#ede4d0",marginBottom:10,background:"#1e1b17"}}/>
+            <button onClick={()=>setStartHereVideo(videoDraft)} style={{width:"100%",padding:13,borderRadius:12,background:"#1e1b17",color:"#fff",border:"none",fontSize:14,fontWeight:700}}>Save Video Link</button>
+            {startHereVideo&&<div style={{fontSize:12,color:"#c8913c",marginTop:10,textAlign:"center",fontWeight:600}}>✓ Live — members will see the video</div>}
           </div>
         )}
       </div>
@@ -866,7 +873,7 @@ function CompletionRingBadge({done,total}){
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,callLink,myWhy,setMyWhy,checkIns,onCheckIn,levelChecks,setLevelChecks,onCheckChange,onboardingDone,hunterUnread=0}){
+function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,callLink,startHereVideo,myWhy,setMyWhy,checkIns,onCheckIn,levelChecks,setLevelChecks,onCheckChange,onboardingDone,hunterUnread=0}){
 
   // ── Smart tips engine → returns array of short punchy insights ──
   const tips=[];
@@ -941,18 +948,8 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
   const [insightsOpen,setInsightsOpen]=React.useState(false);
 
   // ── Level logic ──
-  // Auto-check onboarding item and first-urge item based on real state
-  const effectiveChecks={
-    ...levelChecks,
-    onboarding: onboardingDone||levelChecks.onboarding,
-    firsturge:  logs.length>0||levelChecks.firsturge,
-    partner:    !!partner||levelChecks.partner,
-  };
+  const effectiveChecks={...levelChecks};
   const toggleCheck=(id)=>{
-    // Never un-check auto-detected items
-    if(id==="onboarding"&&onboardingDone) return;
-    if(id==="firsturge"&&logs.length>0) return;
-    if(id==="partner"&&!!partner) return;
     const newVal=!levelChecks[id];
     setLevelChecks(p=>({...p,[id]:newVal}));
     if(onCheckChange) onCheckChange(id,newVal);
@@ -1077,6 +1074,11 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
           {/* Level 1: checklist */}
           {lvIndex===0&&(
             <div className="card" style={{padding:"16px 16px"}}>
+              {startHereVideo&&(
+                <a href={startHereVideo} target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"13px 16px",background:"#1a1714",borderRadius:12,fontSize:14,color:"#ede4d0",fontWeight:700,textDecoration:"none",textAlign:"center",marginBottom:14,border:"1px solid rgba(255,210,140,0.08)"}}>
+                  ▶ Watch Intro Video →
+                </a>
+              )}
               <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:12,letterSpacing:"0.08em"}}>YOUR CHECKLIST</div>
               <div style={{display:"flex",flexDirection:"column",gap:1}}>
                 {l1Items.map((item,i)=>{
@@ -3011,7 +3013,8 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
   const [dmMsgs,    setDmMsgs]   =useState({});
   const [logs,      setLogs]     =useState([]);
   const [library,   setLibrary]  =useState(SEED_LIBRARY);
-  const [callLink,  setCallLink] =useState("");
+  const [callLink,       setCallLink]      =useState("");
+  const [startHereVideo, setStartHereVideo]=useState("");
   const [profile,   setProfile]  =useState(null);
   const [patterns,  setPatterns] =useState(false);
   const [adminOpen, setAdmin]    =useState(false);
@@ -3242,7 +3245,7 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
 
       {/* Content */}
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",minHeight:0}}>
-        {tab==="home"     &&<Dashboard  me={me} logs={logs} library={library} users={allUsers} urges={urges} groupMsgs={groupMsgs} onTabChange={setTab} onProfile={setProfile} callLink={callLink} myWhy={myWhy} setMyWhy={setMyWhy} checkIns={checkIns} onCheckIn={handleCheckIn} levelChecks={levelChecks} setLevelChecks={setLevelChecks} onCheckChange={handleLevelCheckChange} onboardingDone={!showOnboarding} hunterUnread={(dmMsgs[dmKey(me.id,HUNTER_UUID)]||[]).filter(m=>!m.isRead&&m.fromId===HUNTER_UUID).length}/>}
+        {tab==="home"     &&<Dashboard  me={me} logs={logs} library={library} users={allUsers} urges={urges} groupMsgs={groupMsgs} onTabChange={setTab} onProfile={setProfile} callLink={callLink} startHereVideo={startHereVideo} myWhy={myWhy} setMyWhy={setMyWhy} checkIns={checkIns} onCheckIn={handleCheckIn} levelChecks={levelChecks} setLevelChecks={setLevelChecks} onCheckChange={handleLevelCheckChange} onboardingDone={!showOnboarding} hunterUnread={(dmMsgs[dmKey(me.id,HUNTER_UUID)]||[]).filter(m=>!m.isRead&&m.fromId===HUNTER_UUID).length}/>}
         {tab==="messages" &&<MessagesScreen me={me} users={allUsers} channels={channels} groupMsgs={groupMsgs} setGroupMsgs={setGroupMsgs} dmMsgs={dmMsgs} setDmMsgs={setDmMsgs}/>}
         {tab==="calendar" &&<CalendarTab/>}
         {tab==="library"  &&<Library    me={me} library={library} setLibrary={setLibrary} callLink={callLink} onBadgeEarned={handleBadgeEarned}/>}
@@ -3298,7 +3301,7 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
       {profile   &&<ProfileModal user={profile} me={me} onClose={()=>setProfile(null)} onDm={handleDm} onPatterns={()=>setPatterns(true)}/>}
       {patterns  &&<PatternsModal logs={logs} onClose={()=>setPatterns(false)}/>}
       {sosOpen   &&<SOSModal partner={partner} onClose={()=>setSos(false)}/>}
-      {adminOpen &&<AdminPanel users={allUsers} callLink={callLink} setCallLink={setCallLink} onClose={()=>setAdmin(false)} onUpdate={handleAdminSave} me={me}/>}
+      {adminOpen &&<AdminPanel users={allUsers} callLink={callLink} setCallLink={setCallLink} startHereVideo={startHereVideo} setStartHereVideo={setStartHereVideo} onClose={()=>setAdmin(false)} onUpdate={handleAdminSave} me={me}/>}
     </div>
   );
 }
