@@ -3188,7 +3188,7 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
   // Save level check to Supabase
   const handleLevelCheckChange=async(id,checked)=>{
     if(checked){
-      await sb.from("level_checks").upsert({user_id:initMe.id,check_id:id}).onConflict("user_id,check_id");
+      await sb.from("level_checks").upsert({user_id:initMe.id,check_id:id},{onConflict:"user_id,check_id"});
     } else {
       await sb.from("level_checks").delete().eq("user_id",initMe.id).eq("check_id",id);
     }
