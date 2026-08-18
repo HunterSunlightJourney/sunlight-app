@@ -265,7 +265,7 @@ const LEVELS = [
      {id:"charger",    type:"check", label:"Move your charger out of the bedroom", detail:"Charge your phone in the hallway or kitchen tonight."},
      {id:"timelimits", type:"check", label:"Set app time limits with a passcode", detail:"Go to Screen Time → App Limits. Set a passcode someone else knows."},
      {id:"firsturge",  type:"check", label:"Log your first urge", detail:"Hit the red button next time an urge hits — no matter the outcome."},
-     {id:"partner",    type:"check", label:"Connect with an accountability partner", detail:"Ask Coach Hunter to pair you up in the Group chat."},
+     {id:"introduce",  type:"check", label:"Introduce yourself in #general", detail:"Tap to open the group chat and say hi.", goToChannel:"general"},
    ]},
   {id:"fighter",  name:"Fighter",  emoji:"🥊", tagline:"Learn the tools that actually work.",
    items:[
@@ -873,7 +873,7 @@ function CompletionRingBadge({done,total}){
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,callLink,startHereVideo,myWhy,setMyWhy,checkIns,onCheckIn,levelChecks,setLevelChecks,onCheckChange,onboardingDone,hunterUnread=0}){
+function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,callLink,startHereVideo,myWhy,setMyWhy,checkIns,onCheckIn,levelChecks,setLevelChecks,onCheckChange,onboardingDone,hunterUnread=0,onGoToChannel}){
 
   // ── Smart tips engine → returns array of short punchy insights ──
   const tips=[];
@@ -1092,7 +1092,10 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                 {l1Items.map((item,i)=>{
                   const checked=!!effectiveChecks[item.id];
                   return(
-                    <button key={item.id} onClick={()=>toggleCheck(item.id)}
+                    <button key={item.id} onClick={()=>{
+                        if(!effectiveChecks[item.id]) toggleCheck(item.id);
+                        if(item.goToChannel&&onGoToChannel) onGoToChannel(item.goToChannel);
+                      }}
                       style={{display:"flex",alignItems:"flex-start",gap:13,padding:"12px 2px",background:"none",border:"none",textAlign:"left",width:"100%",
                         borderTop:i>0?"0.5px solid rgba(255,210,140,0.05)":"none",cursor:"pointer"}}>
                       <div style={{width:24,height:24,borderRadius:8,flexShrink:0,marginTop:1,
@@ -1833,10 +1836,18 @@ function ChatView({me,users,msgs,setMsgs,channelId,dmToId,isChannel}){
   );
 }
 
-function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMsgs}){
+function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMsgs,openChannelSlug,setOpenChannelSlug}){
   const [view,setView]=useState("list");
   const [activeChannel,setActiveChannel]=useState(null);
   const [activeDmUid,setActiveDmUid]=useState(null);
+
+  React.useEffect(()=>{
+    if(openChannelSlug&&channels.length>0){
+      const ch=channels.find(c=>c.slug===openChannelSlug);
+      if(ch){setActiveChannel(ch);setView("channel");}
+      setOpenChannelSlug(null);
+    }
+  },[openChannelSlug,channels]);
 
   const hunter=users.find(u=>u.id===HUNTER_UUID);
   const otherUsers=users.filter(u=>u.id!==me.id&&u.id!==HUNTER_UUID);
@@ -3021,8 +3032,9 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
   const [dmMsgs,    setDmMsgs]   =useState({});
   const [logs,      setLogs]     =useState([]);
   const [library,   setLibrary]  =useState(SEED_LIBRARY);
-  const [callLink,       setCallLink]      =useState("");
-  const [startHereVideo, setStartHereVideo]=useState("https://vimeo.com/1219278074?share=copy&fl=sv&fe=ci");
+  const [callLink,        setCallLink]       =useState("");
+  const [startHereVideo,  setStartHereVideo] =useState("https://vimeo.com/1219278074?share=copy&fl=sv&fe=ci");
+  const [openChannelSlug, setOpenChannelSlug]=useState(null);
   const [profile,   setProfile]  =useState(null);
   const [patterns,  setPatterns] =useState(false);
   const [adminOpen, setAdmin]    =useState(false);
@@ -3253,8 +3265,8 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
 
       {/* Content */}
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",minHeight:0}}>
-        {tab==="home"     &&<Dashboard  me={me} logs={logs} library={library} users={allUsers} urges={urges} groupMsgs={groupMsgs} onTabChange={setTab} onProfile={setProfile} callLink={callLink} startHereVideo={startHereVideo} myWhy={myWhy} setMyWhy={setMyWhy} checkIns={checkIns} onCheckIn={handleCheckIn} levelChecks={levelChecks} setLevelChecks={setLevelChecks} onCheckChange={handleLevelCheckChange} onboardingDone={!showOnboarding} hunterUnread={(dmMsgs[dmKey(me.id,HUNTER_UUID)]||[]).filter(m=>!m.isRead&&m.fromId===HUNTER_UUID).length}/>}
-        {tab==="messages" &&<MessagesScreen me={me} users={allUsers} channels={channels} groupMsgs={groupMsgs} setGroupMsgs={setGroupMsgs} dmMsgs={dmMsgs} setDmMsgs={setDmMsgs}/>}
+        {tab==="home"     &&<Dashboard  me={me} logs={logs} library={library} users={allUsers} urges={urges} groupMsgs={groupMsgs} onTabChange={setTab} onProfile={setProfile} callLink={callLink} startHereVideo={startHereVideo} myWhy={myWhy} setMyWhy={setMyWhy} checkIns={checkIns} onCheckIn={handleCheckIn} levelChecks={levelChecks} setLevelChecks={setLevelChecks} onCheckChange={handleLevelCheckChange} onboardingDone={!showOnboarding} hunterUnread={(dmMsgs[dmKey(me.id,HUNTER_UUID)]||[]).filter(m=>!m.isRead&&m.fromId===HUNTER_UUID).length} onGoToChannel={(slug)=>{setOpenChannelSlug(slug);setTab("messages");}}/>}
+        {tab==="messages" &&<MessagesScreen me={me} users={allUsers} channels={channels} groupMsgs={groupMsgs} setGroupMsgs={setGroupMsgs} dmMsgs={dmMsgs} setDmMsgs={setDmMsgs} openChannelSlug={openChannelSlug} setOpenChannelSlug={setOpenChannelSlug}/>}
         {tab==="calendar" &&<CalendarTab/>}
         {tab==="library"  &&<Library    me={me} library={library} setLibrary={setLibrary} callLink={callLink} onBadgeEarned={handleBadgeEarned}/>}
         {tab==="urge"     &&<RedButton  me={me} goToMessages={()=>setTab("chat")} urges={urges} onOvercome={handleOvercome} onLogSaved={handleLogSaved}/>}
