@@ -1049,36 +1049,44 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
         </div>
         <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:18}}>
           {/* Level hero */}
-          <div style={{background:"#1e1b17",borderRadius:22,padding:"22px 20px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.18)"}}>
-            <div style={{fontSize:38,marginBottom:10}}>{lv.emoji}</div>
-            <div style={{fontSize:26,fontWeight:800,letterSpacing:"-0.03em",marginBottom:4}}>{lvIndex===0?"Start Here":`Level ${lvIndex+1} — ${lv.name}`}</div>
-            <div style={{fontSize:14,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{lv.tagline}</div>
-            {lvIndex===0&&(
-              <>
-                <div style={{marginTop:16,height:5,borderRadius:999,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}>
+          {lvIndex===0?(
+            <>
+              <div style={{background:"#1e1b17",borderRadius:22,padding:"16px 18px 14px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.18)"}}>
+                <div style={{fontSize:20,fontWeight:800,letterSpacing:"-0.02em",marginBottom:2}}>Start Here</div>
+                <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginBottom:12}}>{lv.tagline}</div>
+                <div style={{height:4,borderRadius:999,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}>
                   <div style={{height:"100%",borderRadius:999,background:"linear-gradient(90deg,#c8913c,rgba(200,145,60,0.6))",width:`${Math.round(l1Done/l1Items.length*100)}%`,transition:"width 0.8s ease"}}/>
                 </div>
-                <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:6,fontWeight:600}}>{l1Done}/{l1Items.length} complete</div>
-              </>
-            )}
-            {lvIndex===1&&(
-              <>
-                <div style={{marginTop:16,height:5,borderRadius:999,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}>
-                  <div style={{height:"100%",borderRadius:999,background:"linear-gradient(90deg,#c8913c,rgba(200,145,60,0.6))",width:`${Math.round(l2Done/l2Items.length*100)}%`,transition:"width 0.8s ease"}}/>
-                </div>
-                <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:6,fontWeight:600}}>{l2Done}/{l2Items.length} complete</div>
-              </>
-            )}
-          </div>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:5,fontWeight:600}}>{l1Done}/{l1Items.length} complete</div>
+              </div>
+              {startHereVideo&&(()=>{
+                const vimeoId=startHereVideo.match(/vimeo\.com\/(\d+)/)?.[1];
+                const ytId=startHereVideo.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)?.[1];
+                const src=vimeoId?`https://player.vimeo.com/video/${vimeoId}`
+                         :ytId?`https://www.youtube.com/embed/${ytId}`
+                         :null;
+                return src?(
+                  <div style={{borderRadius:18,overflow:"hidden",background:"#000",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",aspectRatio:"16/9",position:"relative"}}>
+                    <iframe src={src} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none"}} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+                  </div>
+                ):null;
+              })()}
+            </>
+          ):(
+            <div style={{background:"#1e1b17",borderRadius:22,padding:"22px 20px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.18)"}}>
+              <div style={{fontSize:38,marginBottom:10}}>{lv.emoji}</div>
+              <div style={{fontSize:26,fontWeight:800,letterSpacing:"-0.03em",marginBottom:4}}>Level {lvIndex+1} — {lv.name}</div>
+              <div style={{fontSize:14,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{lv.tagline}</div>
+              <div style={{marginTop:16,height:5,borderRadius:999,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:999,background:"linear-gradient(90deg,#c8913c,rgba(200,145,60,0.6))",width:`${Math.round(l2Done/l2Items.length*100)}%`,transition:"width 0.8s ease"}}/>
+              </div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:6,fontWeight:600}}>{l2Done}/{l2Items.length} complete</div>
+            </div>
+          )}
 
           {/* Level 1: checklist */}
           {lvIndex===0&&(
             <div className="card" style={{padding:"16px 16px"}}>
-              {startHereVideo&&(
-                <a href={startHereVideo} target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"13px 16px",background:"#1a1714",borderRadius:12,fontSize:14,color:"#ede4d0",fontWeight:700,textDecoration:"none",textAlign:"center",marginBottom:14,border:"1px solid rgba(255,210,140,0.08)"}}>
-                  ▶ Watch Intro Video →
-                </a>
-              )}
               <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:12,letterSpacing:"0.08em"}}>YOUR CHECKLIST</div>
               <div style={{display:"flex",flexDirection:"column",gap:1}}>
                 {l1Items.map((item,i)=>{
