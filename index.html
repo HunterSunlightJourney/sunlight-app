@@ -259,7 +259,7 @@ const COLORS     = ["#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899",
 const MOODS      = [{emoji:"😔",label:"Rough"},{emoji:"😐",label:"Okay"},{emoji:"😊",label:"Good"},{emoji:"💪",label:"Strong"},{emoji:"🔥",label:"Locked in"}];
 
 const LEVELS = [
-  {id:"beginner", name:"Beginner", emoji:"🌱", tagline:"Build your foundation.",
+  {id:"beginner", name:"Start Here", emoji:"🌱", tagline:"Build your foundation.",
    items:[
      {id:"onboarding", type:"check", label:"Complete your onboarding", detail:"Answer a few quick questions to personalize your experience."},
      {id:"charger",    type:"check", label:"Move your charger out of the bedroom", detail:"Charge your phone in the hallway or kitchen tonight."},
@@ -1051,7 +1051,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
           {/* Level hero */}
           <div style={{background:"#1e1b17",borderRadius:22,padding:"22px 20px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.18)"}}>
             <div style={{fontSize:38,marginBottom:10}}>{lv.emoji}</div>
-            <div style={{fontSize:26,fontWeight:800,letterSpacing:"-0.03em",marginBottom:4}}>Level {lvIndex+1} — {lv.name}</div>
+            <div style={{fontSize:26,fontWeight:800,letterSpacing:"-0.03em",marginBottom:4}}>{lvIndex===0?"Start Here":`Level ${lvIndex+1} — ${lv.name}`}</div>
             <div style={{fontSize:14,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{lv.tagline}</div>
             {lvIndex===0&&(
               <>
@@ -1106,7 +1106,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
               {l1Complete&&(
                 <div style={{marginTop:14,padding:"14px",background:"rgba(200,145,60,0.14)",borderRadius:14,textAlign:"center",animation:"springPop 0.5s cubic-bezier(0.34,1.56,0.64,1)"}}>
                   <div style={{fontSize:20,marginBottom:4}}>🎉</div>
-                  <div style={{fontWeight:800,fontSize:15,color:"#c8913c"}}>Level 1 complete! Level 2 is now unlocked.</div>
+                  <div style={{fontWeight:800,fontSize:15,color:"#c8913c"}}>All done! Keep it going.</div>
                 </div>
               )}
             </div>
@@ -1492,7 +1492,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
             WebkitOverflowScrolling:"touch"}}>
 
             {[
-              {title:["START","HERE"],badge:"🌱 Level 1",
+              {title:["START","HERE"],badge:"🌱 Start Here",
                bg:"linear-gradient(145deg,#2e1b0d 0%,#1c1007 60%,#110a04 100%)",
                border:"rgba(200,84,26,0.22)",glow:"rgba(200,84,26,0.2)",badgeBg:"#c8541a",
                done:l1Done,total:l1Items.length,
