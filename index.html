@@ -1215,9 +1215,8 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
         </div>
         <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:16}}>
           <div style={{fontWeight:800,fontSize:20,color:"#ede4d0",letterSpacing:"-0.02em",lineHeight:1.3}}>The Double-R M Method</div>
-          <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.75}}>Just messed up? Watch this video and practice the Double-R M method. Relax, Reflect, and Move On.</div>
           {(()=>{
-            const vimeoId="1219644102";
+            const vimeoId="1219658116";
             const embedSrc=`https://player.vimeo.com/video/${vimeoId}`;
             return(
               <div style={{borderRadius:18,overflow:"hidden",background:"#000",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",aspectRatio:"16/9",position:"relative"}}>
@@ -1225,6 +1224,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
               </div>
             );
           })()}
+          <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.75}}>Just messed up? Watch this video and practice the Double-R M method. Relax, Reflect, and Move On.</div>
           <button onClick={()=>{if(onLogSlip)onLogSlip();}}
             style={{width:"100%",padding:16,borderRadius:14,fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",background:"#c8541a",color:"#fff"}}>
             Log what happened
@@ -3495,3 +3495,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(<ErrorBoundary><App/
 </script>
 </body>
 </html>
+
