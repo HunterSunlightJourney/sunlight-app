@@ -873,7 +873,7 @@ function CompletionRingBadge({done,total}){
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,callLink,startHereVideo,myWhy,setMyWhy,checkIns,onCheckIn,levelChecks,setLevelChecks,onCheckChange,onboardingDone,hunterUnread=0,onGoToChannel}){
+function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,callLink,startHereVideo,myWhy,setMyWhy,checkIns,onCheckIn,levelChecks,setLevelChecks,onCheckChange,onboardingDone,hunterUnread=0,onGoToChannel,onLogSlip}){
 
   // ── Smart tips engine → returns array of short punchy insights ──
   const tips=[];
@@ -1207,21 +1207,36 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
 
   // ── Double-R M method deep dive ──
   if(subPage?.type==="method"&&subPage?.id==="double-rm"){
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage({type:"level",id:"fighter"})} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>MESSED UP? RESET HERE</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:16}}>
+          <div style={{fontWeight:800,fontSize:20,color:"#ede4d0",letterSpacing:"-0.02em",lineHeight:1.3}}>The Double-R M Method</div>
+          <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.75}}>Just messed up? Watch this video and practice the Double-R M method. Relax, Reflect, and Move On.</div>
+          {(()=>{
+            const vimeoId="1219644102";
+            const embedSrc=`https://player.vimeo.com/video/${vimeoId}`;
+            return(
+              <div style={{borderRadius:18,overflow:"hidden",background:"#000",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",aspectRatio:"16/9",position:"relative"}}>
+                <iframe src={embedSrc} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none"}} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+              </div>
+            );
+          })()}
+          <button onClick={()=>{if(onLogSlip)onLogSlip();}}
+            style={{width:"100%",padding:16,borderRadius:14,fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",background:"#c8541a",color:"#fff"}}>
+            Log what happened
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── DEAD CODE BELOW (replaced) — kept to avoid parse errors if anything referenced it ──
+  if(false&&subPage?.type==="method"&&subPage?.id==="double-rm-old"){
     const understood=!!effectiveChecks["double-rm-understood"];
-    const steps=[
-      {num:1, letter:"R", word:"Relax", color:"#3b82f6", bg:"#eff6ff", border:"#bfdbfe",
-       headline:"Don't spiral. Just breathe.",
-       body:"After a slip, your brain wants to go into shame mode — replaying what happened, calling yourself weak, catastrophizing. That's not useful and it's not accurate. Before you do anything, just breathe. Take 3 slow breaths. Drop your shoulders. The event already happened and it doesn't define you. Relax first.",
-       tip:"In 4 seconds, hold 4, out for 6. Repeat 3 times. Seriously — do it right now."},
-      {num:2, letter:"R", word:"Reflect", color:"#8b5cf6", bg:"#f5f3ff", border:"#ddd6fe",
-       headline:"Get curious. Not critical.",
-       body:"Now that you're calm, ask yourself honestly: what was going on before this happened? What were you feeling — bored, stressed, lonely, tired? What triggered it? You're not looking for reasons to feel bad. You're looking for information. Every slip has a pattern. Understanding it is the only way to break it.",
-       tip:"Open the journal and write one sentence: \"I think I slipped because ___\". That's it."},
-      {num:3, letter:"M", word:"Move On", color:"#10b981", bg:"#f0fdf4", border:"#bbf7d0",
-       headline:"This doesn't own the rest of your day.",
-       body:"Here's what most guys get wrong: they let a slip become a write-off. \"I already messed up today, so whatever.\" That thinking causes more damage than the slip itself. One moment doesn't cancel your progress. Close this app, go do something normal — make food, call a friend, go for a walk. Your day continues. You continue.",
-       tip:"Say it out loud: \"That happened. I'm still in this.\" Then go do the next right thing."},
-    ];
     return(
       <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
         <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
@@ -1229,46 +1244,6 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
           <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>LEVEL 2 — FIGHTER</div>
         </div>
         <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:18}}>
-
-          {/* Hero */}
-          <div style={{background:"#1e1b17",borderRadius:22,padding:"24px 22px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.2)"}}>
-            <div style={{fontSize:13,fontWeight:800,color:"rgba(255,255,255,0.35)",letterSpacing:"0.1em",marginBottom:10}}>FOR AFTER A SLIP</div>
-            <div style={{fontSize:28,fontWeight:800,letterSpacing:"-0.03em",lineHeight:1.15,marginBottom:10}}>The Double-R M Method</div>
-            <div style={{fontSize:15,color:"rgba(255,255,255,0.6)",lineHeight:1.7}}>
-              When you choose to view, this method keeps it from ruining the rest of your day. Done in under 5 minutes.
-            </div>
-            <div style={{display:"flex",gap:10,marginTop:18}}>
-              {["Relax","Reflect","Move On"].map((s,i)=>(
-                <div key={i} style={{flex:1,background:"rgba(255,255,255,0.08)",borderRadius:12,padding:"10px 8px",textAlign:"center"}}>
-                  <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.4)",letterSpacing:"0.06em",marginBottom:3}}>{i===2?"M":"R"}</div>
-                  <div style={{fontSize:12,fontWeight:700,color:"#fff",lineHeight:1.2}}>{s}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Steps */}
-          {steps.map((step,i)=>(
-            <div key={i} style={{background:step.bg,borderRadius:20,padding:"20px 18px",border:`1.5px solid ${step.border}`,animation:`slideUp 0.3s ${i*0.1}s both`}}>
-              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-                <div style={{width:44,height:44,borderRadius:14,background:step.color,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <span style={{fontSize:20,fontWeight:900,color:"#fff"}}>{step.letter}</span>
-                </div>
-                <div>
-                  <div style={{fontSize:10,fontWeight:800,color:step.color,letterSpacing:"0.1em",marginBottom:2}}>STEP {step.num}</div>
-                  <div style={{fontSize:19,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em"}}>{step.word}</div>
-                </div>
-              </div>
-              <div style={{fontSize:14,fontWeight:700,color:"#ede4d0",marginBottom:8,letterSpacing:"-0.005em"}}>{step.headline}</div>
-              <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.75}}>{step.body}</div>
-              <div style={{marginTop:14,background:"rgba(255,210,140,0.06)",borderRadius:12,padding:"11px 14px",borderLeft:`3px solid ${step.color}`}}>
-                <div style={{fontSize:12,fontWeight:700,color:step.color,marginBottom:3,letterSpacing:"0.04em"}}>DO THIS</div>
-                <div style={{fontSize:13,color:"#c0b8a8",lineHeight:1.55}}>{step.tip}</div>
-              </div>
-            </div>
-          ))}
-
-          {/* I understand checkbox */}
           <button onClick={()=>{if(!understood){setLevelChecks(p=>({...p,"double-rm-understood":true}));if(onCheckChange)onCheckChange("double-rm-understood",true);}}}
             style={{display:"flex",alignItems:"center",gap:14,background:understood?"rgba(200,145,60,0.14)":"rgba(255,210,140,0.04)",
               borderRadius:18,padding:"18px 18px",border:understood?"1.5px solid #bbf7d0":"none",
@@ -2386,8 +2361,9 @@ function Confetti(){
   );
 }
 
-function RedButton({me,goToMessages,urges,onOvercome,onLogSaved}){
-  const [state,       setState]    =useState("idle");
+function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onStartConsumed}){
+  const [state,       setState]    =useState(startState||"idle");
+  useEffect(()=>{ if(startState&&startState!=="idle"&&onStartConsumed) onStartConsumed(); },[]);
   const [left,        setLeft]     =useState(DEMO_SECS);
   const [wh,          setWh]       =useState("");
   const [nx,          setNx]       =useState("");
@@ -3055,6 +3031,7 @@ const TABS=[
 
 function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboarding,onLogout,onRefreshUsers}){
   const [tab,       setTab]      =useState("home");
+  const [urgeStart, setUrgeStart]=useState("idle");
   const [urges,     setUrges]    =useState(initMe.urges);
   const [groupMsgs, setGroupMsgs]=useState([]);
   const [channels,  setChannels] =useState([]);
@@ -3294,11 +3271,11 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
 
       {/* Content */}
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",minHeight:0}}>
-        {tab==="home"     &&<Dashboard  me={me} logs={logs} library={library} users={allUsers} urges={urges} groupMsgs={groupMsgs} onTabChange={setTab} onProfile={setProfile} callLink={callLink} startHereVideo={startHereVideo} myWhy={myWhy} setMyWhy={setMyWhy} checkIns={checkIns} onCheckIn={handleCheckIn} levelChecks={levelChecks} setLevelChecks={setLevelChecks} onCheckChange={handleLevelCheckChange} onboardingDone={!showOnboarding} hunterUnread={(dmMsgs[dmKey(me.id,HUNTER_UUID)]||[]).filter(m=>!m.isRead&&m.fromId===HUNTER_UUID).length} onGoToChannel={(slug)=>{setOpenChannelSlug(slug);setTab("messages");}}/>}
+        {tab==="home"     &&<Dashboard  me={me} logs={logs} library={library} users={allUsers} urges={urges} groupMsgs={groupMsgs} onTabChange={setTab} onProfile={setProfile} callLink={callLink} startHereVideo={startHereVideo} myWhy={myWhy} setMyWhy={setMyWhy} checkIns={checkIns} onCheckIn={handleCheckIn} levelChecks={levelChecks} setLevelChecks={setLevelChecks} onCheckChange={handleLevelCheckChange} onboardingDone={!showOnboarding} hunterUnread={(dmMsgs[dmKey(me.id,HUNTER_UUID)]||[]).filter(m=>!m.isRead&&m.fromId===HUNTER_UUID).length} onGoToChannel={(slug)=>{setOpenChannelSlug(slug);setTab("messages");}} onLogSlip={()=>{setUrgeStart("gave-in-journal");setTab("urge");}}/>}
         {tab==="messages" &&<MessagesScreen me={me} users={allUsers} channels={channels} groupMsgs={groupMsgs} setGroupMsgs={setGroupMsgs} dmMsgs={dmMsgs} setDmMsgs={setDmMsgs} openChannelSlug={openChannelSlug} setOpenChannelSlug={setOpenChannelSlug}/>}
         {tab==="calendar" &&<CalendarTab/>}
         {tab==="library"  &&<Library    me={me} library={library} setLibrary={setLibrary} callLink={callLink} onBadgeEarned={handleBadgeEarned}/>}
-        {tab==="urge"     &&<RedButton  me={me} goToMessages={()=>setTab("chat")} urges={urges} onOvercome={handleOvercome} onLogSaved={handleLogSaved}/>}
+        {tab==="urge"     &&<RedButton  me={me} goToMessages={()=>setTab("chat")} urges={urges} onOvercome={handleOvercome} onLogSaved={handleLogSaved} startState={urgeStart} onStartConsumed={()=>setUrgeStart("idle")}/>}
       </div>
 
       {/* Nav — frosted glass */}
@@ -3307,7 +3284,7 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
           const isUrge=t.id==="urge";
           const active=tab===t.id;
           return(
-            <button key={t.id} onClick={()=>{setTab(t.id);}} style={{
+            <button key={t.id} onClick={()=>{if(t.id==="urge")setUrgeStart("idle");setTab(t.id);}} style={{
               flex:1,padding:isUrge?"0 0 8px":"9px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:isUrge?0:2,
               background:"none",border:"none",color:active?"#c8913c":"#3a3028",transition:"color 0.2s"
             }}>
