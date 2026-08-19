@@ -265,7 +265,7 @@ const LEVELS = [
      {id:"charger",    type:"check", label:"Move your charger out of the bedroom", detail:"Charge your phone in the hallway or kitchen tonight."},
      {id:"timelimits", type:"check", label:"Set app time limits with a passcode", detail:"Go to Screen Time → App Limits. Set a passcode someone else knows."},
      {id:"firsturge",  type:"check", label:"Log your first urge", detail:"Hit the red button next time an urge hits — no matter the outcome."},
-     {id:"introduce",  type:"check", label:"Introduce yourself in #general", detail:"Tap to open the group chat and say hi.", goToChannel:"general"},
+     {id:"introduce",  type:"check", label:"Introduce yourself in #general", detail:"Go to the Messages tab and say hi to the group."},
    ]},
   {id:"fighter",  name:"Fighter",  emoji:"🥊", tagline:"Learn the tools that actually work.",
    items:[
@@ -1092,10 +1092,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                 {l1Items.map((item,i)=>{
                   const checked=!!effectiveChecks[item.id];
                   return(
-                    <button key={item.id} onClick={()=>{
-                        if(!effectiveChecks[item.id]) toggleCheck(item.id);
-                        if(item.goToChannel&&onGoToChannel) onGoToChannel(item.goToChannel);
-                      }}
+                    <button key={item.id} onClick={()=>toggleCheck(item.id)}
                       style={{display:"flex",alignItems:"flex-start",gap:13,padding:"12px 2px",background:"none",border:"none",textAlign:"left",width:"100%",
                         borderTop:i>0?"0.5px solid rgba(255,210,140,0.05)":"none",cursor:"pointer"}}>
                       <div style={{width:24,height:24,borderRadius:8,flexShrink:0,marginTop:1,
