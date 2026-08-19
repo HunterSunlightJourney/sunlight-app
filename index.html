@@ -261,7 +261,7 @@ const MOODS      = [{emoji:"😔",label:"Rough"},{emoji:"😐",label:"Okay"},{em
 const LEVELS = [
   {id:"beginner", name:"Start Here", emoji:"🌱", tagline:"Build your foundation.",
    items:[
-     {id:"onboarding", type:"check", label:"Complete your onboarding", detail:"Answer a few quick questions to personalize your experience."},
+     {id:"onboarding", type:"check", label:"Complete your onboarding", detail:"Answer a few quick questions to personalize your experience.", taskLink:"https://sunlightjourney.com/on-boarding-sunlight"},
      {id:"charger",    type:"check", label:"Move your charger out of the bedroom", detail:"Charge your phone in the hallway or kitchen tonight."},
      {id:"timelimits", type:"check", label:"Set app time limits with a passcode", detail:"Go to Screen Time → App Limits. Set a passcode someone else knows.", taskVideo:"https://vimeo.com/1219627744?share=copy&fl=sv&fe=ci"},
      {id:"firsturge",  type:"check", label:"Log your first urge", detail:"Hit the red button next time an urge hits — no matter the outcome."},
@@ -1092,7 +1092,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                 {l1Items.map((item,i)=>{
                   const checked=!!effectiveChecks[item.id];
                   return(
-                    <button key={item.id} onClick={()=>item.taskVideo?setSubPage({type:"task",id:item.id,item}):toggleCheck(item.id)}
+                    <button key={item.id} onClick={()=>(item.taskVideo||item.taskLink)?setSubPage({type:"task",id:item.id,item}):toggleCheck(item.id)}
                       style={{display:"flex",alignItems:"flex-start",gap:13,padding:"12px 2px",background:"none",border:"none",textAlign:"left",width:"100%",
                         borderTop:i>0?"0.5px solid rgba(255,210,140,0.05)":"none",cursor:"pointer"}}>
                       <div style={{width:24,height:24,borderRadius:8,flexShrink:0,marginTop:1,
@@ -1193,6 +1193,12 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
             </div>
           )}
           <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.7}}>{item.detail}</div>
+          {item.taskLink&&(
+            <a href={item.taskLink} target="_blank" rel="noreferrer"
+              style={{display:"flex",alignItems:"center",justifyContent:"center",padding:16,borderRadius:14,fontSize:15,fontWeight:800,background:"#1e1b17",color:"#ede4d0",textDecoration:"none",border:"1.5px solid rgba(255,210,140,0.1)"}}>
+              Open Form →
+            </a>
+          )}
           <button onClick={()=>{if(!done)toggleCheck(item.id);setSubPage({type:"level",id:"beginner"});}}
             style={{width:"100%",padding:16,borderRadius:14,fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",
               background:done?"rgba(200,145,60,0.14)":"#c8541a",color:done?"#c8913c":"#fff"}}>
