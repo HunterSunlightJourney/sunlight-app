@@ -263,7 +263,7 @@ const LEVELS = [
    items:[
      {id:"onboarding", type:"check", label:"Complete your onboarding", detail:"Answer a few quick questions to personalize your experience."},
      {id:"charger",    type:"check", label:"Move your charger out of the bedroom", detail:"Charge your phone in the hallway or kitchen tonight."},
-     {id:"timelimits", type:"check", label:"Set app time limits with a passcode", detail:"Go to Screen Time → App Limits. Set a passcode someone else knows."},
+     {id:"timelimits", type:"check", label:"Set app time limits with a passcode", detail:"Go to Screen Time → App Limits. Set a passcode someone else knows.", taskVideo:"https://vimeo.com/1219627744?share=copy&fl=sv&fe=ci"},
      {id:"firsturge",  type:"check", label:"Log your first urge", detail:"Hit the red button next time an urge hits — no matter the outcome."},
      {id:"introduce",  type:"check", label:"Introduce yourself in #general", detail:"Go to the Messages tab and say hi to the group."},
    ]},
@@ -1092,7 +1092,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                 {l1Items.map((item,i)=>{
                   const checked=!!effectiveChecks[item.id];
                   return(
-                    <button key={item.id} onClick={()=>toggleCheck(item.id)}
+                    <button key={item.id} onClick={()=>item.taskVideo?setSubPage({type:"task",id:item.id,item}):toggleCheck(item.id)}
                       style={{display:"flex",alignItems:"flex-start",gap:13,padding:"12px 2px",background:"none",border:"none",textAlign:"left",width:"100%",
                         borderTop:i>0?"0.5px solid rgba(255,210,140,0.05)":"none",cursor:"pointer"}}>
                       <div style={{width:24,height:24,borderRadius:8,flexShrink:0,marginTop:1,
@@ -1162,6 +1162,42 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
               <div style={{fontSize:13,color:"#7a7068",lineHeight:1.6}}>You're ahead of schedule. Check back soon.</div>
             </div>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Task detail page (video + complete) ──
+  if(subPage?.type==="task"){
+    const item=subPage.item;
+    const done=!!effectiveChecks[item.id];
+    const videoUrl=item.taskVideo&&item.taskVideo!=="PLACEHOLDER"?item.taskVideo:null;
+    const vimeoId=videoUrl?videoUrl.match(/vimeo\.com\/(\d+)/)?.[1]:null;
+    const ytId=videoUrl?videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)?.[1]:null;
+    const embedSrc=vimeoId?`https://player.vimeo.com/video/${vimeoId}`:ytId?`https://www.youtube.com/embed/${ytId}`:null;
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage({type:"level",id:"beginner"})} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>START HERE</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:16}}>
+          <div style={{fontWeight:800,fontSize:20,color:"#ede4d0",letterSpacing:"-0.02em",lineHeight:1.3}}>{item.label}</div>
+          {embedSrc?(
+            <div style={{borderRadius:18,overflow:"hidden",background:"#000",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",aspectRatio:"16/9",position:"relative"}}>
+              <iframe src={embedSrc} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none"}} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+            </div>
+          ):(
+            <div style={{borderRadius:18,background:"#1e1b17",aspectRatio:"16/9",display:"flex",alignItems:"center",justifyContent:"center",border:"1.5px dashed rgba(255,210,140,0.1)"}}>
+              <div style={{textAlign:"center",color:"#7a7068",fontSize:13}}>Video coming soon</div>
+            </div>
+          )}
+          <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.7}}>{item.detail}</div>
+          <button onClick={()=>{if(!done)toggleCheck(item.id);setSubPage({type:"level",id:"beginner"});}}
+            style={{width:"100%",padding:16,borderRadius:14,fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",
+              background:done?"rgba(200,145,60,0.14)":"#c8541a",color:done?"#c8913c":"#fff"}}>
+            {done?"✓ Already completed":"Mark as complete"}
+          </button>
         </div>
       </div>
     );
