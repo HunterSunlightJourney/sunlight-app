@@ -2363,7 +2363,10 @@ function Confetti(){
 
 function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onStartConsumed}){
   const [state,       setState]    =useState(startState||"idle");
-  useEffect(()=>{ if(startState&&startState!=="idle"&&onStartConsumed) onStartConsumed(); },[]);
+  useEffect(()=>{
+    if(startState&&startState!=="idle"&&onStartConsumed) onStartConsumed();
+    if(startState==="gave-in-journal") setLogTime(new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}));
+  },[]);
   const [left,        setLeft]     =useState(DEMO_SECS);
   const [wh,          setWh]       =useState("");
   const [nx,          setNx]       =useState("");
@@ -2637,9 +2640,8 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onSta
     <div style={{flex:1,overflowY:"auto",padding:"22px 20px"}}>
       {outcome==="gave-in"?(
         <div style={{background:"#1e1b17",borderRadius:20,padding:"22px 20px",marginBottom:22,textAlign:"center"}}>
-          <div style={{fontSize:13,color:"rgba(255,255,255,0.45)",fontWeight:700,letterSpacing:"0.06em",marginBottom:12}}>REMEMBER THIS</div>
-          <div style={{fontSize:17,color:"#fff",fontWeight:600,lineHeight:1.65,letterSpacing:"-0.01em"}}>
-            You only truly fail when you stop being curious. Ask yourself what just happened — honestly — and you've already gotten 1% better. That's exactly how this works.
+          <div style={{fontSize:17,color:"#fff",fontWeight:700,lineHeight:1.65,letterSpacing:"-0.01em"}}>
+            The only way we fail is we do not reflect and learn from this experience.
           </div>
         </div>
       ):(
@@ -2649,6 +2651,54 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onSta
           <div style={{fontSize:14,color:"#7a7068",fontWeight:500}}>This is where the real growth happens.</div>
         </div>
       )}
+
+      {outcome==="gave-in"&&(
+        <>
+          {/* What time */}
+          <div className="card" style={{padding:"16px 18px",marginBottom:14}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:10,letterSpacing:"0.08em"}}>WHAT TIME WAS IT?</div>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <input value={logTime} onChange={e=>setLogTime(e.target.value)}
+                style={{flex:1,background:"#252118",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:10,padding:"10px 14px",fontSize:15,outline:"none",color:"#ede4d0",fontWeight:600}}/>
+              <button onClick={()=>setLogTime(new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}))} style={{background:"#1a1714",border:"none",borderRadius:10,padding:"10px 14px",fontSize:12,color:"#c0b8a8",fontWeight:700}}>Now</button>
+            </div>
+          </div>
+
+          {/* Where */}
+          <div className="card" style={{padding:"16px 18px",marginBottom:14}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:12,letterSpacing:"0.08em"}}>WHERE WERE YOU?</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+              {LOCATIONS.map(l=><Chip key={l} label={l} sel={location===l} onSel={()=>setLocation(l)}/>)}
+            </div>
+          </div>
+
+          {/* Trigger */}
+          <div className="card" style={{padding:"16px 18px",marginBottom:14}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:12,letterSpacing:"0.08em"}}>WHAT TRIGGERED IT?</div>
+            <div style={{display:"flex",gap:10,marginBottom:triggerType==="saw"?14:0}}>
+              <button onClick={()=>{setTrigType("thought");setPlatform("");}} style={{flex:1,padding:16,borderRadius:14,border:"1.5px solid",textAlign:"center",
+                background:triggerType==="thought"?"#c8541a":"rgba(255,210,140,0.05)",color:triggerType==="thought"?"#fff":"#8a8078",borderColor:triggerType==="thought"?"#c8541a":"rgba(255,210,140,0.1)"}}>
+                <div style={{fontSize:26,marginBottom:5}}>💭</div>
+                <div style={{fontSize:13,fontWeight:700,lineHeight:1.3}}>Something I thought of</div>
+              </button>
+              <button onClick={()=>setTrigType("saw")} style={{flex:1,padding:16,borderRadius:14,border:"1.5px solid",textAlign:"center",
+                background:triggerType==="saw"?"#c8541a":"rgba(255,210,140,0.05)",color:triggerType==="saw"?"#fff":"#8a8078",borderColor:triggerType==="saw"?"#c8541a":"rgba(255,210,140,0.1)"}}>
+                <div style={{fontSize:26,marginBottom:5}}>👁</div>
+                <div style={{fontSize:13,fontWeight:700,lineHeight:1.3}}>Something I saw</div>
+              </button>
+            </div>
+            {triggerType==="saw"&&(
+              <div style={{animation:"slideUp 0.25s ease"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:10,letterSpacing:"0.08em"}}>WHERE DID YOU SEE IT?</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+                  {PLATFORMS.map(p=><Chip key={p} label={p} sel={platform===p} onSel={()=>setPlatform(p)}/>)}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       <div style={{marginBottom:16}}>
         <div style={{fontSize:12,fontWeight:700,color:"#c0b8a8",marginBottom:10,letterSpacing:"0.04em"}}>HOW WERE YOU FEELING?</div>
         <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
@@ -3495,4 +3545,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(<ErrorBoundary><App/
 </script>
 </body>
 </html>
-
