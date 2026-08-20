@@ -1730,6 +1730,36 @@ function VoiceMessage({data,isMe}){
   );
 }
 
+function MsgSubHeader({name,subtitle,left,onBack}){
+  return(
+    <div className="frosted-light" style={{borderBottom:"0.5px solid rgba(255,210,140,0.07)",padding:"12px 16px",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
+      <button onClick={onBack} style={{background:"none",border:"none",fontSize:22,color:"#c0b8a8",padding:0,lineHeight:1,cursor:"pointer"}}>←</button>
+      {left}
+      <div style={{flex:1}}>
+        <div style={{fontWeight:700,fontSize:16,color:"#ede4d0",letterSpacing:"-0.01em"}}>{name}</div>
+        {subtitle&&<div style={{fontSize:11,color:"#7a7068",fontWeight:500}}>{subtitle}</div>}
+      </div>
+    </div>
+  );
+}
+function MsgConvoRow({icon,name,preview,badge,onClick,pinned}){
+  return(
+    <div onClick={onClick} style={{margin:"0 12px 3px",background:"#1e1b17",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+      <div style={{width:44,height:44,borderRadius:"50%",background:"#252118",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0,overflow:"hidden"}}>
+        {typeof icon==="string"?icon:<div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>{icon}</div>}
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:5}}>
+          {pinned&&<span style={{fontSize:10,color:"#7a7068"}}>📌</span>}
+          <span style={{fontWeight:700,fontSize:15,color:"#ede4d0"}}>{name}</span>
+        </div>
+        {preview&&<div style={{fontSize:12,color:"#7a7068",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:200}}>{preview}</div>}
+      </div>
+      {badge>0&&<div style={{minWidth:20,height:20,borderRadius:10,background:"#c8913c",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#fff",padding:"0 5px"}}>{badge}</div>}
+    </div>
+  );
+}
+
 function ChatView({me,users,msgs,setMsgs,channelId,dmToId,isChannel}){
   const [inp,setInp]=useState("");
   const [anon,setAnon]=useState(false);
@@ -1870,17 +1900,6 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
   };
   const back=()=>{setView("list");setActiveChannel(null);setActiveDmUid(null);};
 
-  const SubHeader=({name,subtitle,left})=>(
-    <div className="frosted-light" style={{borderBottom:"0.5px solid rgba(255,210,140,0.07)",padding:"12px 16px",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-      <button onClick={back} style={{background:"none",border:"none",fontSize:22,color:"#c0b8a8",padding:0,lineHeight:1,cursor:"pointer"}}>←</button>
-      {left}
-      <div style={{flex:1}}>
-        <div style={{fontWeight:700,fontSize:16,color:"#ede4d0",letterSpacing:"-0.01em"}}>{name}</div>
-        {subtitle&&<div style={{fontSize:11,color:"#7a7068",fontWeight:500}}>{subtitle}</div>}
-      </div>
-    </div>
-  );
-
   if(view==="channel"&&activeChannel){
     const chanMsgs=getChannelMsgs(activeChannel);
     const setChanMsgs=fn=>setGroupMsgs(all=>{
@@ -1890,7 +1909,7 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
     });
     return(
       <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-        <SubHeader name={`# ${activeChannel.name}`} subtitle={activeChannel.desc||"Group channel"}/>
+        <MsgSubHeader name={`# ${activeChannel.name}`} subtitle={activeChannel.desc||"Group channel"} onBack={back}/>
         <ChatView me={me} users={users} msgs={chanMsgs} setMsgs={setChanMsgs} channelId={activeChannel.id} isChannel={true}/>
       </div>
     );
@@ -1903,10 +1922,11 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
     const setThread=fn=>setDmMsgs(p=>({...p,[k]:typeof fn==="function"?fn(p[k]||[]):fn}));
     return(
       <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-        <SubHeader
+        <MsgSubHeader
           name={dmUser?dmUser.name:"..."}
           subtitle={dmUser?.id===HUNTER_UUID?"👑 Your Coach":dmUser?"🔴 "+dmUser.urges+" urges overcome":""}
-          left={dmUser&&<Avatar user={dmUser} size={34}/>}/>
+          left={dmUser&&<Avatar user={dmUser} size={34}/>}
+          onBack={back}/>
         <ChatView me={me} users={users} msgs={thread} setMsgs={setThread} dmToId={activeDmUid} isChannel={false}/>
       </div>
     );
@@ -1916,36 +1936,20 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
   const generalCh=channels.find(c=>c.slug==="general");
   const otherChs=channels.filter(c=>c.slug!=="general");
 
-  const ConvoRow=({icon,name,preview,badge,onClick,pinned})=>(
-    <div onClick={onClick} style={{margin:"0 12px 3px",background:"#1e1b17",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
-      <div style={{width:44,height:44,borderRadius:"50%",background:"#252118",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0,overflow:"hidden"}}>
-        {typeof icon==="string"?icon:<div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>{icon}</div>}
-      </div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:5}}>
-          {pinned&&<span style={{fontSize:10,color:"#7a7068"}}>📌</span>}
-          <span style={{fontWeight:700,fontSize:15,color:"#ede4d0"}}>{name}</span>
-        </div>
-        {preview&&<div style={{fontSize:12,color:"#7a7068",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:200}}>{preview}</div>}
-      </div>
-      {badge>0&&<div style={{minWidth:20,height:20,borderRadius:10,background:"#c8913c",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#fff",padding:"0 5px"}}>{badge}</div>}
-    </div>
-  );
-
   return(
     <div style={{height:"100%",overflowY:"auto",background:"#141210",paddingBottom:16}}>
       <div style={{padding:"16px 16px 8px",fontSize:11,fontWeight:700,color:"#6a6058",letterSpacing:"0.08em"}}>📌 PINNED</div>
-      {generalCh&&<ConvoRow icon="💬" name="# general" preview={getChannelMsgs(generalCh).at(-1)?.text} pinned onClick={()=>openChannel(generalCh)}/>}
-      {hunter&&<ConvoRow icon={<Avatar user={hunter} size={44}/>} name="Coach Hunter" preview={getDmThread(hunter.id).at(-1)?.text||"Tap to message your coach"} badge={hunterUnreadCount} pinned onClick={()=>openDm(hunter.id)}/>}
+      {generalCh&&<MsgConvoRow icon="💬" name="# general" preview={getChannelMsgs(generalCh).at(-1)?.text} pinned onClick={()=>openChannel(generalCh)}/>}
+      {hunter&&<MsgConvoRow icon={<Avatar user={hunter} size={44}/>} name="Coach Hunter" preview={getDmThread(hunter.id).at(-1)?.text||"Tap to message your coach"} badge={hunterUnreadCount} pinned onClick={()=>openDm(hunter.id)}/>}
 
       <div style={{padding:"16px 16px 8px",fontSize:11,fontWeight:700,color:"#6a6058",letterSpacing:"0.08em"}}>CHANNELS</div>
       {otherChs.map(ch=>(
-        <ConvoRow key={ch.id} icon="＃" name={ch.name} preview={getChannelMsgs(ch).at(-1)?.text} onClick={()=>openChannel(ch)}/>
+        <MsgConvoRow key={ch.id} icon="＃" name={ch.name} preview={getChannelMsgs(ch).at(-1)?.text} onClick={()=>openChannel(ch)}/>
       ))}
 
       <div style={{padding:"16px 16px 8px",fontSize:11,fontWeight:700,color:"#6a6058",letterSpacing:"0.08em"}}>DIRECT MESSAGES</div>
       {otherUsers.map(u=>(
-        <ConvoRow key={u.id} icon={<Avatar user={u} size={44}/>} name={u.name} preview={getDmThread(u.id).at(-1)?.text||"No messages yet"} onClick={()=>openDm(u.id)}/>
+        <MsgConvoRow key={u.id} icon={<Avatar user={u} size={44}/>} name={u.name} preview={getDmThread(u.id).at(-1)?.text||"No messages yet"} onClick={()=>openDm(u.id)}/>
       ))}
       {otherUsers.length===0&&<div style={{textAlign:"center",padding:"24px",color:"#7a7068",fontSize:13}}>Other members will appear here</div>}
     </div>
