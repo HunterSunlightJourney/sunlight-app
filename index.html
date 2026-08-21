@@ -258,6 +258,10 @@ const PLATFORMS  = ["Instagram","TikTok","YouTube","Twitter / X","TV","Internet 
 const COLORS     = ["#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899","#111827"];
 const MOODS      = [{emoji:"😔",label:"Rough"},{emoji:"😐",label:"Okay"},{emoji:"😊",label:"Good"},{emoji:"💪",label:"Strong"},{emoji:"🔥",label:"Locked in"}];
 
+const OU_VIDEOS=[
+  {id:"ou-video-1",title:"Lesson 1: How to Overcome Urges",loomId:"204340e7a57a44a49c322054e13ff6fc"},
+];
+
 const LEVELS = [
   {id:"beginner", name:"Start Here", emoji:"🌱", tagline:"Build your foundation.",
    items:[
@@ -957,6 +961,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
   const l1Items=LEVELS[0].items;
   const l1Done=l1Items.filter(it=>effectiveChecks[it.id]).length;
   const l1Complete=l1Done===l1Items.length;
+  const ouDone=OU_VIDEOS.filter(v=>effectiveChecks[v.id]).length;
   const l2Items=LEVELS[1].items;
   const l2Done=l2Items.filter(it=>effectiveChecks[it.checkId]).length;
   const l2Complete=l2Done===l2Items.length;
@@ -1418,14 +1423,62 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
 
   // ── Generic training card sub-pages ──
   if(subPage?.type==="card"){
+
+    // ── Overcome Urges: video-based training ──
+    if(subPage.id==="overcome-urges"){
+      const toggleVideo=(id)=>{
+        const newVal=!effectiveChecks[id];
+        setLevelChecks(p=>({...p,[id]:newVal}));
+        if(onCheckChange) onCheckChange(id,newVal);
+      };
+      return(
+        <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+          <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+            <button onClick={()=>setSubPage(null)} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>TRAINING</div>
+          </div>
+          <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:20}}>
+            {/* Hero */}
+            <div style={{background:"#1e1b17",borderRadius:22,padding:"20px 22px"}}>
+              <div style={{fontSize:26,fontWeight:900,color:"#ede4d0",letterSpacing:"-0.03em",lineHeight:1.15,marginBottom:6}}>💪 How to Overcome Urges</div>
+              <div style={{fontSize:14,color:"#8a8078",lineHeight:1.6,marginBottom:14}}>Complete each lesson below to build your toolkit.</div>
+              <div style={{height:6,borderRadius:999,background:"rgba(255,210,140,0.08)",overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:999,background:"#50a05a",transition:"width 0.6s ease",width:OU_VIDEOS.length?`${Math.round(ouDone/OU_VIDEOS.length*100)}%`:"0%"}}/>
+              </div>
+              <div style={{fontSize:11,color:"#7a7068",marginTop:6,fontWeight:600}}>{ouDone}/{OU_VIDEOS.length} lessons complete</div>
+            </div>
+
+            {/* Video lessons */}
+            {OU_VIDEOS.map((vid,i)=>{
+              const done=!!effectiveChecks[vid.id];
+              return(
+                <div key={vid.id} style={{background:"#1e1b17",borderRadius:20,overflow:"hidden",border:"1.5px solid rgba(255,210,140,0.08)",animation:`slideUp 0.3s ${i*0.08}s both`}}>
+                  {/* Video embed */}
+                  <div style={{position:"relative",paddingBottom:"56.25%",height:0,background:"#000"}}>
+                    <iframe
+                      src={`https://www.loom.com/embed/${vid.loomId}`}
+                      style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
+                      allowFullScreen/>
+                  </div>
+                  {/* Lesson info + complete button */}
+                  <div style={{padding:"16px 18px"}}>
+                    <div style={{fontSize:11,fontWeight:800,color:"#50a05a",letterSpacing:"0.08em",marginBottom:4}}>LESSON {i+1}</div>
+                    <div style={{fontWeight:800,fontSize:16,color:"#ede4d0",letterSpacing:"-0.01em",marginBottom:14}}>{vid.title}</div>
+                    <button onClick={()=>toggleVideo(vid.id)}
+                      style={{width:"100%",padding:14,borderRadius:12,fontSize:14,fontWeight:800,border:"none",letterSpacing:"-0.01em",
+                        background:done?"rgba(80,160,90,0.15)":"#50a05a",color:done?"#50a05a":"#fff",transition:"all 0.2s"}}>
+                      {done?"✓ Lesson complete":"Mark lesson complete"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     const CARD_META={
-      "overcome-urges":{emoji:"💪",title:"How to Overcome Urges",tagline:"The tools that actually work in the moment — not just willpower.",accent:"#c8541a",items:[
-        {icon:"🧠",h:"Name the urge",b:"Say it out loud: \"This is an urge. It isn't me.\" Naming it creates distance. You're the observer, not the urge."},
-        {icon:"⏱",h:"Surf it — don't fight it",b:"Urges peak and fade in 15–20 minutes. Your job isn't to kill it, it's to outlast it. Every time you do, the next one is weaker."},
-        {icon:"🌬",h:"Box breathe",b:"In 4 seconds. Hold 4. Out 4. Hold 4. This directly lowers arousal and resets your nervous system. Do it 3 times minimum."},
-        {icon:"🚶",h:"Change your location",b:"Get up and move to a different room or outside. Urges are partly environmental — the trigger is where you are. Leave."},
-        {icon:"📞",h:"Call your partner or the group",b:"A 2-minute call breaks the loop. You don't have to explain everything. Just saying \"I'm having a hard moment\" is enough."},
-      ]},
       "sexual-mastery":{emoji:"🔥",title:"Sexual Mastery",tagline:"Understanding your drive and directing it toward what actually matters.",accent:"#c8913c",items:[
         {icon:"⚡",h:"Energy is neutral",b:"Your sex drive isn't the problem — it's one of your most powerful sources of motivation and creativity. The question is what you're pointing it at."},
         {icon:"🎯",h:"Redirect, don't suppress",b:"Cold showers, hard workouts, meaningful work — when you feel the energy, channel it. Suppression builds pressure. Redirection builds power."},
@@ -1526,10 +1579,10 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                titleColor:"#c8541a",titleColorLine:2,
                action:()=>setSubPage({type:"method",id:"double-rm"})},
 
-              {title:["OVERCOME","URGES"],badge:"💪 Tools",
+              {title:["OVERCOME","URGES"],badge:"💪 Training",
                bg:"linear-gradient(145deg,#0c1a10 0%,#081209 60%,#050c06 100%)",
                border:"rgba(80,160,90,0.22)",glow:"rgba(80,160,90,0.18)",badgeBg:"rgba(55,120,65,0.9)",
-               done:0,total:5,
+               done:ouDone,total:OU_VIDEOS.length,
                action:()=>setSubPage({type:"card",id:"overcome-urges"})},
 
               {title:["SEXUAL","MASTERY"],badge:"🔥 Mastery",
