@@ -249,7 +249,6 @@ const SEED_LOGS = [
 ];
 
 const MILESTONES = [1,5,10,25,50,100];
-const BLOCKLIST  = ["Instagram","Reddit","Twitter / X","Safari"];
 const DEMO_SECS  = 30;
 const TRIGGERS   = ["Boredom","Stress","Loneliness","Anxiety","Late night","Alcohol","Social media","Other"];
 const EMOTIONS   = ["😰 Anxious","😔 Sad","😤 Frustrated","😴 Tired","🥱 Bored","😊 Okay"];
@@ -1792,7 +1791,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
           </div>
           <div style={{display:"flex",gap:7,flexShrink:0}}>
             <button onClick={()=>onTabChange("urge")} style={{padding:"8px 13px",borderRadius:12,background:"#c8541a",color:"#fff",border:"none",fontSize:13,fontWeight:700,boxShadow:"0 3px 12px rgba(200,84,26,0.3)"}}>
-              🌬 Track
+              🔥 Track
             </button>
             <button onClick={()=>setSubPage({type:"journal"})} style={{padding:"8px 12px",borderRadius:12,background:"rgba(255,210,140,0.07)",color:"#c0b8a8",border:"1px solid rgba(255,210,140,0.1)",fontSize:13,fontWeight:600}}>
               📓
@@ -2565,8 +2564,6 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onSta
   const [wh,          setWh]       =useState("");
   const [nx,          setNx]       =useState("");
   const [selEmo,      setEmo]      =useState("");
-  const [bl,          setBl]       =useState(BLOCKLIST.reduce((a,k)=>({...a,[k]:true}),{}));
-  const [blOpen,      setBlOpen]   =useState(false);
   // reflect form
   const [logTime,     setLogTime]  =useState("");
   const [location,    setLocation] =useState("");
@@ -2933,7 +2930,7 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onSta
           animation:"pulse 3s infinite",
           boxShadow:"0 0 0 14px rgba(157,61,46,0.1),0 0 0 28px rgba(157,61,46,0.05),0 16px 48px rgba(100,30,10,0.55)"
         }}>
-          <div style={{fontSize:28,lineHeight:1,filter:"drop-shadow(0 2px 8px rgba(0,0,0,0.4))"}}>🌬</div>
+          <div style={{fontSize:28,lineHeight:1,filter:"drop-shadow(0 2px 8px rgba(0,0,0,0.4))"}}>🔥</div>
           <span style={{fontWeight:700,fontSize:14,letterSpacing:"0.02em",textAlign:"center",lineHeight:1.5,maxWidth:130,color:"rgba(237,228,208,0.85)"}}>Tap if feeling an urge</span>
         </button>
 
@@ -2950,32 +2947,6 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onSta
           </div>
         )}
 
-        {/* Blocklist — collapsible */}
-        <div className="card" style={{width:"100%",overflow:"hidden"}}>
-          <button onClick={()=>setBlOpen(o=>!o)} style={{
-            width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
-            padding:"14px 18px",background:"none",border:"none",cursor:"pointer",textAlign:"left"
-          }}>
-            <div>
-              <div style={{fontWeight:700,color:"#c0b8a8",fontSize:15,letterSpacing:"-0.01em"}}>📵 App Blocklist</div>
-              <div style={{fontSize:12,color:"#7a7068",marginTop:2,fontWeight:500}}>Active during your 30-min break</div>
-            </div>
-            <div style={{fontSize:16,color:"#4a4038",transition:"transform 0.25s ease",transform:blOpen?"rotate(180deg)":"none"}}>▾</div>
-          </button>
-          {blOpen&&(
-            <div style={{borderTop:"0.5px solid rgba(255,210,140,0.07)",padding:"4px 18px 14px"}}>
-              {BLOCKLIST.map(app=>(
-                <div key={app} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 0",borderBottom:"0.5px solid rgba(255,210,140,0.05)"}}>
-                  <span style={{fontSize:15,color:"#c0b8a8",fontWeight:500}}>{app}</span>
-                  <button onClick={()=>setBl(b=>({...b,[app]:!b[app]}))} style={{width:48,height:28,borderRadius:14,border:"none",padding:"0 3px",
-                    background:bl[app]?"#c8541a":"rgba(255,210,140,0.08)",display:"flex",alignItems:"center",justifyContent:bl[app]?"flex-end":"flex-start",transition:"background 0.25s cubic-bezier(0.34,1.2,0.64,1)"}}>
-                    <div style={{width:22,height:22,borderRadius:"50%",background:"#ede4d0",boxShadow:"0 1px 4px rgba(0,0,0,0.3)"}}/>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
       </div>
     </div>
