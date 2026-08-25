@@ -1799,6 +1799,9 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
           </div>
         </div>
 
+        {/* ── TEST BUTTON ── */}
+        <button style={{width:"100%",padding:20,borderRadius:16,background:"#1e1b17",border:"none",fontSize:40,cursor:"pointer"}}>😊</button>
+
         {/* ── Accountability partner ── */}
         {partner&&(
           <div className="card" style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:13,cursor:"pointer"}} onClick={()=>onTabChange("messages")}>
