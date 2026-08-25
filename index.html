@@ -3052,7 +3052,6 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onSta
 // Recurring: day 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
 const RECURRING=[
   {id:"group-call",   title:"Weekly Group Call",         icon:"📞", day:4, hour:19, minute:0, color:"#c8541a",  desc:"Every Thursday at 7 PM — join on Zoom with the group."},
-  {id:"nervous-sys",  title:"Nervous System Reset",      icon:"🧘", day:6, hour:9,  minute:0, color:"#c8913c",  desc:"Every Saturday morning — breathwork & regulation practice."},
 ];
 
 // One-off special events (date in YYYY-MM-DD)
@@ -3301,6 +3300,19 @@ function CalendarTab(){
             )}
           </div>
         )}
+
+        {/* ── Retreat Announcement ── */}
+        <div style={{borderRadius:18,background:"linear-gradient(135deg,#2a1208 0%,#1a0d06 100%)",border:"1px solid rgba(157,61,46,0.4)",padding:"16px 18px",boxShadow:"0 4px 20px rgba(157,61,46,0.15)"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <span style={{fontSize:26}}>🏕</span>
+            <div>
+              <div style={{fontSize:11,fontWeight:800,color:"#9d3d2e",letterSpacing:"0.08em"}}>UPCOMING RETREAT</div>
+              <div style={{fontSize:17,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em"}}>Fall Retreat 2026</div>
+            </div>
+          </div>
+          <div style={{fontSize:13,color:"#c0b8a8",marginBottom:14}}>Sep 25–27 · 3 days together in person. Don't miss it.</div>
+          <a href="https://sunlightjourney.com/retreat" target="_blank" rel="noopener noreferrer" style={{display:"block",textAlign:"center",padding:"10px",borderRadius:12,background:"#9d3d2e",color:"#fff",fontWeight:700,fontSize:13,textDecoration:"none",boxShadow:"0 3px 12px rgba(157,61,46,0.4)"}}>Register Now →</a>
+        </div>
 
         {/* Upcoming list */}
         <div>
