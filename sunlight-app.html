@@ -249,7 +249,6 @@ const SEED_LOGS = [
 ];
 
 const MILESTONES = [1,5,10,25,50,100];
-const BLOCKLIST  = ["Instagram","Reddit","Twitter / X","Safari"];
 const DEMO_SECS  = 30;
 const TRIGGERS   = ["Boredom","Stress","Loneliness","Anxiety","Late night","Alcohol","Social media","Other"];
 const EMOTIONS   = ["😰 Anxious","😔 Sad","😤 Frustrated","😴 Tired","🥱 Bored","😊 Okay"];
@@ -258,14 +257,32 @@ const PLATFORMS  = ["Instagram","TikTok","YouTube","Twitter / X","TV","Internet 
 const COLORS     = ["#3b82f6","#8b5cf6","#10b981","#f59e0b","#ef4444","#ec4899","#111827"];
 const MOODS      = [{emoji:"😔",label:"Rough"},{emoji:"😐",label:"Okay"},{emoji:"😊",label:"Good"},{emoji:"💪",label:"Strong"},{emoji:"🔥",label:"Locked in"}];
 
+const FOUNDATION_WEEKS=[
+  {id:"week-1",title:"Week 1: Foundations",emoji:"🔑",lessons:[
+    {id:"f-1-1",title:"The Truth About What's Really Happening",loomId:"18b2596435b94ffc8a11c2c3bccd3841",
+     questions:["What emotions do you usually try to avoid or escape from?","What would change in your life if you could sit with those emotions instead of running from them?"]},
+    {id:"f-1-2",title:"Rethinking Success: Freedom vs. Counting Days",loomId:"1ced8455701144ff85701544ff172823",
+     questions:["How have you been defining \"success\" in your journey so far?","What would it look like for you to feel truly free — not just \"never viewing again\"?"]},
+    {id:"f-1-3",title:"Tips To Create Momentum",loomId:"87aeacbaf3214fa19f25a6aa7ad0e1cb",
+     questions:["What is one specific action you will take this week to build momentum?","What has been your biggest obstacle to maintaining momentum so far?"]},
+  ]},
+];
+const FOUNDATION_LESSONS=FOUNDATION_WEEKS.flatMap(w=>w.lessons);
+
+const OU_VIDEOS=[
+  {id:"ou-video-1",title:"What is an Urge",loomId:"32721b7f99bc4b54bee1728e61add92c"},
+  {id:"ou-video-2",title:"Urge Surfing",loomId:"9c4da656943a4b8aa922d96060fcae07"},
+  {id:"ou-video-3",title:"The SBM Method",loomId:"16048735ed3d493e8d7ee01ca6cab9b6"},
+];
+
 const LEVELS = [
-  {id:"beginner", name:"Beginner", emoji:"🌱", tagline:"Build your foundation.",
+  {id:"beginner", name:"Start Here", emoji:"🌱", tagline:"Build your foundation.",
    items:[
-     {id:"onboarding", type:"check", label:"Complete your onboarding", detail:"Answer a few quick questions to personalize your experience."},
+     {id:"onboarding", type:"check", label:"Complete your onboarding", detail:"Answer these questions as honestly and thorough as possible. Should take 5-10 minutes.", taskLink:"https://sunlightjourney.com/on-boarding-sunlight"},
      {id:"charger",    type:"check", label:"Move your charger out of the bedroom", detail:"Charge your phone in the hallway or kitchen tonight."},
-     {id:"timelimits", type:"check", label:"Set app time limits with a passcode", detail:"Go to Screen Time → App Limits. Set a passcode someone else knows."},
+     {id:"timelimits", type:"check", label:"Set app time limits with a passcode", detail:"Go to Screen Time → App Limits. Set a passcode someone else knows.", taskVideo:"https://vimeo.com/1219627744?share=copy&fl=sv&fe=ci"},
      {id:"firsturge",  type:"check", label:"Log your first urge", detail:"Hit the red button next time an urge hits — no matter the outcome."},
-     {id:"partner",    type:"check", label:"Connect with an accountability partner", detail:"Ask Coach Hunter to pair you up in the Group chat."},
+     {id:"introduce",  type:"check", label:"Introduce yourself in #general", detail:"Go to the Messages tab and say hi to the group."},
    ]},
   {id:"fighter",  name:"Fighter",  emoji:"🥊", tagline:"Learn the tools that actually work.",
    items:[
@@ -649,11 +666,12 @@ function ProfileModal({user,me,onClose,onDm,onPatterns}){
 
 // ─── Admin Panel ──────────────────────────────────────────────────────────────
 
-function AdminPanel({users,callLink,setCallLink,onClose,onUpdate,me}){
-  const [tab,       setTab]      =useState("members");
-  const [editing,   setEditing]  =useState(null);
-  const [form,      setForm]     =useState({});
-  const [linkDraft, setLinkDraft]=useState(callLink);
+function AdminPanel({users,callLink,setCallLink,startHereVideo,setStartHereVideo,onClose,onUpdate,me}){
+  const [tab,            setTab]          =useState("members");
+  const [editing,        setEditing]      =useState(null);
+  const [form,           setForm]         =useState({});
+  const [linkDraft,      setLinkDraft]    =useState(callLink);
+  const [videoDraft,     setVideoDraft]   =useState(startHereVideo);
   const setF=(k,v)=>setForm(p=>({...p,[k]:v}));
   const startEdit=u=>{setEditing(u.id);setForm({name:u.name,email:u.email,phone:u.phone,bio:u.bio||"",partnerId:u.partnerId||""});};
   const save=()=>{onUpdate(editing,{...form,partnerId:Number(form.partnerId)||null});setEditing(null);};
@@ -736,6 +754,12 @@ function AdminPanel({users,callLink,setCallLink,onClose,onUpdate,me}){
               style={{width:"100%",padding:"11px 14px",border:"1px solid rgba(255,210,140,0.08)",borderRadius:12,fontSize:14,outline:"none",color:"#ede4d0",marginBottom:10,background:"#1e1b17"}}/>
             <button onClick={()=>setCallLink(linkDraft)} style={{width:"100%",padding:13,borderRadius:12,background:"#1e1b17",color:"#fff",border:"none",fontSize:14,fontWeight:700}}>Save Link</button>
             {callLink&&<div style={{fontSize:12,color:"#c8913c",marginTop:10,textAlign:"center",fontWeight:600}}>✓ Live — members can book now</div>}
+            <div style={{marginTop:22,fontSize:13,fontWeight:700,color:"#c0b8a8",marginBottom:5}}>🎬 Start Here — Intro Video</div>
+            <div style={{fontSize:12,color:"#7a7068",marginBottom:12,lineHeight:1.6}}>Paste a Vimeo or YouTube link. Members will see a Watch Video button on the Start Here page.</div>
+            <input value={videoDraft} onChange={e=>setVideoDraft(e.target.value)} placeholder="https://vimeo.com/your-video"
+              style={{width:"100%",padding:"11px 14px",border:"1px solid rgba(255,210,140,0.08)",borderRadius:12,fontSize:14,outline:"none",color:"#ede4d0",marginBottom:10,background:"#1e1b17"}}/>
+            <button onClick={()=>setStartHereVideo(videoDraft)} style={{width:"100%",padding:13,borderRadius:12,background:"#1e1b17",color:"#fff",border:"none",fontSize:14,fontWeight:700}}>Save Video Link</button>
+            {startHereVideo&&<div style={{fontSize:12,color:"#c8913c",marginTop:10,textAlign:"center",fontWeight:600}}>✓ Live — members will see the video</div>}
           </div>
         )}
       </div>
@@ -866,7 +890,7 @@ function CompletionRingBadge({done,total}){
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,callLink,myWhy,setMyWhy,checkIns,onCheckIn,levelChecks,setLevelChecks,onCheckChange,onboardingDone,hunterUnread=0}){
+function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,callLink,startHereVideo,myWhy,setMyWhy,checkIns,onCheckIn,levelChecks,setLevelChecks,onCheckChange,onboardingDone,hunterUnread=0,onGoToChannel,onLogSlip}){
 
   // ── Smart tips engine → returns array of short punchy insights ──
   const tips=[];
@@ -941,18 +965,8 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
   const [insightsOpen,setInsightsOpen]=React.useState(false);
 
   // ── Level logic ──
-  // Auto-check onboarding item and first-urge item based on real state
-  const effectiveChecks={
-    ...levelChecks,
-    onboarding: onboardingDone||levelChecks.onboarding,
-    firsturge:  logs.length>0||levelChecks.firsturge,
-    partner:    !!partner||levelChecks.partner,
-  };
+  const effectiveChecks={...levelChecks};
   const toggleCheck=(id)=>{
-    // Never un-check auto-detected items
-    if(id==="onboarding"&&onboardingDone) return;
-    if(id==="firsturge"&&logs.length>0) return;
-    if(id==="partner"&&!!partner) return;
     const newVal=!levelChecks[id];
     setLevelChecks(p=>({...p,[id]:newVal}));
     if(onCheckChange) onCheckChange(id,newVal);
@@ -960,12 +974,29 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
   const l1Items=LEVELS[0].items;
   const l1Done=l1Items.filter(it=>effectiveChecks[it.id]).length;
   const l1Complete=l1Done===l1Items.length;
+  const ouDone=OU_VIDEOS.filter(v=>effectiveChecks[v.id]).length;
+  const foundationDone=FOUNDATION_LESSONS.filter(l=>effectiveChecks[l.id]).length;
   const l2Items=LEVELS[1].items;
   const l2Done=l2Items.filter(it=>effectiveChecks[it.checkId]).length;
   const l2Complete=l2Done===l2Items.length;
 
   // ── Sub-page navigation (level detail / method deep-dive / journal) ──
   const [subPage,setSubPage]=React.useState(null); // null | {type:"level",id} | {type:"method",id} | {type:"journal"}
+  const [lessonAnswers,setLessonAnswers]=React.useState({}); // {[lessonId]: string[]}
+  const [lessonDraft,setLessonDraft]=React.useState([]); // current editing draft
+  React.useEffect(()=>{
+    if(!me?.id) return;
+    sb.from("lesson_answers").select("lesson_id,question_idx,answer").eq("user_id",me.id)
+      .then(({data})=>{
+        if(!data) return;
+        const map={};
+        data.forEach(r=>{
+          if(!map[r.lesson_id]) map[r.lesson_id]=[];
+          map[r.lesson_id][r.question_idx]=r.answer;
+        });
+        setLessonAnswers(map);
+      });
+  },[me?.id]);
 
   // ── Journal page render ──
   if(subPage?.type==="journal"){
@@ -1052,27 +1083,40 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
         </div>
         <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:18}}>
           {/* Level hero */}
-          <div style={{background:"#1e1b17",borderRadius:22,padding:"22px 20px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.18)"}}>
-            <div style={{fontSize:38,marginBottom:10}}>{lv.emoji}</div>
-            <div style={{fontSize:26,fontWeight:800,letterSpacing:"-0.03em",marginBottom:4}}>Level {lvIndex+1} — {lv.name}</div>
-            <div style={{fontSize:14,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{lv.tagline}</div>
-            {lvIndex===0&&(
-              <>
-                <div style={{marginTop:16,height:5,borderRadius:999,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}>
+          {lvIndex===0?(
+            <>
+              <div style={{background:"#1e1b17",borderRadius:22,padding:"16px 18px 14px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.18)"}}>
+                <div style={{fontSize:20,fontWeight:800,letterSpacing:"-0.02em",marginBottom:2}}>Start Here</div>
+                <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",marginBottom:12}}>{lv.tagline}</div>
+                <div style={{height:4,borderRadius:999,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}>
                   <div style={{height:"100%",borderRadius:999,background:"linear-gradient(90deg,#c8913c,rgba(200,145,60,0.6))",width:`${Math.round(l1Done/l1Items.length*100)}%`,transition:"width 0.8s ease"}}/>
                 </div>
-                <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:6,fontWeight:600}}>{l1Done}/{l1Items.length} complete</div>
-              </>
-            )}
-            {lvIndex===1&&(
-              <>
-                <div style={{marginTop:16,height:5,borderRadius:999,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}>
-                  <div style={{height:"100%",borderRadius:999,background:"linear-gradient(90deg,#c8913c,rgba(200,145,60,0.6))",width:`${Math.round(l2Done/l2Items.length*100)}%`,transition:"width 0.8s ease"}}/>
-                </div>
-                <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:6,fontWeight:600}}>{l2Done}/{l2Items.length} complete</div>
-              </>
-            )}
-          </div>
+                <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:5,fontWeight:600}}>{l1Done}/{l1Items.length} complete</div>
+              </div>
+              {startHereVideo&&(()=>{
+                const vimeoId=startHereVideo.match(/vimeo\.com\/(\d+)/)?.[1];
+                const ytId=startHereVideo.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)?.[1];
+                const src=vimeoId?`https://player.vimeo.com/video/${vimeoId}`
+                         :ytId?`https://www.youtube.com/embed/${ytId}`
+                         :null;
+                return src?(
+                  <div style={{borderRadius:18,overflow:"hidden",background:"#000",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",aspectRatio:"16/9",position:"relative"}}>
+                    <iframe src={src} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none"}} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+                  </div>
+                ):null;
+              })()}
+            </>
+          ):(
+            <div style={{background:"#1e1b17",borderRadius:22,padding:"22px 20px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.18)"}}>
+              <div style={{fontSize:38,marginBottom:10}}>{lv.emoji}</div>
+              <div style={{fontSize:26,fontWeight:800,letterSpacing:"-0.03em",marginBottom:4}}>Level {lvIndex+1} — {lv.name}</div>
+              <div style={{fontSize:14,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{lv.tagline}</div>
+              <div style={{marginTop:16,height:5,borderRadius:999,background:"rgba(255,255,255,0.1)",overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:999,background:"linear-gradient(90deg,#c8913c,rgba(200,145,60,0.6))",width:`${Math.round(l2Done/l2Items.length*100)}%`,transition:"width 0.8s ease"}}/>
+              </div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:6,fontWeight:600}}>{l2Done}/{l2Items.length} complete</div>
+            </div>
+          )}
 
           {/* Level 1: checklist */}
           {lvIndex===0&&(
@@ -1082,7 +1126,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                 {l1Items.map((item,i)=>{
                   const checked=!!effectiveChecks[item.id];
                   return(
-                    <button key={item.id} onClick={()=>toggleCheck(item.id)}
+                    <button key={item.id} onClick={()=>(item.taskVideo||item.taskLink)?setSubPage({type:"task",id:item.id,item}):toggleCheck(item.id)}
                       style={{display:"flex",alignItems:"flex-start",gap:13,padding:"12px 2px",background:"none",border:"none",textAlign:"left",width:"100%",
                         borderTop:i>0?"0.5px solid rgba(255,210,140,0.05)":"none",cursor:"pointer"}}>
                       <div style={{width:24,height:24,borderRadius:8,flexShrink:0,marginTop:1,
@@ -1104,7 +1148,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
               {l1Complete&&(
                 <div style={{marginTop:14,padding:"14px",background:"rgba(200,145,60,0.14)",borderRadius:14,textAlign:"center",animation:"springPop 0.5s cubic-bezier(0.34,1.56,0.64,1)"}}>
                   <div style={{fontSize:20,marginBottom:4}}>🎉</div>
-                  <div style={{fontWeight:800,fontSize:15,color:"#c8913c"}}>Level 1 complete! Level 2 is now unlocked.</div>
+                  <div style={{fontWeight:800,fontSize:15,color:"#c8913c"}}>All done! Keep it going.</div>
                 </div>
               )}
             </div>
@@ -1157,23 +1201,76 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
     );
   }
 
+  // ── Task detail page (video + complete) ──
+  if(subPage?.type==="task"){
+    const item=subPage.item;
+    const done=!!effectiveChecks[item.id];
+    const videoUrl=item.taskVideo&&item.taskVideo!=="PLACEHOLDER"?item.taskVideo:null;
+    const vimeoId=videoUrl?videoUrl.match(/vimeo\.com\/(\d+)/)?.[1]:null;
+    const ytId=videoUrl?videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&?]+)/)?.[1]:null;
+    const embedSrc=vimeoId?`https://player.vimeo.com/video/${vimeoId}`:ytId?`https://www.youtube.com/embed/${ytId}`:null;
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage({type:"level",id:"beginner"})} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>START HERE</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:16}}>
+          <div style={{fontWeight:800,fontSize:20,color:"#ede4d0",letterSpacing:"-0.02em",lineHeight:1.3}}>{item.label}</div>
+          {embedSrc&&(
+            <div style={{borderRadius:18,overflow:"hidden",background:"#000",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",aspectRatio:"16/9",position:"relative"}}>
+              <iframe src={embedSrc} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none"}} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+            </div>
+          )}
+          <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.7}}>{item.detail}</div>
+          {item.taskLink&&(
+            <a href={item.taskLink} target="_blank" rel="noreferrer"
+              style={{display:"flex",alignItems:"center",justifyContent:"center",padding:16,borderRadius:14,fontSize:15,fontWeight:800,background:"#1e1b17",color:"#ede4d0",textDecoration:"none",border:"1.5px solid rgba(255,210,140,0.1)"}}>
+              Open Form →
+            </a>
+          )}
+          <button onClick={()=>{if(!done)toggleCheck(item.id);setSubPage({type:"level",id:"beginner"});}}
+            style={{width:"100%",padding:16,borderRadius:14,fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",
+              background:done?"rgba(200,145,60,0.14)":"#c8541a",color:done?"#c8913c":"#fff"}}>
+            {done?"✓ Already completed":"Mark as complete"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // ── Double-R M method deep dive ──
   if(subPage?.type==="method"&&subPage?.id==="double-rm"){
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage(null)} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>MESSED UP? RESET HERE</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:16}}>
+          <div style={{fontWeight:800,fontSize:20,color:"#ede4d0",letterSpacing:"-0.02em",lineHeight:1.3}}>The Double-R M Method</div>
+          {(()=>{
+            const vimeoId="1219957371";
+            const embedSrc=`https://player.vimeo.com/video/${vimeoId}`;
+            return(
+              <div style={{borderRadius:18,overflow:"hidden",background:"#000",boxShadow:"0 8px 32px rgba(0,0,0,0.4)",aspectRatio:"16/9",position:"relative"}}>
+                <iframe src={embedSrc} style={{position:"absolute",inset:0,width:"100%",height:"100%",border:"none"}} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+              </div>
+            );
+          })()}
+          <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.75}}>Just messed up? Watch this video and practice the Double-R M method. Relax, Reflect, and Move On.</div>
+          <button onClick={()=>{if(onLogSlip)onLogSlip();}}
+            style={{width:"100%",padding:16,borderRadius:14,fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",background:"#c8541a",color:"#fff"}}>
+            Log what happened
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── DEAD CODE BELOW (replaced) — kept to avoid parse errors if anything referenced it ──
+  if(false&&subPage?.type==="method"&&subPage?.id==="double-rm-old"){
     const understood=!!effectiveChecks["double-rm-understood"];
-    const steps=[
-      {num:1, letter:"R", word:"Relax", color:"#3b82f6", bg:"#eff6ff", border:"#bfdbfe",
-       headline:"Don't spiral. Just breathe.",
-       body:"After a slip, your brain wants to go into shame mode — replaying what happened, calling yourself weak, catastrophizing. That's not useful and it's not accurate. Before you do anything, just breathe. Take 3 slow breaths. Drop your shoulders. The event already happened and it doesn't define you. Relax first.",
-       tip:"In 4 seconds, hold 4, out for 6. Repeat 3 times. Seriously — do it right now."},
-      {num:2, letter:"R", word:"Reflect", color:"#8b5cf6", bg:"#f5f3ff", border:"#ddd6fe",
-       headline:"Get curious. Not critical.",
-       body:"Now that you're calm, ask yourself honestly: what was going on before this happened? What were you feeling — bored, stressed, lonely, tired? What triggered it? You're not looking for reasons to feel bad. You're looking for information. Every slip has a pattern. Understanding it is the only way to break it.",
-       tip:"Open the journal and write one sentence: \"I think I slipped because ___\". That's it."},
-      {num:3, letter:"M", word:"Move On", color:"#10b981", bg:"#f0fdf4", border:"#bbf7d0",
-       headline:"This doesn't own the rest of your day.",
-       body:"Here's what most guys get wrong: they let a slip become a write-off. \"I already messed up today, so whatever.\" That thinking causes more damage than the slip itself. One moment doesn't cancel your progress. Close this app, go do something normal — make food, call a friend, go for a walk. Your day continues. You continue.",
-       tip:"Say it out loud: \"That happened. I'm still in this.\" Then go do the next right thing."},
-    ];
     return(
       <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
         <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
@@ -1181,46 +1278,6 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
           <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>LEVEL 2 — FIGHTER</div>
         </div>
         <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:18}}>
-
-          {/* Hero */}
-          <div style={{background:"#1e1b17",borderRadius:22,padding:"24px 22px",color:"#fff",boxShadow:"0 8px 32px rgba(0,0,0,0.2)"}}>
-            <div style={{fontSize:13,fontWeight:800,color:"rgba(255,255,255,0.35)",letterSpacing:"0.1em",marginBottom:10}}>FOR AFTER A SLIP</div>
-            <div style={{fontSize:28,fontWeight:800,letterSpacing:"-0.03em",lineHeight:1.15,marginBottom:10}}>The Double-R M Method</div>
-            <div style={{fontSize:15,color:"rgba(255,255,255,0.6)",lineHeight:1.7}}>
-              When you choose to view, this method keeps it from ruining the rest of your day. Done in under 5 minutes.
-            </div>
-            <div style={{display:"flex",gap:10,marginTop:18}}>
-              {["Relax","Reflect","Move On"].map((s,i)=>(
-                <div key={i} style={{flex:1,background:"rgba(255,255,255,0.08)",borderRadius:12,padding:"10px 8px",textAlign:"center"}}>
-                  <div style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.4)",letterSpacing:"0.06em",marginBottom:3}}>{i===2?"M":"R"}</div>
-                  <div style={{fontSize:12,fontWeight:700,color:"#fff",lineHeight:1.2}}>{s}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Steps */}
-          {steps.map((step,i)=>(
-            <div key={i} style={{background:step.bg,borderRadius:20,padding:"20px 18px",border:`1.5px solid ${step.border}`,animation:`slideUp 0.3s ${i*0.1}s both`}}>
-              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
-                <div style={{width:44,height:44,borderRadius:14,background:step.color,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <span style={{fontSize:20,fontWeight:900,color:"#fff"}}>{step.letter}</span>
-                </div>
-                <div>
-                  <div style={{fontSize:10,fontWeight:800,color:step.color,letterSpacing:"0.1em",marginBottom:2}}>STEP {step.num}</div>
-                  <div style={{fontSize:19,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em"}}>{step.word}</div>
-                </div>
-              </div>
-              <div style={{fontSize:14,fontWeight:700,color:"#ede4d0",marginBottom:8,letterSpacing:"-0.005em"}}>{step.headline}</div>
-              <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.75}}>{step.body}</div>
-              <div style={{marginTop:14,background:"rgba(255,210,140,0.06)",borderRadius:12,padding:"11px 14px",borderLeft:`3px solid ${step.color}`}}>
-                <div style={{fontSize:12,fontWeight:700,color:step.color,marginBottom:3,letterSpacing:"0.04em"}}>DO THIS</div>
-                <div style={{fontSize:13,color:"#c0b8a8",lineHeight:1.55}}>{step.tip}</div>
-              </div>
-            </div>
-          ))}
-
-          {/* I understand checkbox */}
           <button onClick={()=>{if(!understood){setLevelChecks(p=>({...p,"double-rm-understood":true}));if(onCheckChange)onCheckChange("double-rm-understood",true);}}}
             style={{display:"flex",alignItems:"center",gap:14,background:understood?"rgba(200,145,60,0.14)":"rgba(255,210,140,0.04)",
               borderRadius:18,padding:"18px 18px",border:understood?"1.5px solid #bbf7d0":"none",
@@ -1394,15 +1451,170 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
   }
 
   // ── Generic training card sub-pages ──
+  // ── Foundation: lesson detail ──
+  if(subPage?.type==="lesson"){
+    const lesson=FOUNDATION_LESSONS.find(l=>l.id===subPage.id);
+    if(!lesson) return null;
+    const done=!!effectiveChecks[lesson.id];
+    const saveAndComplete=async()=>{
+      // Save each answer to Supabase
+      const rows=lessonDraft.map((answer,qi)=>({user_id:me.id,lesson_id:lesson.id,question_idx:qi,answer:answer||""}));
+      if(rows.length){
+        await sb.from("lesson_answers").upsert(rows,{onConflict:"user_id,lesson_id,question_idx"});
+      }
+      // Update local answers cache
+      setLessonAnswers(p=>({...p,[lesson.id]:lessonDraft}));
+      // Mark lesson complete
+      if(!done){
+        setLevelChecks(p=>({...p,[lesson.id]:true}));
+        if(onCheckChange) onCheckChange(lesson.id,true);
+      }
+      setSubPage({type:"card",id:"foundation"});
+    };
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage({type:"card",id:"foundation"})} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>FOUNDATION</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:16}}>
+          <div style={{fontWeight:800,fontSize:20,color:"#ede4d0",letterSpacing:"-0.02em",lineHeight:1.3}}>{lesson.title}</div>
+          {/* Video */}
+          <div style={{position:"relative",paddingBottom:"56.25%",height:0,background:"#000",borderRadius:18,overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}}>
+            <iframe src={`https://www.loom.com/embed/${lesson.loomId}`} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}} allowFullScreen/>
+          </div>
+          {/* Reflection questions */}
+          <div style={{background:"#1e1b17",borderRadius:18,padding:"18px 18px",display:"flex",flexDirection:"column",gap:14}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#6496dc",letterSpacing:"0.08em"}}>REFLECTION QUESTIONS</div>
+            {lesson.questions.map((q,qi)=>(
+              <div key={qi}>
+                <div style={{fontSize:13,fontWeight:700,color:"#c0b8a8",marginBottom:8,lineHeight:1.5}}>{q}</div>
+                <textarea
+                  value={lessonDraft[qi]||""}
+                  onChange={e=>{const d=[...lessonDraft];d[qi]=e.target.value;setLessonDraft(d);}}
+                  rows={3}
+                  placeholder="Write your thoughts here..."
+                  style={{width:"100%",background:"#252118",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,padding:"11px 14px",fontSize:14,outline:"none",resize:"none",lineHeight:1.6,color:"#ede4d0",fontFamily:"inherit",boxSizing:"border-box"}}/>
+              </div>
+            ))}
+          </div>
+          <button onClick={saveAndComplete}
+            style={{width:"100%",padding:16,borderRadius:14,fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",
+              background:done?"rgba(100,150,220,0.15)":"#6496dc",color:done?"#6496dc":"#fff"}}>
+            {done?"✓ Lesson complete — save changes":"Save & Mark Complete"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Foundation: course overview ──
+  if(subPage?.type==="card"&&subPage?.id==="foundation"){
+    return(
+      <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+        <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+          <button onClick={()=>setSubPage(null)} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+          <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>TRAINING</div>
+        </div>
+        <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:16}}>
+          {/* Hero */}
+          <div style={{background:"#1e1b17",borderRadius:22,padding:"20px 22px"}}>
+            <div style={{fontSize:26,fontWeight:900,color:"#ede4d0",letterSpacing:"-0.03em",lineHeight:1.15,marginBottom:6}}>🔑 Foundation</div>
+            <div style={{fontSize:14,color:"#8a8078",lineHeight:1.6,marginBottom:14}}>Complete each lesson and answer the reflection questions.</div>
+            <div style={{height:6,borderRadius:999,background:"rgba(255,210,140,0.08)",overflow:"hidden"}}>
+              <div style={{height:"100%",borderRadius:999,background:"#6496dc",transition:"width 0.6s ease",width:FOUNDATION_LESSONS.length?`${Math.round(foundationDone/FOUNDATION_LESSONS.length*100)}%`:"0%"}}/>
+            </div>
+            <div style={{fontSize:11,color:"#7a7068",marginTop:6,fontWeight:600}}>{foundationDone}/{FOUNDATION_LESSONS.length} lessons complete</div>
+          </div>
+          {/* Weeks */}
+          {FOUNDATION_WEEKS.map((week,wi)=>(
+            <div key={week.id}>
+              <div style={{fontSize:13,fontWeight:800,color:"#6496dc",letterSpacing:"0.04em",marginBottom:10}}>{week.emoji} {week.title}</div>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {week.lessons.map((lesson,li)=>{
+                  const done=!!effectiveChecks[lesson.id];
+                  return(
+                    <button key={lesson.id}
+                      onClick={()=>{setLessonDraft(lessonAnswers[lesson.id]||[]);setSubPage({type:"lesson",id:lesson.id});}}
+                      style={{display:"flex",alignItems:"center",gap:14,background:"#1e1b17",borderRadius:16,padding:"14px 16px",border:`1.5px solid ${done?"rgba(100,150,220,0.3)":"rgba(255,210,140,0.07)"}`,textAlign:"left",width:"100%",cursor:"pointer",animation:`slideUp 0.3s ${li*0.07}s both`}}>
+                      <div style={{width:36,height:36,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",
+                        background:done?"rgba(100,150,220,0.15)":"rgba(255,210,140,0.05)",
+                        border:`2px solid ${done?"#6496dc":"rgba(255,210,140,0.15)"}`}}>
+                        {done?<span style={{color:"#6496dc",fontSize:16,fontWeight:800}}>✓</span>:<span style={{color:"#4a4038",fontSize:14,fontWeight:700}}>{(wi*10)+li+1}</span>}
+                      </div>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{fontWeight:700,fontSize:14,color:done?"#6496dc":"#ede4d0",letterSpacing:"-0.01em",lineHeight:1.35}}>{lesson.title}</div>
+                        <div style={{fontSize:11,color:"#7a7068",marginTop:2}}>{done?"Completed":"Tap to watch & reflect"}</div>
+                      </div>
+                      <span style={{color:"#4a4038",fontSize:16}}>→</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if(subPage?.type==="card"){
+
+    // ── Overcome Urges: video-based training ──
+    if(subPage.id==="overcome-urges"){
+      const toggleVideo=(id)=>{
+        const newVal=!effectiveChecks[id];
+        setLevelChecks(p=>({...p,[id]:newVal}));
+        if(onCheckChange) onCheckChange(id,newVal);
+      };
+      return(
+        <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+          <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+            <button onClick={()=>setSubPage(null)} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>TRAINING</div>
+          </div>
+          <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:20}}>
+            {/* Hero */}
+            <div style={{background:"#1e1b17",borderRadius:22,padding:"20px 22px"}}>
+              <div style={{fontSize:26,fontWeight:900,color:"#ede4d0",letterSpacing:"-0.03em",lineHeight:1.15,marginBottom:6}}>💪 How to Overcome Urges</div>
+              <div style={{fontSize:14,color:"#8a8078",lineHeight:1.6,marginBottom:14}}>Complete each lesson below to build your toolkit.</div>
+              <div style={{height:6,borderRadius:999,background:"rgba(255,210,140,0.08)",overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:999,background:"#50a05a",transition:"width 0.6s ease",width:OU_VIDEOS.length?`${Math.round(ouDone/OU_VIDEOS.length*100)}%`:"0%"}}/>
+              </div>
+              <div style={{fontSize:11,color:"#7a7068",marginTop:6,fontWeight:600}}>{ouDone}/{OU_VIDEOS.length} lessons complete</div>
+            </div>
+
+            {/* Video lessons */}
+            {OU_VIDEOS.map((vid,i)=>{
+              const done=!!effectiveChecks[vid.id];
+              return(
+                <div key={vid.id} style={{background:"#1e1b17",borderRadius:20,overflow:"hidden",border:"1.5px solid rgba(255,210,140,0.08)",animation:`slideUp 0.3s ${i*0.08}s both`}}>
+                  {/* Video embed */}
+                  <div style={{position:"relative",paddingBottom:"56.25%",height:0,background:"#000"}}>
+                    <iframe
+                      src={`https://www.loom.com/embed/${vid.loomId}`}
+                      style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
+                      allowFullScreen/>
+                  </div>
+                  {/* Lesson info + complete button */}
+                  <div style={{padding:"16px 18px"}}>
+                    <div style={{fontSize:11,fontWeight:800,color:"#50a05a",letterSpacing:"0.08em",marginBottom:4}}>LESSON {i+1}</div>
+                    <div style={{fontWeight:800,fontSize:16,color:"#ede4d0",letterSpacing:"-0.01em",marginBottom:14}}>{vid.title}</div>
+                    <button onClick={()=>toggleVideo(vid.id)}
+                      style={{width:"100%",padding:14,borderRadius:12,fontSize:14,fontWeight:800,border:"none",letterSpacing:"-0.01em",
+                        background:done?"rgba(80,160,90,0.15)":"#50a05a",color:done?"#50a05a":"#fff",transition:"all 0.2s"}}>
+                      {done?"✓ Lesson complete":"Mark lesson complete"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     const CARD_META={
-      "overcome-urges":{emoji:"💪",title:"How to Overcome Urges",tagline:"The tools that actually work in the moment — not just willpower.",accent:"#c8541a",items:[
-        {icon:"🧠",h:"Name the urge",b:"Say it out loud: \"This is an urge. It isn't me.\" Naming it creates distance. You're the observer, not the urge."},
-        {icon:"⏱",h:"Surf it — don't fight it",b:"Urges peak and fade in 15–20 minutes. Your job isn't to kill it, it's to outlast it. Every time you do, the next one is weaker."},
-        {icon:"🌬",h:"Box breathe",b:"In 4 seconds. Hold 4. Out 4. Hold 4. This directly lowers arousal and resets your nervous system. Do it 3 times minimum."},
-        {icon:"🚶",h:"Change your location",b:"Get up and move to a different room or outside. Urges are partly environmental — the trigger is where you are. Leave."},
-        {icon:"📞",h:"Call your partner or the group",b:"A 2-minute call breaks the loop. You don't have to explain everything. Just saying \"I'm having a hard moment\" is enough."},
-      ]},
       "sexual-mastery":{emoji:"🔥",title:"Sexual Mastery",tagline:"Understanding your drive and directing it toward what actually matters.",accent:"#c8913c",items:[
         {icon:"⚡",h:"Energy is neutral",b:"Your sex drive isn't the problem — it's one of your most powerful sources of motivation and creativity. The question is what you're pointing it at."},
         {icon:"🎯",h:"Redirect, don't suppress",b:"Cold showers, hard workouts, meaningful work — when you feel the energy, channel it. Suppression builds pressure. Redirection builds power."},
@@ -1490,7 +1702,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
             WebkitOverflowScrolling:"touch"}}>
 
             {[
-              {title:["START","HERE"],badge:"🌱 Level 1",
+              {title:["START","HERE"],badge:"🌱 Start Here",
                bg:"linear-gradient(145deg,#2e1b0d 0%,#1c1007 60%,#110a04 100%)",
                border:"rgba(200,84,26,0.22)",glow:"rgba(200,84,26,0.2)",badgeBg:"#c8541a",
                done:l1Done,total:l1Items.length,
@@ -1503,17 +1715,17 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                titleColor:"#c8541a",titleColorLine:2,
                action:()=>setSubPage({type:"method",id:"double-rm"})},
 
-              {title:["OVERCOME","URGES"],badge:"💪 Tools",
+              {title:["OVERCOME","URGES"],badge:"💪 Training",
                bg:"linear-gradient(145deg,#0c1a10 0%,#081209 60%,#050c06 100%)",
                border:"rgba(80,160,90,0.22)",glow:"rgba(80,160,90,0.18)",badgeBg:"rgba(55,120,65,0.9)",
-               done:0,total:5,
+               done:ouDone,total:OU_VIDEOS.length,
                action:()=>setSubPage({type:"card",id:"overcome-urges"})},
 
-              {title:["SEXUAL","MASTERY"],badge:"🔥 Mastery",
-               bg:"linear-gradient(145deg,#1a140a 0%,#110d05 60%,#0a0803 100%)",
-               border:"rgba(200,145,60,0.22)",glow:"rgba(200,145,60,0.18)",badgeBg:"#c8913c",
-               done:0,total:4,
-               action:()=>setSubPage({type:"card",id:"sexual-mastery"})},
+              {title:["FOUNDATION"],badge:"🔑 Foundation",
+               bg:"linear-gradient(145deg,#0d1020 0%,#080b18 60%,#050710 100%)",
+               border:"rgba(100,130,220,0.25)",glow:"rgba(100,130,220,0.18)",badgeBg:"rgba(80,110,200,0.9)",
+               done:foundationDone,total:FOUNDATION_LESSONS.length,
+               action:()=>setSubPage({type:"card",id:"foundation"})},
 
               {title:["MARRIAGE","& THIS","FIGHT"],badge:"💍 Relationships",
                bg:"linear-gradient(145deg,#150a14 0%,#0e0710 60%,#080508 100%)",
@@ -1579,7 +1791,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
           </div>
           <div style={{display:"flex",gap:7,flexShrink:0}}>
             <button onClick={()=>onTabChange("urge")} style={{padding:"8px 13px",borderRadius:12,background:"#c8541a",color:"#fff",border:"none",fontSize:13,fontWeight:700,boxShadow:"0 3px 12px rgba(200,84,26,0.3)"}}>
-              🌬 Track
+              🔥 Track
             </button>
             <button onClick={()=>setSubPage({type:"journal"})} style={{padding:"8px 12px",borderRadius:12,background:"rgba(255,210,140,0.07)",color:"#c0b8a8",border:"1px solid rgba(255,210,140,0.1)",fontSize:13,fontWeight:600}}>
               📓
@@ -1604,6 +1816,60 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
 
         {/* ── Calendar widget ── */}
         <NextEventWidget onTabChange={onTabChange}/>
+
+        {/* ── Coaching with Hunter homework ── */}
+        {(()=>{
+          const HW_ITEMS=[
+            {id:"hw-1",text:"Journal for 5 minutes every morning this week"},
+            {id:"hw-2",text:"Complete the Foundation Week 1 lessons"},
+            {id:"hw-3",text:"Reach out to one person in the group this week"},
+          ];
+          const [hwDone,setHwDone]=React.useState(()=>{
+            try{return JSON.parse(localStorage.getItem("hw_done")||"{}");}catch{return {};}
+          });
+          const toggle=(id)=>{
+            setHwDone(prev=>{
+              const next={...prev,[id]:!prev[id]};
+              try{localStorage.setItem("hw_done",JSON.stringify(next));}catch{}
+              return next;
+            });
+          };
+          const doneCount=HW_ITEMS.filter(i=>hwDone[i.id]).length;
+          return(
+            <div style={{background:"#1a1814",borderRadius:18,padding:"18px 20px",boxShadow:"0 4px 16px rgba(0,0,0,0.18)"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+                <div>
+                  <div style={{fontSize:10,fontWeight:800,color:"rgba(255,210,140,0.4)",letterSpacing:"0.1em",marginBottom:3}}>THIS WEEK</div>
+                  <div style={{fontSize:15,fontWeight:700,color:"#ede4d0",letterSpacing:"-0.01em"}}>🎯 Coaching with Hunter</div>
+                </div>
+                <div style={{fontSize:12,fontWeight:700,color:doneCount===HW_ITEMS.length?"#4caf50":"#7a7068",background:"rgba(255,210,140,0.06)",borderRadius:20,padding:"4px 10px"}}>
+                  {doneCount}/{HW_ITEMS.length} done
+                </div>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {HW_ITEMS.map(item=>(
+                  <button key={item.id} onClick={()=>toggle(item.id)} style={{
+                    display:"flex",alignItems:"center",gap:12,background:"none",border:"none",
+                    padding:"10px 12px",borderRadius:12,cursor:"pointer",textAlign:"left",
+                    background:hwDone[item.id]?"rgba(76,175,80,0.08)":"rgba(255,210,140,0.04)",
+                    transition:"background 0.2s"
+                  }}>
+                    <div style={{
+                      width:22,height:22,borderRadius:6,border:hwDone[item.id]?"none":"1.5px solid rgba(255,210,140,0.2)",
+                      background:hwDone[item.id]?"#4caf50":"transparent",flexShrink:0,
+                      display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s"
+                    }}>
+                      {hwDone[item.id]&&<span style={{fontSize:13,color:"#fff",lineHeight:1}}>✓</span>}
+                    </div>
+                    <span style={{fontSize:14,color:hwDone[item.id]?"#7a7068":"#c0b8a8",fontWeight:500,textDecoration:hwDone[item.id]?"line-through":"none",transition:"all 0.2s"}}>
+                      {item.text}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ── Coaching call CTA ── */}
         {callLink&&(
@@ -1703,6 +1969,36 @@ function VoiceMessage({data,isMe}){
       <audio ref={audioRef} src={data}
         onTimeUpdate={e=>setProgress(e.target.duration?(e.target.currentTime/e.target.duration*100):0)}
         onEnded={()=>{setPlaying(false);setProgress(0);}}/>
+    </div>
+  );
+}
+
+function MsgSubHeader({name,subtitle,left,onBack}){
+  return(
+    <div className="frosted-light" style={{borderBottom:"0.5px solid rgba(255,210,140,0.07)",padding:"12px 16px",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
+      <button onClick={onBack} style={{background:"none",border:"none",fontSize:22,color:"#c0b8a8",padding:0,lineHeight:1,cursor:"pointer"}}>←</button>
+      {left}
+      <div style={{flex:1}}>
+        <div style={{fontWeight:700,fontSize:16,color:"#ede4d0",letterSpacing:"-0.01em"}}>{name}</div>
+        {subtitle&&<div style={{fontSize:11,color:"#7a7068",fontWeight:500}}>{subtitle}</div>}
+      </div>
+    </div>
+  );
+}
+function MsgConvoRow({icon,name,preview,badge,onClick,pinned}){
+  return(
+    <div onClick={onClick} style={{margin:"0 12px 3px",background:"#1e1b17",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
+      <div style={{width:44,height:44,borderRadius:"50%",background:"#252118",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0,overflow:"hidden"}}>
+        {typeof icon==="string"?icon:<div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>{icon}</div>}
+      </div>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:5}}>
+          {pinned&&<span style={{fontSize:10,color:"#7a7068"}}>📌</span>}
+          <span style={{fontWeight:700,fontSize:15,color:"#ede4d0"}}>{name}</span>
+        </div>
+        {preview&&<div style={{fontSize:12,color:"#7a7068",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:200}}>{preview}</div>}
+      </div>
+      {badge>0&&<div style={{minWidth:20,height:20,borderRadius:10,background:"#c8913c",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#fff",padding:"0 5px"}}>{badge}</div>}
     </div>
   );
 }
@@ -1823,10 +2119,12 @@ function ChatView({me,users,msgs,setMsgs,channelId,dmToId,isChannel}){
   );
 }
 
-function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMsgs}){
-  const [view,setView]=useState("list");
-  const [activeChannel,setActiveChannel]=useState(null);
+function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMsgs,openChannelSlug,setOpenChannelSlug}){
+  const initCh=openChannelSlug?channels.find(c=>c.slug===openChannelSlug)||null:null;
+  const [view,setView]=useState(initCh?"channel":"list");
+  const [activeChannel,setActiveChannel]=useState(initCh);
   const [activeDmUid,setActiveDmUid]=useState(null);
+  useEffect(()=>{if(openChannelSlug&&setOpenChannelSlug)setOpenChannelSlug(null);},[]);
 
   const hunter=users.find(u=>u.id===HUNTER_UUID);
   const otherUsers=users.filter(u=>u.id!==me.id&&u.id!==HUNTER_UUID);
@@ -1845,17 +2143,6 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
   };
   const back=()=>{setView("list");setActiveChannel(null);setActiveDmUid(null);};
 
-  const SubHeader=({name,subtitle,left})=>(
-    <div className="frosted-light" style={{borderBottom:"0.5px solid rgba(255,210,140,0.07)",padding:"12px 16px",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-      <button onClick={back} style={{background:"none",border:"none",fontSize:22,color:"#c0b8a8",padding:0,lineHeight:1,cursor:"pointer"}}>←</button>
-      {left}
-      <div style={{flex:1}}>
-        <div style={{fontWeight:700,fontSize:16,color:"#ede4d0",letterSpacing:"-0.01em"}}>{name}</div>
-        {subtitle&&<div style={{fontSize:11,color:"#7a7068",fontWeight:500}}>{subtitle}</div>}
-      </div>
-    </div>
-  );
-
   if(view==="channel"&&activeChannel){
     const chanMsgs=getChannelMsgs(activeChannel);
     const setChanMsgs=fn=>setGroupMsgs(all=>{
@@ -1865,7 +2152,7 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
     });
     return(
       <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-        <SubHeader name={`# ${activeChannel.name}`} subtitle={activeChannel.desc||"Group channel"}/>
+        <MsgSubHeader name={`# ${activeChannel.name}`} subtitle={activeChannel.desc||"Group channel"} onBack={back}/>
         <ChatView me={me} users={users} msgs={chanMsgs} setMsgs={setChanMsgs} channelId={activeChannel.id} isChannel={true}/>
       </div>
     );
@@ -1878,10 +2165,11 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
     const setThread=fn=>setDmMsgs(p=>({...p,[k]:typeof fn==="function"?fn(p[k]||[]):fn}));
     return(
       <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-        <SubHeader
+        <MsgSubHeader
           name={dmUser?dmUser.name:"..."}
           subtitle={dmUser?.id===HUNTER_UUID?"👑 Your Coach":dmUser?"🔴 "+dmUser.urges+" urges overcome":""}
-          left={dmUser&&<Avatar user={dmUser} size={34}/>}/>
+          left={dmUser&&<Avatar user={dmUser} size={34}/>}
+          onBack={back}/>
         <ChatView me={me} users={users} msgs={thread} setMsgs={setThread} dmToId={activeDmUid} isChannel={false}/>
       </div>
     );
@@ -1891,36 +2179,20 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
   const generalCh=channels.find(c=>c.slug==="general");
   const otherChs=channels.filter(c=>c.slug!=="general");
 
-  const ConvoRow=({icon,name,preview,badge,onClick,pinned})=>(
-    <div onClick={onClick} style={{margin:"0 12px 3px",background:"#1e1b17",borderRadius:16,padding:"12px 14px",display:"flex",alignItems:"center",gap:12,cursor:"pointer"}}>
-      <div style={{width:44,height:44,borderRadius:"50%",background:"#252118",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0,overflow:"hidden"}}>
-        {typeof icon==="string"?icon:<div style={{width:44,height:44,borderRadius:"50%",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>{icon}</div>}
-      </div>
-      <div style={{flex:1,minWidth:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:5}}>
-          {pinned&&<span style={{fontSize:10,color:"#7a7068"}}>📌</span>}
-          <span style={{fontWeight:700,fontSize:15,color:"#ede4d0"}}>{name}</span>
-        </div>
-        {preview&&<div style={{fontSize:12,color:"#7a7068",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:200}}>{preview}</div>}
-      </div>
-      {badge>0&&<div style={{minWidth:20,height:20,borderRadius:10,background:"#c8913c",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"#fff",padding:"0 5px"}}>{badge}</div>}
-    </div>
-  );
-
   return(
     <div style={{height:"100%",overflowY:"auto",background:"#141210",paddingBottom:16}}>
       <div style={{padding:"16px 16px 8px",fontSize:11,fontWeight:700,color:"#6a6058",letterSpacing:"0.08em"}}>📌 PINNED</div>
-      {generalCh&&<ConvoRow icon="💬" name="# general" preview={getChannelMsgs(generalCh).at(-1)?.text} pinned onClick={()=>openChannel(generalCh)}/>}
-      {hunter&&<ConvoRow icon={<Avatar user={hunter} size={44}/>} name="Coach Hunter" preview={getDmThread(hunter.id).at(-1)?.text||"Tap to message your coach"} badge={hunterUnreadCount} pinned onClick={()=>openDm(hunter.id)}/>}
+      {generalCh&&<MsgConvoRow icon="💬" name="# general" preview={getChannelMsgs(generalCh).at(-1)?.text} pinned onClick={()=>openChannel(generalCh)}/>}
+      {hunter&&<MsgConvoRow icon={<Avatar user={hunter} size={44}/>} name="Coach Hunter" preview={getDmThread(hunter.id).at(-1)?.text||"Tap to message your coach"} badge={hunterUnreadCount} pinned onClick={()=>openDm(hunter.id)}/>}
 
       <div style={{padding:"16px 16px 8px",fontSize:11,fontWeight:700,color:"#6a6058",letterSpacing:"0.08em"}}>CHANNELS</div>
       {otherChs.map(ch=>(
-        <ConvoRow key={ch.id} icon="＃" name={ch.name} preview={getChannelMsgs(ch).at(-1)?.text} onClick={()=>openChannel(ch)}/>
+        <MsgConvoRow key={ch.id} icon="＃" name={ch.name} preview={getChannelMsgs(ch).at(-1)?.text} onClick={()=>openChannel(ch)}/>
       ))}
 
       <div style={{padding:"16px 16px 8px",fontSize:11,fontWeight:700,color:"#6a6058",letterSpacing:"0.08em"}}>DIRECT MESSAGES</div>
       {otherUsers.map(u=>(
-        <ConvoRow key={u.id} icon={<Avatar user={u} size={44}/>} name={u.name} preview={getDmThread(u.id).at(-1)?.text||"No messages yet"} onClick={()=>openDm(u.id)}/>
+        <MsgConvoRow key={u.id} icon={<Avatar user={u} size={44}/>} name={u.name} preview={getDmThread(u.id).at(-1)?.text||"No messages yet"} onClick={()=>openDm(u.id)}/>
       ))}
       {otherUsers.length===0&&<div style={{textAlign:"center",padding:"24px",color:"#7a7068",fontSize:13}}>Other members will appear here</div>}
     </div>
@@ -2133,6 +2405,49 @@ function Messages({me,users,dms,setDms,activeDm,setActiveDm,onProfile,onSOS}){
   );
 }
 
+// ─── Library helpers (defined outside Library to prevent remount on re-render) ─
+
+const LIB_TYPE_ICON  ={article:"📄",video:"🎬",challenge:"🏋️"};
+const LIB_TYPE_COLOR ={article:"#eff6ff",video:"#f5f3ff",challenge:"#f0fdf4"};
+const LIB_TYPE_BORDER={article:"#bfdbfe",video:"#ddd6fe",challenge:"#bbf7d0"};
+const LIB_TYPE_LABEL ={article:"#1d4ed8",video:"#6d28d9",challenge:"#15803d"};
+
+function LibraryFormFields({vals,set}){
+  return(
+    <>
+      <div style={{display:"flex",gap:6,marginBottom:14}}>
+        {["article","video","challenge"].map(t=>(
+          <button key={t} onClick={()=>set("type",t)} style={{flex:1,padding:"9px 4px",borderRadius:10,border:"1.5px solid",fontSize:12,fontWeight:700,
+            background:vals.type===t?"#c8541a":"rgba(255,210,140,0.05)",color:vals.type===t?"#fff":"#8a8078",borderColor:vals.type===t?"#c8541a":"rgba(255,210,140,0.1)"}}>
+            {LIB_TYPE_ICON[t]} {t}
+          </button>
+        ))}
+      </div>
+      <input placeholder="Title *" value={vals.title} onChange={e=>set("title",e.target.value)} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#252118"}}/>
+      {vals.type==="video"&&<input placeholder="Vimeo or YouTube URL" value={vals.url} onChange={e=>set("url",e.target.value)} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#252118"}}/>}
+      <textarea placeholder="Description / content..." value={vals.body} onChange={e=>set("body",e.target.value)} rows={4} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",resize:"none",marginBottom:10,color:"#ede4d0",background:"#252118",fontFamily:"inherit"}}/>
+      {vals.type==="challenge"&&(
+        <div style={{display:"flex",gap:8,marginBottom:10}}>
+          <input placeholder="Badge emoji" value={vals.badgeIcon} onChange={e=>set("badgeIcon",e.target.value)} style={{width:110,padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",color:"#ede4d0",background:"#252118"}}/>
+          <input placeholder="Badge name" value={vals.badgeLabel} onChange={e=>set("badgeLabel",e.target.value)} style={{flex:1,padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",color:"#ede4d0",background:"#252118"}}/>
+        </div>
+      )}
+    </>
+  );
+}
+
+function LibraryModal({title,onClose,onSave,vals,set}){
+  return(
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#1e1b17",borderRadius:"24px 24px 0 0",padding:"22px 22px 44px",width:"100%",maxWidth:390,animation:"springUp 0.36s cubic-bezier(0.34,1.2,0.64,1)",maxHeight:"85vh",overflowY:"auto"}}>
+        <div style={{fontWeight:800,fontSize:18,color:"#ede4d0",marginBottom:18,letterSpacing:"-0.02em"}}>{title}</div>
+        <LibraryFormFields vals={vals} set={set}/>
+        <button onClick={onSave} style={{width:"100%",padding:15,borderRadius:14,background:"#c8541a",color:"#fff",fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",marginTop:4}}>Save</button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Library ──────────────────────────────────────────────────────────────────
 
 function Library({me,library,setLibrary,callLink,onBadgeEarned}){
@@ -2144,10 +2459,10 @@ function Library({me,library,setLibrary,callLink,onBadgeEarned}){
   const setNP=(k,v)=>setNewPost(p=>({...p,[k]:v}));
   const setEF=(k,v)=>setEditForm(p=>({...p,[k]:v}));
 
-  const typeIcon  ={article:"📄",video:"🎬",challenge:"🏋️"};
-  const typeColor ={article:"#eff6ff",video:"#f5f3ff",challenge:"#f0fdf4"};
-  const typeBorder={article:"#bfdbfe",video:"#ddd6fe",challenge:"#bbf7d0"};
-  const typeLabel ={article:"#1d4ed8",video:"#6d28d9",challenge:"#15803d"};
+  const typeIcon  =LIB_TYPE_ICON;
+  const typeColor =LIB_TYPE_COLOR;
+  const typeBorder=LIB_TYPE_BORDER;
+  const typeLabel =LIB_TYPE_LABEL;
 
   const addPost=async()=>{
     if(!newPost.title.trim()) return;
@@ -2196,27 +2511,6 @@ function Library({me,library,setLibrary,callLink,onBadgeEarned}){
     setLibrary(p=>p.map(x=>x.id!==item.id?x:{...x,completions:wasDone?x.completions.filter(c=>c!==me.id):[...x.completions,me.id]}));
   };
 
-  const FormFields=({vals,set})=>(
-    <>
-      <div style={{display:"flex",gap:6,marginBottom:14}}>
-        {["article","video","challenge"].map(t=>(
-          <button key={t} onClick={()=>set("type",t)} style={{flex:1,padding:"9px 4px",borderRadius:10,border:"1.5px solid",fontSize:12,fontWeight:700,
-            background:vals.type===t?"#c8541a":"rgba(255,210,140,0.05)",color:vals.type===t?"#fff":"#8a8078",borderColor:vals.type===t?"#c8541a":"rgba(255,210,140,0.1)"}}>
-            {typeIcon[t]} {t}
-          </button>
-        ))}
-      </div>
-      <input placeholder="Title *" value={vals.title} onChange={e=>set("title",e.target.value)} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#252118"}}/>
-      {vals.type==="video"&&<input placeholder="Vimeo or YouTube URL" value={vals.url} onChange={e=>set("url",e.target.value)} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",marginBottom:10,color:"#ede4d0",background:"#252118"}}/>}
-      <textarea placeholder="Description / content..." value={vals.body} onChange={e=>set("body",e.target.value)} rows={4} style={{width:"100%",padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",resize:"none",marginBottom:10,color:"#ede4d0",background:"#252118",fontFamily:"inherit"}}/>
-      {vals.type==="challenge"&&(
-        <div style={{display:"flex",gap:8,marginBottom:10}}>
-          <input placeholder="Badge emoji" value={vals.badgeIcon} onChange={e=>set("badgeIcon",e.target.value)} style={{width:110,padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",color:"#ede4d0",background:"#252118"}}/>
-          <input placeholder="Badge name" value={vals.badgeLabel} onChange={e=>set("badgeLabel",e.target.value)} style={{flex:1,padding:"12px 14px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:12,fontSize:15,outline:"none",color:"#ede4d0",background:"#252118"}}/>
-        </div>
-      )}
-    </>
-  );
 
   const ContentCard=({item})=>{
     const isOpen=open===item.id;
@@ -2260,15 +2554,6 @@ function Library({me,library,setLibrary,callLink,onBadgeEarned}){
   const challenges=library.filter(i=>i.type==="challenge");
   const resources =library.filter(i=>i.type!=="challenge");
 
-  const Modal=({title,onClose,onSave,vals,set})=>(
-    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center",backdropFilter:"blur(4px)",WebkitBackdropFilter:"blur(4px)"}}>
-      <div onClick={e=>e.stopPropagation()} style={{background:"#1e1b17",borderRadius:"24px 24px 0 0",padding:"22px 22px 44px",width:"100%",maxWidth:390,animation:"springUp 0.36s cubic-bezier(0.34,1.2,0.64,1)",maxHeight:"85vh",overflowY:"auto"}}>
-        <div style={{fontWeight:800,fontSize:18,color:"#ede4d0",marginBottom:18,letterSpacing:"-0.02em"}}>{title}</div>
-        <FormFields vals={vals} set={set}/>
-        <button onClick={onSave} style={{width:"100%",padding:15,borderRadius:14,background:"#c8541a",color:"#fff",fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",marginTop:4}}>Save</button>
-      </div>
-    </div>
-  );
 
   return(
     <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
@@ -2302,8 +2587,8 @@ function Library({me,library,setLibrary,callLink,onBadgeEarned}){
         )}
       </div>
 
-      {adding&&<Modal title="New Training" onClose={()=>setAdding(false)} onSave={addPost} vals={newPost} set={setNP}/>}
-      {editing&&<Modal title="Edit Training" onClose={()=>setEditing(null)} onSave={saveEdit} vals={editForm} set={setEF}/>}
+      {adding&&<LibraryModal title="New Training" onClose={()=>setAdding(false)} onSave={addPost} vals={newPost} set={setNP}/>}
+      {editing&&<LibraryModal title="Edit Training" onClose={()=>setEditing(null)} onSave={saveEdit} vals={editForm} set={setEF}/>}
 
       <div style={{height:48}}/>
     </div>
@@ -2323,14 +2608,16 @@ function Confetti(){
   );
 }
 
-function RedButton({me,goToMessages,urges,onOvercome,onLogSaved}){
-  const [state,       setState]    =useState("idle");
+function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onStartConsumed}){
+  const [state,       setState]    =useState(startState||"idle");
+  useEffect(()=>{
+    if(startState&&startState!=="idle"&&onStartConsumed) onStartConsumed();
+    if(startState==="gave-in-journal") setLogTime(new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}));
+  },[]);
   const [left,        setLeft]     =useState(DEMO_SECS);
   const [wh,          setWh]       =useState("");
   const [nx,          setNx]       =useState("");
   const [selEmo,      setEmo]      =useState("");
-  const [bl,          setBl]       =useState(BLOCKLIST.reduce((a,k)=>({...a,[k]:true}),{}));
-  const [blOpen,      setBlOpen]   =useState(false);
   // reflect form
   const [logTime,     setLogTime]  =useState("");
   const [location,    setLocation] =useState("");
@@ -2598,9 +2885,8 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved}){
     <div style={{flex:1,overflowY:"auto",padding:"22px 20px"}}>
       {outcome==="gave-in"?(
         <div style={{background:"#1e1b17",borderRadius:20,padding:"22px 20px",marginBottom:22,textAlign:"center"}}>
-          <div style={{fontSize:13,color:"rgba(255,255,255,0.45)",fontWeight:700,letterSpacing:"0.06em",marginBottom:12}}>REMEMBER THIS</div>
-          <div style={{fontSize:17,color:"#fff",fontWeight:600,lineHeight:1.65,letterSpacing:"-0.01em"}}>
-            You only truly fail when you stop being curious. Ask yourself what just happened — honestly — and you've already gotten 1% better. That's exactly how this works.
+          <div style={{fontSize:17,color:"#fff",fontWeight:700,lineHeight:1.65,letterSpacing:"-0.01em"}}>
+            The only way we fail is we do not reflect and learn from this experience.
           </div>
         </div>
       ):(
@@ -2610,6 +2896,54 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved}){
           <div style={{fontSize:14,color:"#7a7068",fontWeight:500}}>This is where the real growth happens.</div>
         </div>
       )}
+
+      {outcome==="gave-in"&&(
+        <>
+          {/* What time */}
+          <div className="card" style={{padding:"16px 18px",marginBottom:14}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:10,letterSpacing:"0.08em"}}>WHAT TIME WAS IT?</div>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <input value={logTime} onChange={e=>setLogTime(e.target.value)}
+                style={{flex:1,background:"#252118",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:10,padding:"10px 14px",fontSize:15,outline:"none",color:"#ede4d0",fontWeight:600}}/>
+              <button onClick={()=>setLogTime(new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}))} style={{background:"#1a1714",border:"none",borderRadius:10,padding:"10px 14px",fontSize:12,color:"#c0b8a8",fontWeight:700}}>Now</button>
+            </div>
+          </div>
+
+          {/* Where */}
+          <div className="card" style={{padding:"16px 18px",marginBottom:14}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:12,letterSpacing:"0.08em"}}>WHERE WERE YOU?</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+              {LOCATIONS.map(l=><Chip key={l} label={l} sel={location===l} onSel={()=>setLocation(l)}/>)}
+            </div>
+          </div>
+
+          {/* Trigger */}
+          <div className="card" style={{padding:"16px 18px",marginBottom:14}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:12,letterSpacing:"0.08em"}}>WHAT TRIGGERED IT?</div>
+            <div style={{display:"flex",gap:10,marginBottom:triggerType==="saw"?14:0}}>
+              <button onClick={()=>{setTrigType("thought");setPlatform("");}} style={{flex:1,padding:16,borderRadius:14,border:"1.5px solid",textAlign:"center",
+                background:triggerType==="thought"?"#c8541a":"rgba(255,210,140,0.05)",color:triggerType==="thought"?"#fff":"#8a8078",borderColor:triggerType==="thought"?"#c8541a":"rgba(255,210,140,0.1)"}}>
+                <div style={{fontSize:26,marginBottom:5}}>💭</div>
+                <div style={{fontSize:13,fontWeight:700,lineHeight:1.3}}>Something I thought of</div>
+              </button>
+              <button onClick={()=>setTrigType("saw")} style={{flex:1,padding:16,borderRadius:14,border:"1.5px solid",textAlign:"center",
+                background:triggerType==="saw"?"#c8541a":"rgba(255,210,140,0.05)",color:triggerType==="saw"?"#fff":"#8a8078",borderColor:triggerType==="saw"?"#c8541a":"rgba(255,210,140,0.1)"}}>
+                <div style={{fontSize:26,marginBottom:5}}>👁</div>
+                <div style={{fontSize:13,fontWeight:700,lineHeight:1.3}}>Something I saw</div>
+              </button>
+            </div>
+            {triggerType==="saw"&&(
+              <div style={{animation:"slideUp 0.25s ease"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:10,letterSpacing:"0.08em"}}>WHERE DID YOU SEE IT?</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+                  {PLATFORMS.map(p=><Chip key={p} label={p} sel={platform===p} onSel={()=>setPlatform(p)}/>)}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       <div style={{marginBottom:16}}>
         <div style={{fontSize:12,fontWeight:700,color:"#c0b8a8",marginBottom:10,letterSpacing:"0.04em"}}>HOW WERE YOU FEELING?</div>
         <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
@@ -2650,7 +2984,7 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved}){
           animation:"pulse 3s infinite",
           boxShadow:"0 0 0 14px rgba(157,61,46,0.1),0 0 0 28px rgba(157,61,46,0.05),0 16px 48px rgba(100,30,10,0.55)"
         }}>
-          <div style={{fontSize:28,lineHeight:1,filter:"drop-shadow(0 2px 8px rgba(0,0,0,0.4))"}}>🌬</div>
+          <div style={{fontSize:28,lineHeight:1,filter:"drop-shadow(0 2px 8px rgba(0,0,0,0.4))"}}>🔥</div>
           <span style={{fontWeight:700,fontSize:14,letterSpacing:"0.02em",textAlign:"center",lineHeight:1.5,maxWidth:130,color:"rgba(237,228,208,0.85)"}}>Tap if feeling an urge</span>
         </button>
 
@@ -2667,32 +3001,6 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved}){
           </div>
         )}
 
-        {/* Blocklist — collapsible */}
-        <div className="card" style={{width:"100%",overflow:"hidden"}}>
-          <button onClick={()=>setBlOpen(o=>!o)} style={{
-            width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
-            padding:"14px 18px",background:"none",border:"none",cursor:"pointer",textAlign:"left"
-          }}>
-            <div>
-              <div style={{fontWeight:700,color:"#c0b8a8",fontSize:15,letterSpacing:"-0.01em"}}>📵 App Blocklist</div>
-              <div style={{fontSize:12,color:"#7a7068",marginTop:2,fontWeight:500}}>Active during your 30-min break</div>
-            </div>
-            <div style={{fontSize:16,color:"#4a4038",transition:"transform 0.25s ease",transform:blOpen?"rotate(180deg)":"none"}}>▾</div>
-          </button>
-          {blOpen&&(
-            <div style={{borderTop:"0.5px solid rgba(255,210,140,0.07)",padding:"4px 18px 14px"}}>
-              {BLOCKLIST.map(app=>(
-                <div key={app} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 0",borderBottom:"0.5px solid rgba(255,210,140,0.05)"}}>
-                  <span style={{fontSize:15,color:"#c0b8a8",fontWeight:500}}>{app}</span>
-                  <button onClick={()=>setBl(b=>({...b,[app]:!b[app]}))} style={{width:48,height:28,borderRadius:14,border:"none",padding:"0 3px",
-                    background:bl[app]?"#c8541a":"rgba(255,210,140,0.08)",display:"flex",alignItems:"center",justifyContent:bl[app]?"flex-end":"flex-start",transition:"background 0.25s cubic-bezier(0.34,1.2,0.64,1)"}}>
-                    <div style={{width:22,height:22,borderRadius:"50%",background:"#ede4d0",boxShadow:"0 1px 4px rgba(0,0,0,0.3)"}}/>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
       </div>
     </div>
@@ -2980,25 +3288,204 @@ function CalendarTab(){
   );
 }
 
+// ─── Track Screen (patterns + urge CTA) ──────────────────────────────────────
+function TrackScreen({logs,onStartUrge}){
+  const overcome = logs.filter(l=>l.outcome==="overcome").length;
+  const gaveIn   = logs.filter(l=>l.outcome==="gave-in").length;
+  const total    = logs.length||1;
+
+  const platCount={};
+  logs.forEach(l=>{if(l.platform) platCount[l.platform]=(platCount[l.platform]||0)+1;});
+  const topPlats=Object.entries(platCount).sort((a,b)=>b[1]-a[1]);
+  const maxP=topPlats[0]?.[1]||1;
+
+  const locCount={};
+  logs.forEach(l=>{if(l.location) locCount[l.location]=(locCount[l.location]||0)+1;});
+  const topLocs=Object.entries(locCount).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const maxL=topLocs[0]?.[1]||1;
+
+  const timeBuckets={"Morning (6-12)":0,"Afternoon (12-6)":0,"Evening (6-10)":0,"Late night (10+)":0};
+  logs.forEach(l=>{
+    if(!l.logTime) return;
+    const [hStr,rest]=l.logTime.split(":");
+    let h=parseInt(hStr,10);
+    const isPM=l.logTime.toLowerCase().includes("pm");
+    if(isPM&&h!==12) h+=12;
+    if(!isPM&&h===12) h=0;
+    if(h>=6&&h<12) timeBuckets["Morning (6-12)"]++;
+    else if(h>=12&&h<18) timeBuckets["Afternoon (12-6)"]++;
+    else if(h>=18&&h<22) timeBuckets["Evening (6-10)"]++;
+    else timeBuckets["Late night (10+)"]++;
+  });
+  const maxT=Math.max(...Object.values(timeBuckets),1);
+
+  const thoughtCount=logs.filter(l=>l.triggerType==="thought").length;
+  const sawCount=logs.filter(l=>l.triggerType==="saw").length;
+
+  return(
+    <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+      {/* Red CTA button */}
+      <div style={{padding:"18px 18px 0"}}>
+        <button onClick={onStartUrge} style={{
+          width:"100%",padding:"16px 20px",borderRadius:16,border:"none",cursor:"pointer",
+          background:"linear-gradient(135deg,#9d3d2e 0%,#7a2e20 100%)",
+          display:"flex",alignItems:"center",justifyContent:"space-between",
+          boxShadow:"0 4px 20px rgba(157,61,46,0.45)"
+        }}>
+          <div style={{textAlign:"left"}}>
+            <div style={{fontSize:10,fontWeight:800,color:"rgba(255,255,255,0.5)",letterSpacing:"0.1em",marginBottom:3}}>FEELING IT RIGHT NOW?</div>
+            <div style={{fontSize:16,fontWeight:700,color:"#fff",letterSpacing:"-0.01em"}}>Tap if feeling an urge now</div>
+          </div>
+          <div style={{fontSize:26,marginLeft:12}}>🔥</div>
+        </button>
+      </div>
+
+      {/* Patterns content */}
+      <div style={{padding:"18px 18px 56px",display:"flex",flexDirection:"column",gap:14}}>
+        <div>
+          <div style={{fontSize:18,fontWeight:800,color:"#c8913c",letterSpacing:"-0.02em"}}>My Patterns</div>
+          <div style={{fontSize:12,color:"#7a7068",marginTop:2}}>Based on {logs.length} urge log{logs.length!==1?"s":""}</div>
+        </div>
+
+        {/* Win rate */}
+        <div style={{background:"#1e1b17",borderRadius:16,padding:"16px 18px"}}>
+          <div style={{fontSize:11,fontWeight:700,color:"#7a7068",letterSpacing:"0.08em",marginBottom:10}}>WIN RATE</div>
+          <div style={{height:8,borderRadius:4,background:"rgba(255,210,140,0.08)",overflow:"hidden",marginBottom:10}}>
+            <div style={{height:"100%",width:`${(overcome/total)*100}%`,background:"linear-gradient(90deg,#c8913c,#e8a84c)",borderRadius:4,transition:"width 0.6s ease"}}/>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between"}}>
+            <span style={{fontSize:13,fontWeight:700,color:"#c8913c"}}>💪 {overcome} overcome ({Math.round((overcome/total)*100)}%)</span>
+            <span style={{fontSize:13,color:"#7a7068"}}>😔 {gaveIn} gave in</span>
+          </div>
+        </div>
+
+        {/* Time of day */}
+        {logs.length>0&&(
+          <div style={{background:"#1e1b17",borderRadius:16,padding:"16px 18px"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#7a7068",letterSpacing:"0.08em",marginBottom:12}}>WHEN DO URGES HIT?</div>
+            {Object.entries(timeBuckets).map(([label,count])=>(
+              <div key={label} style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}>
+                <div style={{width:120,fontSize:13,color:"#c0b8a8"}}>{label}</div>
+                <div style={{flex:1,height:6,borderRadius:3,background:"rgba(255,210,140,0.08)",overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${(count/maxT)*100}%`,background:"#c8913c",borderRadius:3,transition:"width 0.6s ease"}}/>
+                </div>
+                <div style={{width:20,textAlign:"right",fontSize:13,color:"#7a7068"}}>{count}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Trigger type */}
+        {logs.length>0&&(
+          <div style={{background:"#1e1b17",borderRadius:16,padding:"16px 18px"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#7a7068",letterSpacing:"0.08em",marginBottom:12}}>TRIGGER TYPE</div>
+            <div style={{display:"flex",gap:12}}>
+              {[{label:"A thought",count:thoughtCount,emoji:"💭"},{label:"Something I saw",count:sawCount,emoji:"👁"}].map(({label,count,emoji})=>(
+                <div key={label} style={{flex:1,background:"rgba(255,210,140,0.04)",borderRadius:12,padding:"14px 12px",textAlign:"center"}}>
+                  <div style={{fontSize:24,marginBottom:6}}>{emoji}</div>
+                  <div style={{fontSize:22,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em"}}>{count}</div>
+                  <div style={{fontSize:11,color:"#7a7068",marginTop:2}}>{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Platform */}
+        {topPlats.length>0&&(
+          <div style={{background:"#1e1b17",borderRadius:16,padding:"16px 18px"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#7a7068",letterSpacing:"0.08em",marginBottom:12}}>WHERE YOU SAW IT</div>
+            {topPlats.map(([name,count])=>(
+              <div key={name} style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}>
+                <div style={{width:130,fontSize:13,fontWeight:600,color:"#c0b8a8"}}>{name}</div>
+                <div style={{flex:1,height:6,borderRadius:3,background:"rgba(255,210,140,0.08)",overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${(count/maxP)*100}%`,background:"#c8913c",borderRadius:3}}/>
+                </div>
+                <div style={{width:20,textAlign:"right",fontSize:13,color:"#7a7068"}}>{count}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Location */}
+        {topLocs.length>0&&(
+          <div style={{background:"#1e1b17",borderRadius:16,padding:"16px 18px"}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#7a7068",letterSpacing:"0.08em",marginBottom:12}}>WHERE ARE YOU WHEN IT HITS?</div>
+            {topLocs.map(([name,count])=>(
+              <div key={name} style={{display:"flex",alignItems:"center",gap:10,marginBottom:9}}>
+                <div style={{width:130,fontSize:13,fontWeight:600,color:"#c0b8a8"}}>{name}</div>
+                <div style={{flex:1,height:6,borderRadius:3,background:"rgba(255,210,140,0.08)",overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${(count/maxL)*100}%`,background:"#c8913c",borderRadius:3}}/>
+                </div>
+                <div style={{width:20,textAlign:"right",fontSize:13,color:"#7a7068"}}>{count}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {logs.length===0&&(
+          <div style={{textAlign:"center",padding:"40px 20px",color:"#7a7068",fontSize:14}}>
+            No urge logs yet. Start tracking to see your patterns.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 const TABS=[
-  {id:"home",     icon:"🏠",label:"Home"},
-  {id:"messages", icon:"💬",label:"Messages"},
-  {id:"urge",     icon:"🔴",label:"Urge"},
-  {id:"calendar", icon:"📅",label:"Calendar"},
-  {id:"library",  icon:"📚",label:"Library"},
+  {id:"home",     label:"Home"},
+  {id:"messages", label:"Messages"},
+  {id:"urge",     label:"Track"},
+  {id:"calendar", label:"Calendar"},
+  {id:"library",  label:"Library"},
 ];
+function TabIcon({id,active}){
+  const c=active?"#c8913c":"rgba(200,185,165,0.35)";
+  const s={width:22,height:22,display:"block"};
+  if(id==="home") return(
+    <svg style={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 10.5L12 3l9 7.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V10.5z"/>
+      <path d="M9 21V13h6v8"/>
+    </svg>
+  );
+  if(id==="messages") return(
+    <svg style={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"/>
+    </svg>
+  );
+  if(id==="calendar") return(
+    <svg style={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+  );
+  if(id==="library") return(
+    <svg style={s} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+    </svg>
+  );
+  return null;
+}
 
 function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboarding,onLogout,onRefreshUsers}){
   const [tab,       setTab]      =useState("home");
+  const [urgeMode,  setUrgeMode] =useState("track"); // "track" | "flow"
+  const [urgeStart, setUrgeStart]=useState("idle");
   const [urges,     setUrges]    =useState(initMe.urges);
   const [groupMsgs, setGroupMsgs]=useState([]);
   const [channels,  setChannels] =useState([]);
   const [dmMsgs,    setDmMsgs]   =useState({});
   const [logs,      setLogs]     =useState([]);
   const [library,   setLibrary]  =useState(SEED_LIBRARY);
-  const [callLink,  setCallLink] =useState("");
+  const [callLink,        setCallLink]       =useState("");
+  const [startHereVideo,  setStartHereVideo] =useState("https://vimeo.com/1219278074?share=copy&fl=sv&fe=ci");
+  const [openChannelSlug, setOpenChannelSlug]=useState(null);
   const [profile,   setProfile]  =useState(null);
   const [patterns,  setPatterns] =useState(false);
   const [adminOpen, setAdmin]    =useState(false);
@@ -3172,7 +3659,7 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
   // Save level check to Supabase
   const handleLevelCheckChange=async(id,checked)=>{
     if(checked){
-      await sb.from("level_checks").upsert({user_id:initMe.id,check_id:id}).onConflict("user_id,check_id");
+      await sb.from("level_checks").upsert({user_id:initMe.id,check_id:id},{onConflict:"user_id,check_id"});
     } else {
       await sb.from("level_checks").delete().eq("user_id",initMe.id).eq("check_id",id);
     }
@@ -3229,11 +3716,14 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
 
       {/* Content */}
       <div style={{flex:1,overflow:"hidden",display:"flex",flexDirection:"column",minHeight:0}}>
-        {tab==="home"     &&<Dashboard  me={me} logs={logs} library={library} users={allUsers} urges={urges} groupMsgs={groupMsgs} onTabChange={setTab} onProfile={setProfile} callLink={callLink} myWhy={myWhy} setMyWhy={setMyWhy} checkIns={checkIns} onCheckIn={handleCheckIn} levelChecks={levelChecks} setLevelChecks={setLevelChecks} onCheckChange={handleLevelCheckChange} onboardingDone={!showOnboarding} hunterUnread={(dmMsgs[dmKey(me.id,HUNTER_UUID)]||[]).filter(m=>!m.isRead&&m.fromId===HUNTER_UUID).length}/>}
-        {tab==="messages" &&<MessagesScreen me={me} users={allUsers} channels={channels} groupMsgs={groupMsgs} setGroupMsgs={setGroupMsgs} dmMsgs={dmMsgs} setDmMsgs={setDmMsgs}/>}
+        {tab==="home"     &&<Dashboard  me={me} logs={logs} library={library} users={allUsers} urges={urges} groupMsgs={groupMsgs} onTabChange={setTab} onProfile={setProfile} callLink={callLink} startHereVideo={startHereVideo} myWhy={myWhy} setMyWhy={setMyWhy} checkIns={checkIns} onCheckIn={handleCheckIn} levelChecks={levelChecks} setLevelChecks={setLevelChecks} onCheckChange={handleLevelCheckChange} onboardingDone={!showOnboarding} hunterUnread={(dmMsgs[dmKey(me.id,HUNTER_UUID)]||[]).filter(m=>!m.isRead&&m.fromId===HUNTER_UUID).length} onGoToChannel={(slug)=>{setOpenChannelSlug(slug);setTab("messages");}} onLogSlip={()=>{setUrgeStart("gave-in-journal");setUrgeMode("flow");setTab("urge");}}/>}
+        {tab==="messages" &&<MessagesScreen me={me} users={allUsers} channels={channels} groupMsgs={groupMsgs} setGroupMsgs={setGroupMsgs} dmMsgs={dmMsgs} setDmMsgs={setDmMsgs} openChannelSlug={openChannelSlug} setOpenChannelSlug={setOpenChannelSlug}/>}
         {tab==="calendar" &&<CalendarTab/>}
         {tab==="library"  &&<Library    me={me} library={library} setLibrary={setLibrary} callLink={callLink} onBadgeEarned={handleBadgeEarned}/>}
-        {tab==="urge"     &&<RedButton  me={me} goToMessages={()=>setTab("chat")} urges={urges} onOvercome={handleOvercome} onLogSaved={handleLogSaved}/>}
+        {tab==="urge"     &&(urgeMode==="track"
+          ?<TrackScreen logs={logs} onStartUrge={()=>setUrgeMode("flow")}/>
+          :<RedButton me={me} goToMessages={()=>setTab("chat")} urges={urges} onOvercome={handleOvercome} onLogSaved={handleLogSaved} startState={urgeStart} onStartConsumed={()=>setUrgeStart("idle")}/>
+        )}
       </div>
 
       {/* Nav — frosted glass */}
@@ -3242,7 +3732,7 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
           const isUrge=t.id==="urge";
           const active=tab===t.id;
           return(
-            <button key={t.id} onClick={()=>{setTab(t.id);}} style={{
+            <button key={t.id} onClick={()=>{if(t.id==="urge"){setUrgeStart("idle");setUrgeMode("track");}setTab(t.id);}} style={{
               flex:1,padding:isUrge?"0 0 8px":"9px 0 8px",display:"flex",flexDirection:"column",alignItems:"center",gap:isUrge?0:2,
               background:"none",border:"none",color:active?"#c8913c":"#3a3028",transition:"color 0.2s"
             }}>
@@ -3260,7 +3750,7 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
                   <div style={{width:16,height:16,borderRadius:"50%",background:active?"#ff8c70":"#9d3d2e",boxShadow:active?"0 0 12px rgba(255,140,112,0.8)":"none",transition:"all 0.3s"}}/>
                 </div>
               ):(
-                <span style={{fontSize:21,lineHeight:1,opacity:active?1:0.35,transition:"opacity 0.2s"}}>{t.icon}</span>
+                <TabIcon id={t.id} active={active}/>
               )}
               <span style={{fontSize:9,fontWeight:active?600:400,letterSpacing:"0.06em",marginTop:isUrge?5:0,textTransform:"uppercase",color:active?"#c8913c":"#3a3028",transition:"color 0.2s"}}>{t.label}</span>
               {active&&!isUrge&&<div style={{width:3,height:3,borderRadius:"50%",background:"#c8913c",marginTop:2}}/>}
@@ -3285,7 +3775,7 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
       {profile   &&<ProfileModal user={profile} me={me} onClose={()=>setProfile(null)} onDm={handleDm} onPatterns={()=>setPatterns(true)}/>}
       {patterns  &&<PatternsModal logs={logs} onClose={()=>setPatterns(false)}/>}
       {sosOpen   &&<SOSModal partner={partner} onClose={()=>setSos(false)}/>}
-      {adminOpen &&<AdminPanel users={allUsers} callLink={callLink} setCallLink={setCallLink} onClose={()=>setAdmin(false)} onUpdate={handleAdminSave} me={me}/>}
+      {adminOpen &&<AdminPanel users={allUsers} callLink={callLink} setCallLink={setCallLink} startHereVideo={startHereVideo} setStartHereVideo={setStartHereVideo} onClose={()=>setAdmin(false)} onUpdate={handleAdminSave} me={me}/>}
     </div>
   );
 }
@@ -3453,3 +3943,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(<ErrorBoundary><App/
 </script>
 </body>
 </html>
+
