@@ -2763,39 +2763,24 @@ function Library({me,library,setLibrary,callLink,onBadgeEarned}){
 
   return(
     <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+      <div style={{padding:"32px 20px 40px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"80%",gap:28,textAlign:"center"}}>
 
-      {/* Challenges */}
-      <div style={{padding:"18px 16px 8px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-        <div style={{fontWeight:800,fontSize:17,color:"#ede4d0",letterSpacing:"-0.02em"}}>🏋️ Challenges</div>
-        {me.isAdmin&&<button onClick={()=>setAdding(true)} style={{background:"#1e1b17",color:"#fff",border:"none",borderRadius:22,padding:"7px 16px",fontSize:12,fontWeight:700}}>+ Add</button>}
+        {/* Header */}
+        <div>
+          <div style={{fontSize:48,marginBottom:14}}>📅</div>
+          <div style={{fontWeight:800,fontSize:24,color:"#ede4d0",marginBottom:8,letterSpacing:"-0.03em",lineHeight:1.2}}>Book a 1-on-1 with Hunter</div>
+          <div style={{fontSize:15,color:"#8a8078",lineHeight:1.65,maxWidth:280}}>Ready to go deeper? Book a personal coaching call and let's map out your path forward.</div>
+        </div>
+
+        {/* Book button */}
+        <a href="https://sunlightjourney.com/coaching-calendar" target="_blank" rel="noreferrer"
+          style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:"18px 32px",borderRadius:18,
+            background:"#c8913c",color:"#fff",fontSize:17,fontWeight:800,textDecoration:"none",
+            letterSpacing:"-0.01em",boxShadow:"0 6px 24px rgba(200,145,60,0.4)",width:"100%",maxWidth:320,boxSizing:"border-box"}}>
+          Book a Call →
+        </a>
+
       </div>
-      <div style={{padding:"0 16px 2px",fontSize:12,color:"#7a7068",fontWeight:500,marginBottom:8}}>Complete challenges to earn badges next to your name.</div>
-      <div style={{padding:"0 16px"}}>{challenges.map(item=><ContentCard key={item.id} item={item}/>)}</div>
-
-      {/* Resources */}
-      <div style={{padding:"16px 16px 8px"}}>
-        <div style={{fontWeight:800,fontSize:17,color:"#ede4d0",letterSpacing:"-0.02em"}}>📚 Resources</div>
-      </div>
-      <div style={{padding:"0 16px"}}>{resources.map(item=><ContentCard key={item.id} item={item}/>)}</div>
-
-      {/* Book a Call */}
-      <div style={{padding:"8px 16px 0"}}>
-        <div style={{fontWeight:800,fontSize:17,color:"#ede4d0",marginBottom:5,letterSpacing:"-0.02em"}}>📅 Book a 1:1 Call</div>
-        <div style={{fontSize:13,color:"#7a7068",marginBottom:14,fontWeight:500}}>30 min with Coach Hunter</div>
-        {callLink?(
-          <a href={callLink} target="_blank" rel="noreferrer" style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,padding:18,borderRadius:16,background:"#1e1b17",color:"#fff",fontSize:16,fontWeight:800,textDecoration:"none",letterSpacing:"-0.01em",boxShadow:"0 4px 16px rgba(0,0,0,0.2)"}}>
-            📅 Book a Call →
-          </a>
-        ):(
-          <div style={{background:"#1e1b17",border:"1.5px dashed rgba(255,210,140,0.15)",borderRadius:16,padding:22,textAlign:"center"}}>
-            <div style={{fontSize:13,color:"#7a7068",lineHeight:1.6}}>{me.isAdmin?"Add your booking link in ⚙️ Admin → Settings.":"Booking link coming soon."}</div>
-          </div>
-        )}
-      </div>
-
-      {adding&&<LibraryModal title="New Training" onClose={()=>setAdding(false)} onSave={addPost} vals={newPost} set={setNP}/>}
-      {editing&&<LibraryModal title="Edit Training" onClose={()=>setEditing(null)} onSave={saveEdit} vals={editForm} set={setEF}/>}
-
       <div style={{height:48}}/>
     </div>
   );
