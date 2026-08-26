@@ -1860,19 +1860,6 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
           </div>
         </div>
 
-        {/* ── Fall Retreat Announcement ── */}
-        <div style={{borderRadius:18,background:"linear-gradient(135deg,#2a1208 0%,#1a0d06 100%)",border:"1px solid rgba(157,61,46,0.4)",padding:"16px 18px",boxShadow:"0 4px 20px rgba(157,61,46,0.15)"}}>
-          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-            <span style={{fontSize:26}}>🏕</span>
-            <div>
-              <div style={{fontSize:11,fontWeight:800,color:"#9d3d2e",letterSpacing:"0.08em"}}>UPCOMING RETREAT</div>
-              <div style={{fontSize:17,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em"}}>Fall Retreat 2026</div>
-            </div>
-          </div>
-          <div style={{fontSize:13,color:"#c0b8a8",marginBottom:14}}>Sep 25–27 · 3 days together in person. Don't miss it.</div>
-          <a href="https://sunlightjourney.com/retreat" target="_blank" rel="noopener noreferrer" style={{display:"block",textAlign:"center",padding:"10px",borderRadius:12,background:"#9d3d2e",color:"#fff",fontWeight:700,fontSize:13,textDecoration:"none",boxShadow:"0 3px 12px rgba(157,61,46,0.4)"}}>Register Now →</a>
-        </div>
-
         {/* ── Next Event ── */}
         {(()=>{
           const next=getUpcomingEvents(1)[0];
@@ -3053,12 +3040,13 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onSta
 
 // Recurring: day 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
 const RECURRING=[
-  {id:"group-call",   title:"Weekly Group Call",         icon:"📞", day:4, hour:19, minute:0, color:"#c8541a",  desc:"Every Thursday at 7 PM — join on Zoom with the group."},
+  {id:"group-call", title:"Weekly Group Call", icon:"📞", day:4, hour:19, minute:0, color:"#c8541a", desc:"Every Thursday at 7 PM MST — join on Zoom with the group.", skipDates:["2026-08-27"]},
 ];
 
 // One-off special events (date in YYYY-MM-DD)
 const SPECIAL=[
-  {id:"retreat-1",    title:"Fall Retreat",              icon:"🏕", date:"2026-09-25", endDate:"2026-09-27", color:"#9d3d2e", desc:"3-day in-person retreat. Sep 25–27, 2026."},
+  {id:"retreat-1",    title:"Fall Retreat",    icon:"🏕", date:"2026-09-25", endDate:"2026-09-27", color:"#9d3d2e", desc:"3-day in-person retreat. Sep 25–27, 2026."},
+  {id:"call-aug26",   title:"Weekly Group Call",icon:"📞", date:"2026-08-26", hour:19, minute:0,    color:"#c8541a", desc:"This week's call is Wednesday Aug 26 at 7 PM MST — join on Zoom."},
 ];
 
 function nextOccurrence(rec){
@@ -3074,17 +3062,22 @@ function nextOccurrence(rec){
 function getUpcomingEvents(limit=10){
   const now=new Date();
   const events=[];
-  // Recurring — next 3 occurrences each
+  // Recurring — next 3 occurrences each (skip any dates in skipDates)
   RECURRING.forEach(r=>{
     let d=nextOccurrence(r);
     for(let i=0;i<3;i++){
-      events.push({...r,_date:new Date(d),_type:"recurring"});
+      const ds=d.toISOString().split('T')[0];
+      if(!r.skipDates||!r.skipDates.includes(ds)){
+        events.push({...r,_date:new Date(d),_type:"recurring"});
+      }
       d=new Date(d);d.setDate(d.getDate()+7);
     }
   });
   // Special
   SPECIAL.forEach(s=>{
-    const d=new Date(s.date+"T08:00:00");
+    const hh=s.hour!=null?String(s.hour).padStart(2,'0'):'08';
+    const mm=s.minute!=null?String(s.minute).padStart(2,'0'):'00';
+    const d=new Date(s.date+`T${hh}:${mm}:00`);
     if(d>now||s.endDate) events.push({...s,_date:d,_type:"special"});
   });
   return events.sort((a,b)=>a._date-b._date).slice(0,limit);
