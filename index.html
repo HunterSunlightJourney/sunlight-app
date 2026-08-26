@@ -2130,10 +2130,57 @@ function ChatView({me,users,msgs,setMsgs,channelId,dmToId,isChannel}){
   const [inp,setInp]=useState("");
   const [anon,setAnon]=useState(false);
   const [voiceMode,setVoiceMode]=useState(false);
+  const [imgSending,setImgSending]=useState(false);
   const endRef=useRef(null);
+  const imgRef=useRef(null);
   useEffect(()=>endRef.current?.scrollIntoView({behavior:"smooth"}),[msgs]);
   const getU=id=>users.find(u=>u.id===id)||{id,name:"Member",color:"#5a5248",badges:[],urges:0};
   const challengeBadges=u=>(u.badges||[]).map(id=>BADGE_DEFS.find(b=>b.id===id&&b.isChallenge)).filter(Boolean);
+
+  // Compress image via canvas, return data URL
+  const compressImage=file=>new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const MAX=900;
+        let w=img.width,h=img.height;
+        if(w>h&&w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+        else if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+        const canvas=document.createElement("canvas");
+        canvas.width=w;canvas.height=h;
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL("image/jpeg",0.72));
+      };
+      img.onerror=reject;
+      img.src=e.target.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+
+  const sendImage=async file=>{
+    if(!file)return;
+    setImgSending(true);
+    let dataUrl;
+    try{dataUrl=await compressImage(file);}catch(e){setImgSending(false);alert("Couldn't load image.");return;}
+    const text="[img]"+dataUrl;
+    const tempId="opt_"+Date.now();
+    const tempMsg={id:tempId,userId:me.id,fromId:me.id,toId:dmToId,text,isAnn:false,pinned:false,anon:false,isBadge:false,badgeIcon:null,isVoice:false,channelId,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};
+    setMsgs(p=>[...p,tempMsg]);
+    setImgSending(false);
+    try{
+      if(isChannel){
+        const {data,error}=await sb.from("group_messages").insert({user_id:me.id,text,is_anonymous:false,is_announcement:false,channel_id:channelId}).select();
+        if(error){setMsgs(p=>p.filter(m=>m.id!==tempId));}
+        else if(data&&data[0])setMsgs(p=>p.map(x=>x.id===tempId?rowToMsg(data[0]):x));
+      } else {
+        const {data,error}=await sb.from("direct_messages").insert({from_user_id:me.id,to_user_id:dmToId,text,is_voice:false}).select();
+        if(error){setMsgs(p=>p.filter(m=>m.id!==tempId));}
+        else if(data&&data[0])setMsgs(p=>p.map(x=>x.id===tempId?rowToDm(data[0]):x));
+      }
+    }catch(e){setMsgs(p=>p.filter(m=>m.id!==tempId));}
+  };
 
   const sendText=async()=>{
     if(!inp.trim())return;
@@ -2199,6 +2246,17 @@ function ChatView({me,users,msgs,setMsgs,channelId,dmToId,isChannel}){
               <div style={{fontSize:11,color:"#8a8078",marginTop:5}}>{msg.time}</div>
             </div>
           );
+          let msgContent;
+          if(msg.isVoice&&msg.voiceData){
+            msgContent=<VoiceMessage data={msg.voiceData} isMe={isMe}/>;
+          } else if(msg.text&&msg.text.startsWith("[img]")){
+            msgContent=<img src={msg.text.slice(5)} alt="photo" style={{maxWidth:220,maxHeight:280,borderRadius:16,display:"block",objectFit:"cover",boxShadow:"0 3px 12px rgba(0,0,0,0.35)"}}/>;
+          } else {
+            msgContent=<div style={{borderRadius:20,padding:"9px 15px",fontSize:15,lineHeight:1.45,
+                background:isMe?"#2a2018":"#252118",color:isMe?"#ede4d0":"#c0b8a8",
+                borderBottomRightRadius:isMe?5:20,borderBottomLeftRadius:isMe?20:5,
+                boxShadow:isMe?"0 2px 8px rgba(0,0,0,0.18)":"0 1px 4px rgba(0,0,0,0.07)"}}>{msg.text}</div>;
+          }
           return(
             <div key={msg.id} style={{display:"flex",alignItems:"flex-end",gap:8,flexDirection:isMe?"row-reverse":"row"}}>
               {!isMe&&(showAnon
@@ -2212,12 +2270,7 @@ function ChatView({me,users,msgs,setMsgs,channelId,dmToId,isChannel}){
                     {cBadges.map(b=><span key={b.id} title={b.label} style={{fontSize:12}}>{b.icon}</span>)}
                   </div>
                 )}
-                {msg.isVoice&&msg.voiceData
-                  ?<VoiceMessage data={msg.voiceData} isMe={isMe}/>
-                  :<div style={{borderRadius:20,padding:"9px 15px",fontSize:15,lineHeight:1.45,
-                    background:isMe?"#2a2018":"#252118",color:isMe?"#ede4d0":"#c0b8a8",
-                    borderBottomRightRadius:isMe?5:20,borderBottomLeftRadius:isMe?20:5,
-                    boxShadow:isMe?"0 2px 8px rgba(0,0,0,0.18)":"0 1px 4px rgba(0,0,0,0.07)"}}>{msg.text}</div>}
+                {msgContent}
                 <div style={{fontSize:11,color:"#7a7068",marginTop:4}}>{msg.time}</div>
               </div>
             </div>
@@ -2234,6 +2287,9 @@ function ChatView({me,users,msgs,setMsgs,channelId,dmToId,isChannel}){
             :<input style={{flex:1,background:"rgba(255,210,140,0.05)",borderRadius:22,padding:"9px 16px",fontSize:15,border:"1px solid rgba(255,210,140,0.08)",outline:"none",color:"#ede4d0"}}
               placeholder={isChannel?(anon?"Message anonymously...":"Message the group..."):"Message..."}
               value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==="Enter"&&sendText()}/>}
+          {/* Photo button */}
+          <input ref={imgRef} type="file" accept="image/*" style={{display:"none"}} onChange={e=>{const f=e.target.files&&e.target.files[0];if(f)sendImage(f);e.target.value="";}}/>
+          {!voiceMode&&<button onClick={()=>imgRef.current&&imgRef.current.click()} disabled={imgSending} style={{width:36,height:36,borderRadius:"50%",background:"rgba(255,210,140,0.06)",border:"1px solid rgba(255,210,140,0.1)",color:imgSending?"#3a3028":"#7a7068",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>📷</button>}
           <button onClick={()=>setVoiceMode(v=>!v)} style={{width:36,height:36,borderRadius:"50%",background:voiceMode?"rgba(200,145,60,0.25)":"rgba(255,210,140,0.06)",border:voiceMode?"1px solid rgba(200,145,60,0.5)":"1px solid rgba(255,210,140,0.1)",color:voiceMode?"#c8913c":"#7a7068",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>🎙</button>
           {!voiceMode&&<button onClick={sendText} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"none",color:"#fff",fontSize:18,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>↑</button>}
         </div>
