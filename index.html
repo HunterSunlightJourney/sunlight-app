@@ -2191,6 +2191,8 @@ function ChatView({me,users,msgs,setMsgs,channelId,dmToId,isChannel}){
   );
 }
 
+const CH_ICON_PULLUP="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCABAAEADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDxaI/L+NPzUUZ+X8aduqRj80Zpm6jdQA/NGaZuo3UAPzTJT8v40bqbIfl/GgDvPBvw0k8Q6VHqN5dyW8M5PkRwxhncA43HPQZBxXUN8GNPjXc99qaj1aNAP5V3PwpAHh3RMYz/AGeMZ9a7a4+1HTL77UPl8s4BxxxTsI8L/wCFQaR/0FL/ANOkf+FL/wAKg0n/AKCl/wD98p/hXcv4c+2b5V0+NxIxJba3Oep6/wAqtDTruygCrbpFCowBtIA/yaQHnn/Cn9J/6Cl//wB8p/hR/wAKf0n/AKCl/wD98p/hXf4nxwYs/Q1IM4GcZ74oA88/4U/pP/QUv/8AvlP8K5rxh8Nm0HSX1OxvXuYISDMkqBWVScbgRwRkjNe01heNAD4I1sH/AJ83oAd4Kdk8F6IyMVYWaYKnBHFdA91PKpWSeV17hnJFYngJYv8AhC9JlmwYoNN85gTjcFUnFbmjeI7LxPb2YgsbZYriQxl42+eP5SQffpVcrtzdAWuhJ9rjZYxLHKWRQoMczICB0yBT21Bfs7xRxON4IJeUvgHHr9KSxgSWYh9pIyBnpUt/boke75AwP8P4f41NxXM6iuE17VL+68Sf2XBfSWkQyimIYO4LnJJ4PPb0q14I8RXWqteWd3IkzWqqwmU53ckEfpUqSbsaODUeY7GsPxn/AMiTrf8A15v/ACrZhfzbN7jc2FJACoW6DPJ7CuX8eaj5HgDU5VTf5qCD6b2Az+FbzpOKuZKVy94MuXtfBWhypE0h+yICqqGyCDnIPUVs32pRX0KxWukxWk0T7i8cCE9COmRjrmsXwe6x+B9FZiABZpkmtUT2yNvGxS/G7bjd+NFONS/NBPTyuKbh8MmTiQwQ7ueF6E4J/wDr0sV288LAKFViMh1BYY9CDxQU81SpRWU9Qw4pqQrCDsiRATztAH8q55ODdm9RSlTvyt6lfUkhktEjlg3BZN4dVGVJGD1I6jirEewqrJbQwDHRIgjf8CI64qX7K9xGcwh0PZsYP50kiPEcOu3PSoU6TnZNX9dTeUW4q62Mia2CXJ8tbpVJyUVQVbB+vNQeNj5/grW3kjjGbRm2KgUKRjHHrXUro2oSKrizYg8gnAP865jxyj2/g3XI5lMbraOCG4wa6JScmnIz5Y3uj//Z";
+const CH_ICON_MEDITATION="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCABAAEADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3XbL6N+dG2X0b86gu4PtEyumoXNvgYKxEYP5g1G9qHDA6peLnbja6gjA+nfvTAt7ZfRvzo2y+jfnVMWpVosatd/u8bgWU7+c88fhWj9oiH8QoAi2y+jfnRtl9G/OpftEX98UfaI/71AEW2Qf3vzoAkPTJ+hrO1nTE1WW2kF35fkNnYy7lbkdRkelaMRQOHzGMDGI161Kcr2sQnLmatoV5YPMbO4DjH3Af50w2inPzDkAf6teP0qxRVlkEdqiMSwV8+qKP5CpPJi5/dJz1+Uc0+igCPyIenlJ/3yKPIi/55J/3yKkooAjMEJ6xJ1z90U9UVBhVCj0AxS0UAFFFFABRRRQAUUUUAFFFFAGfcXssSF0jZxn7qAE4/rVb+15/MCC0usnoTGAP58VohMyiI2hEZiV/P3cE5AK4oRHYSGTT/KZHYRp5oPmgDg57Z96LiIvtMvqPyqvNqU0MhUQTScZBjQEH2rQjh3RI5swsrLGWiL/cyfm574/XFKYAHAWANGd+573K46f1ouMzrfU5Z2x5E8YwSGkjABqx9pl9R+VWEjV5Xja1KInl7ZS3Emev5UiR+ZGXayMcgD4iZwd2OnI9aLiIPtEv94flSrcyAjJBH0qd4gjLss/NLOqsofGwEcn3xTCmJTELQmPymcz7uA2SAuKLjP/Z";
 function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMsgs,openChannelSlug,setOpenChannelSlug}){
   const generalCh=channels.find(c=>c.slug==="general");
   const initCh=openChannelSlug?channels.find(c=>c.slug===openChannelSlug)||generalCh:generalCh;
@@ -2271,23 +2273,26 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
           <div style={{width:280,height:"100%",background:"#1a1714",overflowY:"auto",boxShadow:"6px 0 32px rgba(0,0,0,0.6)",display:"flex",flexDirection:"column"}}>
             <div style={{padding:"18px 16px 10px",fontSize:18,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em",borderBottom:"0.5px solid rgba(255,210,140,0.07)",marginBottom:4}}>Messages</div>
 
-            <div style={{padding:"12px 16px 4px",fontSize:10,fontWeight:700,color:"#6a6058",letterSpacing:"0.1em"}}>PINNED</div>
             {generalCh&&<SidebarRow icon="💬" name="General" active={!!(activeChannel&&activeChannel.id===generalCh.id&&!activeDmUid)} unread={false} onClick={()=>selectChannel(generalCh)}/>}
-            {hunter&&<SidebarRow icon={<Avatar user={hunter} size={32}/>} name="Coach Hunter" active={activeDmUid===hunter.id} unread={hunterUnread>0} unreadCount={hunterUnread} onClick={()=>selectDm(hunter.id)}/>}
 
             <div style={{padding:"12px 16px 4px",fontSize:10,fontWeight:700,color:"#6a6058",letterSpacing:"0.1em"}}>CHANNELS</div>
             {sidebarChs.map(ch=>{
               const hasUnread=!visited[ch.id]&&getChannelMsgs(ch).length>0;
-              return<SidebarRow key={ch.id} icon="＃" name={ch.name} active={activeChannel&&activeChannel.id===ch.id} unread={hasUnread} onClick={()=>selectChannel(ch)}/>;
+              let chIcon;
+              if(ch.slug==="fitness-crew"){chIcon=<img src={CH_ICON_PULLUP} style={{width:"100%",height:"100%",objectFit:"cover"}}/>;}
+              else if(ch.slug==="monthly-challenge"){chIcon=<img src={CH_ICON_MEDITATION} style={{width:"100%",height:"100%",objectFit:"cover"}}/>;}
+              else{chIcon="＃";}
+              return<SidebarRow key={ch.id} icon={chIcon} name={ch.name} active={activeChannel&&activeChannel.id===ch.id} unread={hasUnread} onClick={()=>selectChannel(ch)}/>;
             })}
 
             <div style={{padding:"12px 16px 4px",fontSize:10,fontWeight:700,color:"#6a6058",letterSpacing:"0.1em"}}>DIRECT MESSAGES</div>
+            {hunter&&<SidebarRow icon={<Avatar user={hunter} size={32}/>} name="Coach Hunter" active={activeDmUid===hunter.id} unread={hunterUnread>0} unreadCount={hunterUnread} onClick={()=>selectDm(hunter.id)}/>}
             {otherUsers.map(u=>{
               const thread=getDmThread(u.id);
               const unread=thread.some(m=>!m.isRead&&m.fromId===u.id);
               return<SidebarRow key={u.id} icon={<Avatar user={u} size={32}/>} name={u.name} active={activeDmUid===u.id} unread={unread} onClick={()=>selectDm(u.id)}/>;
             })}
-            {otherUsers.length===0&&<div style={{padding:"12px 16px",fontSize:13,color:"#4a4038"}}>Other members will appear here</div>}
+            {!hunter&&otherUsers.length===0&&<div style={{padding:"12px 16px",fontSize:13,color:"#4a4038"}}>Other members will appear here</div>}
           </div>
           {/* Backdrop — tap to close */}
           <div style={{flex:1,background:"rgba(0,0,0,0.5)"}} onClick={()=>setSidebarOpen(false)}/>
