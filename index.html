@@ -774,22 +774,38 @@ function AdminPanel({users,callLink,setCallLink,startHereVideo,setStartHereVideo
 const inpStyle={width:"100%",padding:"15px 18px",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:14,fontSize:16,outline:"none",marginBottom:12,color:"#ede4d0",background:"#1e1b17",boxSizing:"border-box",fontFamily:"inherit"};
 
 function LoginScreen({onLogin,onSignup}){
-  const [email,   setEmail]   =useState("");
-  const [pass,    setPass]    =useState("");
-  const [err,     setErr]     =useState("");
-  const [loading, setLoading] =useState(false);
+  const saved=()=>{try{return JSON.parse(localStorage.getItem("sl_remember")||"null");}catch{return null;}};
+  const init=saved();
+  const [email,      setEmail]     =useState(init?.email||"");
+  const [pass,       setPass]      =useState(init?.pass||"");
+  const [remember,   setRemember]  =useState(!!init);
+  const [err,        setErr]       =useState("");
+  const [loading,    setLoading]   =useState(false);
+
+  // Auto-login if credentials were saved
+  useEffect(()=>{
+    if(init?.email&&init?.pass){
+      setLoading(true);
+      onLogin(init.email,init.pass).then(error=>{
+        if(error){setErr("Saved login failed. Please sign in again.");localStorage.removeItem("sl_remember");setLoading(false);}
+      });
+    }
+  },[]);
 
   const submit=async()=>{
     if(!email.trim()){setErr("Enter your email.");return;}
     if(!pass){setErr("Enter your password.");return;}
-    setLoading(true);
-    setErr("");
+    setLoading(true);setErr("");
+    if(remember){
+      try{localStorage.setItem("sl_remember",JSON.stringify({email:email.trim().toLowerCase(),pass}));}catch{}
+    } else {
+      try{localStorage.removeItem("sl_remember");}catch{}
+    }
     const error=await onLogin(email.trim().toLowerCase(),pass);
     if(error){
       setErr(error==="Invalid login credentials"?"Wrong email or password.":error);
       setLoading(false);
     }
-    // On success, login() sets screen to "app" directly
   };
 
   const handleKey=e=>{if(e.key==="Enter") submit();};
@@ -804,6 +820,13 @@ function LoginScreen({onLogin,onSignup}){
         </div>
         <input type="email" placeholder="Email address" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={handleKey} style={inpStyle} autoComplete="email"/>
         <input type="password" placeholder="Password" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={handleKey} style={{...inpStyle,letterSpacing:"0.05em"}} autoComplete="current-password"/>
+        {/* Remember Me */}
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16,marginTop:2}}>
+          <button onClick={()=>setRemember(r=>!r)} style={{width:22,height:22,borderRadius:6,border:`2px solid ${remember?"#c8541a":"rgba(255,210,140,0.2)"}`,background:remember?"#c8541a":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,cursor:"pointer"}}>
+            {remember&&<span style={{color:"#fff",fontSize:13,fontWeight:800,lineHeight:1}}>✓</span>}
+          </button>
+          <span style={{fontSize:14,color:"#7a7068",cursor:"pointer"}} onClick={()=>setRemember(r=>!r)}>Remember me</span>
+        </div>
         {err&&<div style={{fontSize:13,color:"#c07060",marginBottom:10,fontWeight:500}}>{err}</div>}
         <button onClick={submit} disabled={loading}
           style={{width:"100%",padding:17,borderRadius:16,background:loading?"#8a4018":"#c8541a",color:"#fff",fontSize:17,fontWeight:800,border:"none",marginBottom:12,letterSpacing:"-0.01em",opacity:loading?0.8:1}}>
