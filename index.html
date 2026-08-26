@@ -25,7 +25,7 @@
       font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Helvetica,Arial,sans-serif;
       -webkit-font-smoothing:antialiased;
     }
-    #root{width:100%;height:100%;}
+    #root{max-width:430px;width:100%;height:100%;margin:0 auto;}
     textarea,input,select{font-family:inherit;-webkit-font-smoothing:antialiased;color:#ede4d0;}
     ::-webkit-scrollbar{display:none;}
 
@@ -2198,11 +2198,14 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
   const [activeChannel,setActiveChannel]=useState(initCh||null);
   const [activeDmUid,setActiveDmUid]=useState(null);
   const [sidebarOpen,setSidebarOpen]=useState(true);
-  const [visited,setVisited]=useState(()=>new Set(generalCh?[generalCh.id]:[]));
+  // visited: plain object {channelId: true} — avoids Set compat issues with Babel standalone
+  const [visited,setVisited]=useState(()=>{ const o={}; if(generalCh)o[generalCh.id]=true; return o; });
 
   useEffect(()=>{if(openChannelSlug&&setOpenChannelSlug)setOpenChannelSlug(null);},[]);
-  // Keep general in visited whenever it loads
-  useEffect(()=>{if(generalCh)setVisited(v=>new Set([...v,generalCh.id]));},[generalCh?.id]);
+  // Keep general marked visited whenever channels load
+  useEffect(()=>{
+    if(generalCh&&generalCh.id){setVisited(v=>({...v,[generalCh.id]:true}));}
+  },[generalCh&&generalCh.id||null]);
 
   const hunter=users.find(u=>u.id===HUNTER_UUID);
   const otherUsers=users.filter(u=>u.id!==me.id&&u.id!==HUNTER_UUID);
@@ -2215,7 +2218,7 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
 
   const selectChannel=ch=>{
     setActiveChannel(ch);setActiveDmUid(null);setSidebarOpen(false);
-    setVisited(v=>new Set([...v,ch.id]));
+    setVisited(v=>({...v,[ch.id]:true}));
   };
   const selectDm=async uid=>{
     setActiveDmUid(uid);setActiveChannel(null);setSidebarOpen(false);
@@ -2247,7 +2250,7 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
     chatContent=(<>
       <MsgSubHeader
         name={dmUser?dmUser.name:"..."}
-        subtitle={dmUser?.id===HUNTER_UUID?"👑 Your Coach":dmUser?"💪 "+dmUser.urges+" urges overcome":""}
+        subtitle={dmUser&&dmUser.id===HUNTER_UUID?"👑 Your Coach":dmUser?"💪 "+dmUser.urges+" urges overcome":""}
         left={dmUser&&<Avatar user={dmUser} size={34}/>}
         backIcon="☰" onBack={()=>setSidebarOpen(true)}/>
       <ChatView me={me} users={users} msgs={thread} setMsgs={setThread} dmToId={activeDmUid} isChannel={false}/>
@@ -2269,13 +2272,13 @@ function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMs
             <div style={{padding:"18px 16px 10px",fontSize:18,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em",borderBottom:"0.5px solid rgba(255,210,140,0.07)",marginBottom:4}}>Messages</div>
 
             <div style={{padding:"12px 16px 4px",fontSize:10,fontWeight:700,color:"#6a6058",letterSpacing:"0.1em"}}>PINNED</div>
-            {generalCh&&<SidebarRow icon="💬" name="General" active={activeChannel?.id===generalCh.id&&!activeDmUid} unread={false} onClick={()=>selectChannel(generalCh)}/>}
+            {generalCh&&<SidebarRow icon="💬" name="General" active={!!(activeChannel&&activeChannel.id===generalCh.id&&!activeDmUid)} unread={false} onClick={()=>selectChannel(generalCh)}/>}
             {hunter&&<SidebarRow icon={<Avatar user={hunter} size={32}/>} name="Coach Hunter" active={activeDmUid===hunter.id} unread={hunterUnread>0} unreadCount={hunterUnread} onClick={()=>selectDm(hunter.id)}/>}
 
             <div style={{padding:"12px 16px 4px",fontSize:10,fontWeight:700,color:"#6a6058",letterSpacing:"0.1em"}}>CHANNELS</div>
             {sidebarChs.map(ch=>{
-              const hasUnread=!visited.has(ch.id)&&getChannelMsgs(ch).length>0;
-              return<SidebarRow key={ch.id} icon="＃" name={ch.name} active={activeChannel?.id===ch.id} unread={hasUnread} onClick={()=>selectChannel(ch)}/>;
+              const hasUnread=!visited[ch.id]&&getChannelMsgs(ch).length>0;
+              return<SidebarRow key={ch.id} icon="＃" name={ch.name} active={activeChannel&&activeChannel.id===ch.id} unread={hasUnread} onClick={()=>selectChannel(ch)}/>;
             })}
 
             <div style={{padding:"12px 16px 4px",fontSize:10,fontWeight:700,color:"#6a6058",letterSpacing:"0.1em"}}>DIRECT MESSAGES</div>
