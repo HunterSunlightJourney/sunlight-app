@@ -2025,16 +2025,36 @@ function VoiceMessage({data,isMe}){
   );
 }
 
-function MsgSubHeader({name,subtitle,left,onBack}){
+function MsgSubHeader({name,subtitle,left,onBack,backIcon}){
   return(
     <div className="frosted-light" style={{borderBottom:"0.5px solid rgba(255,210,140,0.07)",padding:"12px 16px",display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
-      <button onClick={onBack} style={{background:"none",border:"none",fontSize:22,color:"#c0b8a8",padding:0,lineHeight:1,cursor:"pointer"}}>←</button>
+      <button onClick={onBack} style={{background:"none",border:"none",fontSize:backIcon?"20px":"22px",color:"#c0b8a8",padding:0,lineHeight:1,cursor:"pointer"}}>{backIcon||"←"}</button>
       {left}
       <div style={{flex:1}}>
         <div style={{fontWeight:700,fontSize:16,color:"#ede4d0",letterSpacing:"-0.01em"}}>{name}</div>
         {subtitle&&<div style={{fontSize:11,color:"#7a7068",fontWeight:500}}>{subtitle}</div>}
       </div>
     </div>
+  );
+}
+
+function SidebarRow({icon,name,active,unread,unreadCount,onClick}){
+  return(
+    <button onClick={onClick} style={{width:"100%",padding:"10px 16px",display:"flex",alignItems:"center",gap:12,
+      background:active?"rgba(200,145,60,0.1)":"none",border:"none",cursor:"pointer",textAlign:"left",
+      borderLeft:active?"3px solid #c8913c":"3px solid transparent"}}>
+      <div style={{flexShrink:0,width:32,height:32,borderRadius:"50%",background:"#252118",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,overflow:"hidden"}}>
+        {typeof icon==="string"?<span style={{color:"#a09888"}}>{icon}</span>:icon}
+      </div>
+      <span style={{flex:1,fontSize:14,fontWeight:active?600:400,color:active?"#c8913c":"#c0b8a8",letterSpacing:"-0.01em",textAlign:"left"}}>{name}</span>
+      {unread&&(
+        <div style={{minWidth:unreadCount?18:9,height:unreadCount?18:9,borderRadius:unreadCount?9:4.5,
+          background:"#3b82f6",display:"flex",alignItems:"center",justifyContent:"center",
+          fontSize:11,fontWeight:700,color:"#fff",padding:unreadCount?"0 5px":0,flexShrink:0}}>
+          {unreadCount||null}
+        </div>
+      )}
+    </button>
   );
 }
 function MsgConvoRow({icon,name,preview,badge,onClick,pinned}){
@@ -2172,81 +2192,104 @@ function ChatView({me,users,msgs,setMsgs,channelId,dmToId,isChannel}){
 }
 
 function MessagesScreen({me,users,channels,groupMsgs,setGroupMsgs,dmMsgs,setDmMsgs,openChannelSlug,setOpenChannelSlug}){
-  const initCh=openChannelSlug?channels.find(c=>c.slug===openChannelSlug)||null:null;
-  const [view,setView]=useState(initCh?"channel":"list");
-  const [activeChannel,setActiveChannel]=useState(initCh);
+  const generalCh=channels.find(c=>c.slug==="general");
+  const initCh=openChannelSlug?channels.find(c=>c.slug===openChannelSlug)||generalCh:generalCh;
+
+  const [activeChannel,setActiveChannel]=useState(initCh||null);
   const [activeDmUid,setActiveDmUid]=useState(null);
+  const [sidebarOpen,setSidebarOpen]=useState(true);
+  const [visited,setVisited]=useState(()=>new Set(generalCh?[generalCh.id]:[]));
+
   useEffect(()=>{if(openChannelSlug&&setOpenChannelSlug)setOpenChannelSlug(null);},[]);
+  // Keep general in visited whenever it loads
+  useEffect(()=>{if(generalCh)setVisited(v=>new Set([...v,generalCh.id]));},[generalCh?.id]);
 
   const hunter=users.find(u=>u.id===HUNTER_UUID);
   const otherUsers=users.filter(u=>u.id!==me.id&&u.id!==HUNTER_UUID);
   const getChannelMsgs=ch=>groupMsgs.filter(m=>m.channelId===ch.id);
   const getDmThread=uid=>{const k=dmKey(me.id,uid);return dmMsgs[k]||[];};
-  const hunterUnreadCount=hunter?getDmThread(hunter.id).filter(m=>!m.isRead&&m.fromId===HUNTER_UUID).length:0;
+  const hunterUnread=hunter?getDmThread(hunter.id).filter(m=>!m.isRead&&m.fromId===HUNTER_UUID).length:0;
 
-  const openChannel=ch=>{setActiveChannel(ch);setView("channel");};
-  const openDm=async uid=>{
-    setActiveDmUid(uid);setView("dm");
+  // Channels shown in sidebar: not general, not wins
+  const sidebarChs=channels.filter(c=>c.slug!=="general"&&c.slug!=="wins");
+
+  const selectChannel=ch=>{
+    setActiveChannel(ch);setActiveDmUid(null);setSidebarOpen(false);
+    setVisited(v=>new Set([...v,ch.id]));
+  };
+  const selectDm=async uid=>{
+    setActiveDmUid(uid);setActiveChannel(null);setSidebarOpen(false);
     if(uid===HUNTER_UUID){
       await sb.from("direct_messages").update({is_read:true}).eq("to_user_id",me.id).eq("from_user_id",uid).is("is_read",false);
       const k=dmKey(me.id,uid);
       setDmMsgs(p=>({...p,[k]:(p[k]||[]).map(m=>m.fromId===uid?{...m,isRead:true}:m)}));
     }
   };
-  const back=()=>{setView("list");setActiveChannel(null);setActiveDmUid(null);};
 
-  if(view==="channel"&&activeChannel){
+  // Build chat area
+  let chatContent=null;
+  if(activeChannel){
     const chanMsgs=getChannelMsgs(activeChannel);
     const setChanMsgs=fn=>setGroupMsgs(all=>{
       const others=all.filter(m=>m.channelId!==activeChannel.id);
       const these=typeof fn==="function"?fn(all.filter(m=>m.channelId===activeChannel.id)):fn;
       return[...others,...these];
     });
-    return(
-      <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-        <MsgSubHeader name={`# ${activeChannel.name}`} subtitle={activeChannel.desc||"Group channel"} onBack={back}/>
-        <ChatView me={me} users={users} msgs={chanMsgs} setMsgs={setChanMsgs} channelId={activeChannel.id} isChannel={true}/>
-      </div>
-    );
-  }
-
-  if(view==="dm"&&activeDmUid!==null){
+    chatContent=(<>
+      <MsgSubHeader name={`# ${activeChannel.name}`} subtitle={activeChannel.desc||"Group channel"} backIcon="☰" onBack={()=>setSidebarOpen(true)}/>
+      <ChatView me={me} users={users} msgs={chanMsgs} setMsgs={setChanMsgs} channelId={activeChannel.id} isChannel={true}/>
+    </>);
+  } else if(activeDmUid!==null){
     const dmUser=users.find(u=>u.id===activeDmUid);
     const k=dmKey(me.id,activeDmUid);
     const thread=dmMsgs[k]||[];
     const setThread=fn=>setDmMsgs(p=>({...p,[k]:typeof fn==="function"?fn(p[k]||[]):fn}));
-    return(
-      <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-        <MsgSubHeader
-          name={dmUser?dmUser.name:"..."}
-          subtitle={dmUser?.id===HUNTER_UUID?"👑 Your Coach":dmUser?"🔴 "+dmUser.urges+" urges overcome":""}
-          left={dmUser&&<Avatar user={dmUser} size={34}/>}
-          onBack={back}/>
-        <ChatView me={me} users={users} msgs={thread} setMsgs={setThread} dmToId={activeDmUid} isChannel={false}/>
-      </div>
-    );
+    chatContent=(<>
+      <MsgSubHeader
+        name={dmUser?dmUser.name:"..."}
+        subtitle={dmUser?.id===HUNTER_UUID?"👑 Your Coach":dmUser?"💪 "+dmUser.urges+" urges overcome":""}
+        left={dmUser&&<Avatar user={dmUser} size={34}/>}
+        backIcon="☰" onBack={()=>setSidebarOpen(true)}/>
+      <ChatView me={me} users={users} msgs={thread} setMsgs={setThread} dmToId={activeDmUid} isChannel={false}/>
+    </>);
+  } else {
+    chatContent=<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:"#7a7068",fontSize:14}}>Select a channel</div>;
   }
 
-  // ── List view ──
-  const generalCh=channels.find(c=>c.slug==="general");
-  const otherChs=channels.filter(c=>c.slug!=="general");
-
   return(
-    <div style={{height:"100%",overflowY:"auto",background:"#141210",paddingBottom:16}}>
-      <div style={{padding:"16px 16px 8px",fontSize:11,fontWeight:700,color:"#6a6058",letterSpacing:"0.08em"}}>📌 PINNED</div>
-      {generalCh&&<MsgConvoRow icon="💬" name="# general" preview={getChannelMsgs(generalCh).at(-1)?.text} pinned onClick={()=>openChannel(generalCh)}/>}
-      {hunter&&<MsgConvoRow icon={<Avatar user={hunter} size={44}/>} name="Coach Hunter" preview={getDmThread(hunter.id).at(-1)?.text||"Tap to message your coach"} badge={hunterUnreadCount} pinned onClick={()=>openDm(hunter.id)}/>}
+    <div style={{position:"relative",height:"100%",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      {/* Chat behind sidebar */}
+      <div style={{display:"flex",flexDirection:"column",height:"100%"}}>{chatContent}</div>
 
-      <div style={{padding:"16px 16px 8px",fontSize:11,fontWeight:700,color:"#6a6058",letterSpacing:"0.08em"}}>CHANNELS</div>
-      {otherChs.map(ch=>(
-        <MsgConvoRow key={ch.id} icon="＃" name={ch.name} preview={getChannelMsgs(ch).at(-1)?.text} onClick={()=>openChannel(ch)}/>
-      ))}
+      {/* Sidebar overlay */}
+      {sidebarOpen&&(
+        <div style={{position:"absolute",inset:0,zIndex:50,display:"flex"}}>
+          {/* Panel */}
+          <div style={{width:280,height:"100%",background:"#1a1714",overflowY:"auto",boxShadow:"6px 0 32px rgba(0,0,0,0.6)",display:"flex",flexDirection:"column"}}>
+            <div style={{padding:"18px 16px 10px",fontSize:18,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em",borderBottom:"0.5px solid rgba(255,210,140,0.07)",marginBottom:4}}>Messages</div>
 
-      <div style={{padding:"16px 16px 8px",fontSize:11,fontWeight:700,color:"#6a6058",letterSpacing:"0.08em"}}>DIRECT MESSAGES</div>
-      {otherUsers.map(u=>(
-        <MsgConvoRow key={u.id} icon={<Avatar user={u} size={44}/>} name={u.name} preview={getDmThread(u.id).at(-1)?.text||"No messages yet"} onClick={()=>openDm(u.id)}/>
-      ))}
-      {otherUsers.length===0&&<div style={{textAlign:"center",padding:"24px",color:"#7a7068",fontSize:13}}>Other members will appear here</div>}
+            <div style={{padding:"12px 16px 4px",fontSize:10,fontWeight:700,color:"#6a6058",letterSpacing:"0.1em"}}>PINNED</div>
+            {generalCh&&<SidebarRow icon="💬" name="General" active={activeChannel?.id===generalCh.id&&!activeDmUid} unread={false} onClick={()=>selectChannel(generalCh)}/>}
+            {hunter&&<SidebarRow icon={<Avatar user={hunter} size={32}/>} name="Coach Hunter" active={activeDmUid===hunter.id} unread={hunterUnread>0} unreadCount={hunterUnread} onClick={()=>selectDm(hunter.id)}/>}
+
+            <div style={{padding:"12px 16px 4px",fontSize:10,fontWeight:700,color:"#6a6058",letterSpacing:"0.1em"}}>CHANNELS</div>
+            {sidebarChs.map(ch=>{
+              const hasUnread=!visited.has(ch.id)&&getChannelMsgs(ch).length>0;
+              return<SidebarRow key={ch.id} icon="＃" name={ch.name} active={activeChannel?.id===ch.id} unread={hasUnread} onClick={()=>selectChannel(ch)}/>;
+            })}
+
+            <div style={{padding:"12px 16px 4px",fontSize:10,fontWeight:700,color:"#6a6058",letterSpacing:"0.1em"}}>DIRECT MESSAGES</div>
+            {otherUsers.map(u=>{
+              const thread=getDmThread(u.id);
+              const unread=thread.some(m=>!m.isRead&&m.fromId===u.id);
+              return<SidebarRow key={u.id} icon={<Avatar user={u} size={32}/>} name={u.name} active={activeDmUid===u.id} unread={unread} onClick={()=>selectDm(u.id)}/>;
+            })}
+            {otherUsers.length===0&&<div style={{padding:"12px 16px",fontSize:13,color:"#4a4038"}}>Other members will appear here</div>}
+          </div>
+          {/* Backdrop — tap to close */}
+          <div style={{flex:1,background:"rgba(0,0,0,0.5)"}} onClick={()=>setSidebarOpen(false)}/>
+        </div>
+      )}
     </div>
   );
 }
