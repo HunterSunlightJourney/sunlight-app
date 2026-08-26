@@ -2926,12 +2926,27 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onSta
             )}
           </div>
 
+          {/* What are you feeling */}
+          <div className="card" style={{padding:"16px 18px"}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:12,letterSpacing:"0.08em"}}>WHAT ARE YOU FEELING?</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:7}}>
+              {EMOTIONS.map(e=><Chip key={e} label={e} sel={selEmo===e} onSel={()=>setEmo(selEmo===e?"":e)}/>)}
+            </div>
+          </div>
+
+          {/* Journal */}
+          <div className="card" style={{padding:"16px 18px"}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:10,letterSpacing:"0.08em"}}>ANYTHING ELSE ON YOUR MIND?</div>
+            <textarea value={wh} onChange={e=>setWh(e.target.value)} rows={3} placeholder="Let it out — no one else sees this..."
+              style={{width:"100%",background:"#1a1714",border:"1.5px solid rgba(255,210,140,0.1)",borderRadius:10,padding:"10px 13px",fontSize:14,outline:"none",resize:"none",lineHeight:1.6,color:"#ede4d0",fontFamily:"inherit",boxSizing:"border-box"}}/>
+          </div>
+
           {/* Continue */}
           <button onClick={()=>setState("away")} disabled={!canContinue} style={{
             width:"100%",padding:17,borderRadius:16,background:canContinue?"#c8541a":"rgba(255,210,140,0.06)",
             color:canContinue?"#fff":"#3a3028",border:"none",fontSize:16,fontWeight:800,letterSpacing:"-0.01em",
             transition:"background 0.2s,color 0.2s"
-          }}>Step away for 30 minutes →</button>
+          }}>Overcome the Urge →</button>
           <GBtn l="I already overcame it" o={()=>{onOvercome();setState("celebrate");}}/>
         </div>
       </div>
@@ -2940,31 +2955,61 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onSta
 
   if(state==="away"){
     const R=58,circ=2*Math.PI*R;
-    const moves=[
-      {icon:"🚶",text:"Go for a walk — even 10 minutes changes your brain chemistry."},
-      {icon:"🏋️",text:"Hit the gym. Channel this energy somewhere real."},
-      {icon:"📞",text:"Call a friend. Not about this — just connect with someone."},
-      {icon:"🧠",text:"Sit with this question: what are you actually looking for from porn?"},
-    ];
     return(
       <div style={{flex:1,overflowY:"auto",background:"#141210"}}>
-        <div style={{display:"flex",flexDirection:"column",padding:"28px 20px 40px",gap:20}}>
+        <div style={{display:"flex",flexDirection:"column",padding:"28px 20px 40px",gap:22}}>
           <div>
-            <div style={{fontWeight:800,fontSize:26,color:"#ede4d0",marginBottom:6,letterSpacing:"-0.03em",lineHeight:1.2}}>Good. Make this time yours.</div>
-            <div style={{fontSize:15,color:"#8a8078",lineHeight:1.6}}>You just bought yourself 30 minutes of forward movement. Use it.</div>
+            <div style={{fontWeight:800,fontSize:26,color:"#ede4d0",marginBottom:6,letterSpacing:"-0.03em",lineHeight:1.2}}>Let's overcome this together.</div>
+            <div style={{fontSize:15,color:"#8a8078",lineHeight:1.6}}>Watch this with me. Right now.</div>
           </div>
 
-          {/* Activity cards */}
-          <div style={{display:"flex",flexDirection:"column",gap:10}}>
-            {moves.map(m=>(
-              <div key={m.icon} className="card" style={{padding:"14px 16px",display:"flex",alignItems:"flex-start",gap:14}}>
-                <div style={{fontSize:28,lineHeight:1,marginTop:1,flexShrink:0}}>{m.icon}</div>
-                <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.6,fontWeight:500}}>{m.text}</div>
+          {/* Vimeo video */}
+          <div style={{borderRadius:16,overflow:"hidden",background:"#000",position:"relative",paddingBottom:"56.25%",height:0}}>
+            <iframe
+              src="https://player.vimeo.com/video/1221602831?autoplay=0&title=0&byline=0&portrait=0"
+              style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+
+          {/* SBM Method */}
+          <div className="card" style={{padding:"18px 18px"}}>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",marginBottom:14,letterSpacing:"0.08em"}}>THE SBM METHOD</div>
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
+                <div style={{width:38,height:38,borderRadius:12,background:"rgba(200,84,26,0.15)",border:"1px solid rgba(200,84,26,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:18,color:"#c8541a",flexShrink:0}}>S</div>
+                <div>
+                  <div style={{fontWeight:800,fontSize:15,color:"#ede4d0",marginBottom:3}}>Stop</div>
+                  <div style={{fontSize:13,color:"#8a8078",lineHeight:1.6}}>Freeze. Don't pick up your phone. Don't open anything. Just stop where you are.</div>
+                </div>
               </div>
-            ))}
+              <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
+                <div style={{width:38,height:38,borderRadius:12,background:"rgba(200,84,26,0.15)",border:"1px solid rgba(200,84,26,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:18,color:"#c8541a",flexShrink:0}}>B</div>
+                <div>
+                  <div style={{fontWeight:800,fontSize:15,color:"#ede4d0",marginBottom:3}}>Breathe</div>
+                  <div style={{fontSize:13,color:"#8a8078",lineHeight:1.6}}>In for 4 seconds. Hold for 4. Out for 6. Do it three times. This resets your nervous system in under 60 seconds.</div>
+                </div>
+              </div>
+              <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
+                <div style={{width:38,height:38,borderRadius:12,background:"rgba(200,84,26,0.15)",border:"1px solid rgba(200,84,26,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:18,color:"#c8541a",flexShrink:0}}>M</div>
+                <div>
+                  <div style={{fontWeight:800,fontSize:15,color:"#ede4d0",marginBottom:3}}>Move</div>
+                  <div style={{fontSize:13,color:"#8a8078",lineHeight:1.6}}>Get up. Walk outside, drop and do push-ups, anything physical. Movement ends the loop — your body can't hold an urge and exert itself at the same time.</div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Timer — secondary, not the focus */}
+          {/* 100 urges milestone */}
+          <div style={{background:"rgba(200,145,60,0.08)",border:"1px solid rgba(200,145,60,0.2)",borderRadius:16,padding:"18px 18px"}}>
+            <div style={{fontSize:22,marginBottom:10}}>🏆</div>
+            <div style={{fontWeight:800,fontSize:16,color:"#c8913c",marginBottom:6,lineHeight:1.3}}>You're on your way to 100 urges overcome.</div>
+            <div style={{fontSize:13,color:"#8a8078",lineHeight:1.65}}>Every single urge you face and walk away from rewires your brain. At 100, the pattern breaks permanently — the pull gets quiet. You're not just fighting an urge right now. You're buying your freedom.</div>
+            <div style={{marginTop:12,fontWeight:700,fontSize:13,color:"#c0b8a8"}}>Current count: {urges} overcome. Keep going.</div>
+          </div>
+
+          {/* Timer — secondary */}
           <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:10,padding:"8px 0"}}>
             <div style={{position:"relative",width:132,height:132,display:"flex",alignItems:"center",justifyContent:"center"}}>
               <svg style={{position:"absolute",transform:"rotate(-90deg)"}} width="132" height="132">
