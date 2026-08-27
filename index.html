@@ -2818,11 +2818,7 @@ function RedButton({me,goToMessages,urges,onOvercome,onLogSaved,startState,onSta
   const [commitment,  setCommitment]=useState(null); // {dueAt, label}
   const tmr=useRef(null);
 
-  useEffect(()=>{
-    if(state!=="away") return;
-    tmr.current=setInterval(()=>setLeft(t=>{if(t<=1){clearInterval(tmr.current);setState("checkin");return 0;}return t-1;}),1000);
-    return()=>clearInterval(tmr.current);
-  },[state]);
+  // Timer removed — user manually taps "I overcame it" or "I gave into it"
 
   // Fire commitment check-in once time is up — works even if they've been on another tab
   useEffect(()=>{
