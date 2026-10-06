@@ -1729,6 +1729,14 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
     }
 
     const CARD_META={
+      "first-30-days":{emoji:"📅",title:"Your First 30 Days",tagline:"The first month is the hardest — and the most important. Here's what to expect and how to win it.",accent:"#c8913c",items:[
+        {icon:"🧠",h:"Days 1–7: The brain fights back",b:"Your brain is used to a dopamine hit on demand. The first week it will throw everything at you — restlessness, strong urges, irritability. This is withdrawal. It's real, it's temporary, and pushing through it is the most important thing you'll do."},
+        {icon:"🌊",h:"Days 8–14: The flatline",b:"Around week two many men hit a flatline — low energy, low motivation, even low libido. This is not permanent. It means your brain is recalibrating. Rest, move your body, reach out to the community. Don't make big decisions in the flatline."},
+        {icon:"🔥",h:"Days 15–21: Momentum builds",b:"If you've made it to week three, something starts to shift. Mornings feel clearer. You start to feel pride instead of shame. Your focus sharpens. This is the compound interest of daily wins starting to pay off."},
+        {icon:"🏆",h:"Days 22–30: Identity is forming",b:"By the end of day 30 you are not the same person who started. The habit of reaching for porn is weakening. The habit of choosing differently is strengthening. This is where a new identity takes root."},
+        {icon:"⚠️",h:"What trips men up",b:"Boredom is the #1 trigger in the first 30 days. Have a plan for evenings and weekends. The urge to 'just check' social media late at night — treat that urge the same as any other. Use the app. Track it. Reach out."},
+        {icon:"🎯",h:"Your one job",b:"Don't quit. Not on the hard days, not on the boring days, not after a slip. Your one job in the first 30 days is to stay in the fight. Use every resource in this app. That's what it's here for."},
+      ]},
       "sexual-mastery":{emoji:"🔥",title:"Sexual Mastery",tagline:"Understanding your drive and directing it toward what actually matters.",accent:"#c8913c",items:[
         {icon:"⚡",h:"Energy is neutral",b:"Your sex drive isn't the problem — it's one of your most powerful sources of motivation and creativity. The question is what you're pointing it at."},
         {icon:"🎯",h:"Redirect, don't suppress",b:"Cold showers, hard workouts, meaningful work — when you feel the energy, channel it. Suppression builds pressure. Redirection builds power."},
@@ -1821,6 +1829,12 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                border:"rgba(200,84,26,0.22)",glow:"rgba(200,84,26,0.2)",badgeBg:"#c8541a",
                done:l1Done,total:l1Items.length,
                action:()=>setSubPage({type:"level",id:"beginner"})},
+
+              {title:["FIRST","30","DAYS"],badge:"📅 30 Days",
+               bg:"linear-gradient(145deg,#1a1408 0%,#110d05 60%,#0a0803 100%)",
+               border:"rgba(200,145,60,0.28)",glow:"rgba(200,145,60,0.22)",badgeBg:"rgba(180,120,40,0.9)",
+               done:0,total:0,
+               action:()=>setSubPage({type:"card",id:"first-30-days"})},
 
               {title:["MESSED","UP?","RESET","HERE"],badge:"🔄 Recovery",
                bg:"linear-gradient(145deg,#1c0d0a 0%,#120807 60%,#0c0706 100%)",
