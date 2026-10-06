@@ -2090,8 +2090,30 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          ],
          images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day28-innerchild.png"],
          chatPost:null},
+        {day:29,videoType:null,videoId:null,title:"Vision — Next 90 Days",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"You made it to Day 29.",bold:true,gold:false},
+           {t:"27 days ago you decided to do something most men never do — look themselves in the mirror and choose change.",bold:false,gold:false},
+           {t:"Now it's time to look forward.",bold:false,gold:false},
+           {t:"Not to what you're quitting. To what you're building.",bold:true,gold:true},
+           {t:"The next 90 days are where everything compounds. The discipline you've built. The clarity you've found. The identity you've stepped into.",bold:false,gold:false},
+           {t:"It all gets to go somewhere now.",bold:false,gold:false},
+           {t:"Most guys finish a challenge and slide back into old patterns within two weeks. Not because they're weak — because they had no vision pulling them forward.",bold:false,gold:false},
+           {t:"Vague goals stay dreams. Written goals become plans.",bold:true,gold:true},
+           {t:"So let's get specific. Take your time with these journal prompts below — this is some of the most important work you'll do in the whole 30 days.",bold:false,gold:false},
+         ],
+         tasksLabel:"",tasks:[],
+         journals:[
+           {prompt:"In 90 days, who do you want to be? Describe him in detail — how he carries himself, how he spends his mornings, what he no longer does, what he's deeply committed to."},
+           {prompt:"What are your top 3 goals for the next 90 days? Be specific across the areas that matter most to you: body, relationships, career or purpose, and your inner life."},
+           {prompt:"Which habits from this challenge are you keeping? What new ones are you adding? Write out your non-negotiable daily standard."},
+           {prompt:"What is the one thing — if you did it consistently for the next 90 days — that would change everything?"},
+         ],
+         images:[],
+         chatPost:{prefix:"My 90 Day Vision:",placeholder:"Share your #1 goal for the next 90 days with the group..."}},
       ];
-      for(var _d=29;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=30;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
