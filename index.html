@@ -1886,8 +1886,16 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
            {prompt:"Journal: How else do you label yourself when you look at porn? And what kinder, truer thing could you say instead?"},
          ],
          images:[]},
+        {day:14,videoType:"loom",videoId:"a38ca444420e41a08e52a521a0af377a",title:"Connection",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"Isolation feeds the habit. Connection breaks it.",bold:true,gold:false},
+         ],
+         tasksLabel:"TODAY'S TASK",
+         tasks:["Call your mama, a friend, or whoever. Build connection with someone you care about."],
+         journals:[],images:[]},
       ];
-      for(var _d=14;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=15;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
