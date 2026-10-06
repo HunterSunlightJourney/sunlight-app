@@ -1917,8 +1917,17 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
            {prompt:"What would you do for work if money wasn't a thing?"},
          ],
          images:[]},
+        {day:16,videoType:"loom",videoId:"923ce88f67594c59a4669623675fe1ad",title:"DO Your Passion",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"Yesterday was find your passion. Today is do it.",bold:true,gold:false},
+           {t:"You don't need permission. You don't need it to be productive. You just need 30 minutes.",bold:false,gold:false},
+         ],
+         tasksLabel:"TODAY'S TASK",
+         tasks:["Carve out 30 minutes for yourself and do something you genuinely enjoy."],
+         journals:[],images:[]},
       ];
-      for(var _d=16;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=17;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
