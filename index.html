@@ -2033,8 +2033,25 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
              ]},
            ],
          }},
+        {day:25,videoType:"loom",videoId:"32d8a2fae6f247749a10c4f3af110136",title:"Nervous System",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"When your nervous system is dysregulated, urges get louder. When you learn to calm it, you get your power back.",bold:true,gold:false},
+           {t:"Here are some ideas to calm your nervous system daily:",bold:false,gold:false},
+           {t:"• Meditation",bold:false,gold:false},
+           {t:"• Walks without your phone",bold:false,gold:false},
+           {t:"• Grounding (bare feet in grass)",bold:false,gold:false},
+           {t:"• Gardening",bold:false,gold:false},
+           {t:"⚠️ Heads up: tomorrow's big challenge is an ice bath!",bold:true,gold:true},
+         ],
+         tasksLabel:"TODAY'S TASK",
+         tasks:["Brainstorm daily ways you can calm your nervous system and pick one to do today"],
+         journals:[
+           {prompt:"What are some daily ways you can calm your nervous system? Write your own list:"},
+         ],
+         images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day25-nervoussystem.png"]},
       ];
-      for(var _d=25;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=26;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
