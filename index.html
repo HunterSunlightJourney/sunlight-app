@@ -1742,7 +1742,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          ],
          tasksLabel:"4 THINGS TO DO TODAY",
          tasks:["Delete all your social medias for 30 days","Plug your phone charger outside of your room","Go buy an alarm clock (if needed) and a NICE journal","Go introduce yourself in the community"],
-         journals:[]},
+         journals:[],images:[]},
         {day:2,videoType:"loom",videoId:"37a75eda2d8b408b9df65a1bd4962716",title:"Understanding Your Habit",comingSoon:false,
          textBlocks:[
            {t:"To break a habit we need to FIRST understand the habit.",bold:false,gold:false},
@@ -1753,7 +1753,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          ],
          tasksLabel:"TODAY'S CHALLENGE",
          tasks:["Call up one friend and tell them about your current habit"],
-         journals:[]},
+         journals:[],images:[]},
         {day:3,videoType:"vimeo",videoId:"1233424124",title:"Porn Isn't Your Problem",comingSoon:false,
          textBlocks:[
            {t:"Gentlemen, porn isn't your problem. The real issue is what you're using porn to escape from. Once you understand this you'll spend less time trying to 'quit porn' and more time on the actual ROOT of the issue.",bold:false,gold:false},
@@ -1763,9 +1763,19 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          journals:[
            {prompt:"What am I using porn to escape from?"},
            {prompt:"How else do you cope with negative emotions? (food, scrolling, video games)"},
-         ]},
+         ],
+         images:[]},
+        {day:4,videoType:"loom",videoId:"e9d00e47b7b649d3af7a350057ce35a4",title:"How to Overcome Urges",comingSoon:false,
+         textBlocks:[
+           {t:"How to overcome URGES",bold:true,gold:false},
+           {t:"Use this technique called urge surfing. Rather than giving in to a craving, you can ride it out — like a surfer riding a wave. The urge has a Trigger, a Rise, a Peak, and then it Falls away. You don't have to act on it. Just surf it.",bold:false,gold:false},
+         ],
+         tasksLabel:"",
+         tasks:[],
+         journals:[],
+         images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/urge-surfing.png"]},
       ];
-      for(var _d=4;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[]});
+      for(var _d=5;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
@@ -1887,6 +1897,15 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                               />
                             </div>
                           );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Inline images */}
+                    {day.images&&day.images.length>0&&(
+                      <div style={{marginBottom:20,display:"flex",flexDirection:"column",gap:12}}>
+                        {day.images.map(function(src,ii){
+                          return <img key={ii} src={src} alt="" style={{width:"100%",borderRadius:14,display:"block"}}/>;
                         })}
                       </div>
                     )}
