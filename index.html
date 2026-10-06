@@ -2061,8 +2061,26 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          tasksLabel:"TODAY'S CHALLENGE",
          tasks:["Complete a cold plunge for at least 3 minutes (ice bath, cold river, lake, or cold shower)","Take a photo or video and post it to the group"],
          journals:[],images:[]},
+        {day:27,videoType:"vimeo",videoId:"1233476430",title:"Confidence",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"Alright brother — today we're talking about confidence.",bold:true,gold:false},
+           {t:"Not fake confidence. Real confidence.",bold:true,gold:true},
+           {t:"The kind that comes from keeping promises to yourself.",bold:false,gold:false},
+           {t:"Think about the moments you've felt the most confident lately. What were you doing?",bold:false,gold:false},
+           {t:"• Taking care of your body?",bold:false,gold:false},
+           {t:"• Being honest?",bold:false,gold:false},
+           {t:"• Getting uncomfortable?",bold:false,gold:false},
+           {t:"• Speaking up?",bold:false,gold:false},
+           {t:"• Showing discipline?",bold:false,gold:false},
+           {t:"Confidence isn't built in huge moments. It's built in the small things you do every single day.",bold:true,gold:false},
+           {t:"The workout you didn't skip. The hard conversation you finally had. The urge you didn't give into. The moment you chose growth instead of escape.",bold:false,gold:false},
+           {t:"Write down 3 things that make you feel the most confident and share it with the community:",bold:false,gold:true},
+         ],
+         tasksLabel:"",tasks:[],journals:[],images:[],
+         chatPost:{prefix:"Confidence - Day 27:",placeholder:"Write 3 things that make you feel the most confident...\n\n1.\n2.\n3."}},
       ];
-      for(var _d=27;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=28;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
