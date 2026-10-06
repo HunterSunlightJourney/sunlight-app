@@ -1728,15 +1728,123 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
       );
     }
 
+    // ── First 30 Days: video-based daily training ──
+    if(subPage.id==="first-30-days"){
+      const DAYS_DATA=[
+        {day:1,vimeoId:"1233414310",title:"Welcome to the 30 Day Challenge",comingSoon:false},
+      ];
+      for(var _d=2;_d<=30;_d++) DAYS_DATA.push({day:_d,vimeoId:null,title:"Day "+_d,comingSoon:true});
+
+      const DAY1_TASKS=[
+        "Delete all your social medias for 30 days",
+        "Plug your phone charger outside of your room",
+        "Go buy an alarm clock (if needed) and a NICE journal",
+        "Go introduce yourself in the community",
+      ];
+
+      const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
+
+      const toggleThirty=function(id){
+        var nv=!effectiveChecks[id];
+        setLevelChecks(function(p){var o=Object.assign({},p);o[id]=nv;return o;});
+        if(onCheckChange) onCheckChange(id,nv);
+      };
+
+      return(
+        <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
+          <div style={{padding:"16px 18px 0",display:"flex",alignItems:"center",gap:12}}>
+            <button onClick={()=>setSubPage(null)} style={{width:36,height:36,borderRadius:"50%",background:"#1e1b17",border:"1.5px solid rgba(255,210,140,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,color:"#ede4d0",flexShrink:0}}>←</button>
+            <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em"}}>FIRST 30 DAYS</div>
+          </div>
+          <div style={{padding:"16px 18px 56px",display:"flex",flexDirection:"column",gap:16}}>
+
+            {/* Hero progress */}
+            <div style={{background:"#1e1b17",borderRadius:22,padding:"20px 22px"}}>
+              <div style={{fontSize:32,marginBottom:10}}>📅</div>
+              <div style={{fontSize:24,fontWeight:900,color:"#ede4d0",letterSpacing:"-0.03em",lineHeight:1.15,marginBottom:8}}>Your First 30 Days</div>
+              <div style={{height:6,borderRadius:999,background:"rgba(255,210,140,0.08)",overflow:"hidden",marginBottom:6}}>
+                <div style={{height:"100%",borderRadius:999,background:"#c8913c",transition:"width 0.6s ease",width:(Math.round(daysDone/30*100))+"%"}}/>
+              </div>
+              <div style={{fontSize:12,color:"#7a7068",fontWeight:600}}>{daysDone}/30 days complete</div>
+            </div>
+
+            {/* Day cards */}
+            {DAYS_DATA.map(function(day){
+              var dayId="thirty-"+day.day;
+              var isDone=!!effectiveChecks[dayId];
+
+              if(day.comingSoon){
+                return(
+                  <div key={dayId} style={{background:"#1a1714",borderRadius:18,padding:"16px 18px",border:"1px solid rgba(255,210,140,0.06)",display:"flex",alignItems:"center",gap:14,opacity:0.5}}>
+                    <div style={{width:36,height:36,borderRadius:10,background:"rgba(255,210,140,0.05)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:"#4a4038",flexShrink:0}}>{"D"+day.day}</div>
+                    <div style={{flex:1,fontSize:14,fontWeight:700,color:"#4a4038"}}>{"Day "+day.day+" — Coming Soon"}</div>
+                    <div style={{fontSize:12,color:"#3a3028"}}>🔒</div>
+                  </div>
+                );
+              }
+
+              return(
+                <div key={dayId} style={{background:"#1e1b17",borderRadius:20,overflow:"hidden",border:"1.5px solid rgba(255,210,140,0.08)"}}>
+                  {/* Video */}
+                  <div style={{position:"relative",paddingBottom:"56.25%",height:0,background:"#000"}}>
+                    <iframe
+                      src={"https://player.vimeo.com/video/"+day.vimeoId+"?autoplay=0&title=0&byline=0&portrait=0"}
+                      style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
+                      allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+                  </div>
+                  <div style={{padding:"18px 18px"}}>
+                    <div style={{fontSize:11,fontWeight:800,color:"#c8913c",letterSpacing:"0.08em",marginBottom:4}}>{"DAY "+day.day}</div>
+                    <div style={{fontWeight:800,fontSize:17,color:"#ede4d0",letterSpacing:"-0.01em",marginBottom:16}}>{day.title}</div>
+
+                    {/* Intro text */}
+                    <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.75,marginBottom:20}}>
+                      <div style={{marginBottom:12}}>Guys so stoked you're here. You've trusted us with a lot — your time, your money, and your energy. Our goal is to bring ACTUAL VALUE to your life and give you tools to not only make it 30 days but also overcome this long term.</div>
+                      <div style={{fontWeight:800,color:"#ede4d0",marginBottom:8}}>The Rules:</div>
+                      <div style={{marginBottom:6}}>1. Go 30 days without SEARCHING for porn</div>
+                      <div style={{marginBottom:6}}>2. Complete all the challenges (4 big challenges) and fill out the check-in forms</div>
+                      <div style={{marginBottom:12}}>3. Book and show up to the 30 min Graduation Call</div>
+                      <div style={{color:"#c8913c",fontWeight:700}}>That's it to get your $500 back.</div>
+                    </div>
+
+                    {/* 4 action checkboxes */}
+                    <div style={{marginBottom:20}}>
+                      <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em",marginBottom:12}}>4 THINGS TO DO TODAY</div>
+                      {DAY1_TASKS.map(function(task,ti){
+                        var tid=dayId+"-task-"+ti;
+                        var checked=!!effectiveChecks[tid];
+                        return(
+                          <button key={tid} onClick={()=>toggleThirty(tid)}
+                            style={{display:"flex",alignItems:"flex-start",gap:13,width:"100%",background:"none",border:"none",padding:"10px 0",cursor:"pointer",textAlign:"left",borderBottom:"0.5px solid rgba(255,210,140,0.06)"}}>
+                            <div style={{width:22,height:22,borderRadius:6,flexShrink:0,marginTop:1,
+                              border:"2px solid "+(checked?"#c8913c":"rgba(255,210,140,0.2)"),
+                              background:checked?"#c8913c":"transparent",
+                              display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s"}}>
+                              {checked&&<span style={{color:"#fff",fontSize:13,fontWeight:900,lineHeight:1}}>✓</span>}
+                            </div>
+                            <div style={{flex:1,fontSize:14,color:checked?"#c8913c":"#ede4d0",fontWeight:checked?700:500,lineHeight:1.45,textDecoration:checked?"line-through":"none",transition:"all 0.2s"}}>
+                              {(ti+1)+". "+task}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Mark day complete */}
+                    <button onClick={()=>toggleThirty(dayId)}
+                      style={{width:"100%",padding:15,borderRadius:13,fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",
+                        background:isDone?"rgba(200,145,60,0.14)":"#c8913c",color:isDone?"#c8913c":"#1a1410",transition:"all 0.2s"}}>
+                      {isDone?"✓ Day 1 Complete":"Mark Day 1 Complete"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
     const CARD_META={
-      "first-30-days":{emoji:"📅",title:"Your First 30 Days",tagline:"The first month is the hardest — and the most important. Here's what to expect and how to win it.",accent:"#c8913c",items:[
-        {icon:"🧠",h:"Days 1–7: The brain fights back",b:"Your brain is used to a dopamine hit on demand. The first week it will throw everything at you — restlessness, strong urges, irritability. This is withdrawal. It's real, it's temporary, and pushing through it is the most important thing you'll do."},
-        {icon:"🌊",h:"Days 8–14: The flatline",b:"Around week two many men hit a flatline — low energy, low motivation, even low libido. This is not permanent. It means your brain is recalibrating. Rest, move your body, reach out to the community. Don't make big decisions in the flatline."},
-        {icon:"🔥",h:"Days 15–21: Momentum builds",b:"If you've made it to week three, something starts to shift. Mornings feel clearer. You start to feel pride instead of shame. Your focus sharpens. This is the compound interest of daily wins starting to pay off."},
-        {icon:"🏆",h:"Days 22–30: Identity is forming",b:"By the end of day 30 you are not the same person who started. The habit of reaching for porn is weakening. The habit of choosing differently is strengthening. This is where a new identity takes root."},
-        {icon:"⚠️",h:"What trips men up",b:"Boredom is the #1 trigger in the first 30 days. Have a plan for evenings and weekends. The urge to 'just check' social media late at night — treat that urge the same as any other. Use the app. Track it. Reach out."},
-        {icon:"🎯",h:"Your one job",b:"Don't quit. Not on the hard days, not on the boring days, not after a slip. Your one job in the first 30 days is to stay in the fight. Use every resource in this app. That's what it's here for."},
-      ]},
       "sexual-mastery":{emoji:"🔥",title:"Sexual Mastery",tagline:"Understanding your drive and directing it toward what actually matters.",accent:"#c8913c",items:[
         {icon:"⚡",h:"Energy is neutral",b:"Your sex drive isn't the problem — it's one of your most powerful sources of motivation and creativity. The question is what you're pointing it at."},
         {icon:"🎯",h:"Redirect, don't suppress",b:"Cold showers, hard workouts, meaningful work — when you feel the energy, channel it. Suppression builds pressure. Redirection builds power."},
