@@ -1815,7 +1815,6 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          ],
          journals:[],
          images:[]},
-      ];
         {day:8,videoType:"loom",videoId:"b8ebb98e6b8a45d4b6267de7d9358170",title:"Movement is Medicine",comingSoon:false,
          topImages:[],
          textBlocks:[
@@ -1828,8 +1827,18 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          journals:[],
          images:[],
          link:{label:"Open the Workout Program →",url:"https://docs.google.com/spreadsheets/d/1JllQAbTMPOH6YF0LVXhFSpG-lu5WoOoURKMmYvc-acc/edit?usp=sharing",note:"You won't be able to edit it unless you make a copy in Google Sheets"}},
+        {day:9,videoType:"loom",videoId:"e90175260acd48bd8c15275206e42d12",title:"Master Your Emotions",comingSoon:false,
+         textBlocks:[
+           {t:"Emotions just want to be felt. Once you feel them, they go away.",bold:true,gold:false},
+           {t:"Feel it to heal it. Most guys use porn to escape an emotion they don't want to sit with. The solution isn't to run — it's to feel it.",bold:false,gold:false},
+           {t:"How do you feel your emotions? Pause. Name what you're feeling. Breathe into it. Let it move through you.",bold:false,gold:false},
+         ],
+         tasksLabel:"",tasks:[],journals:[],
+         images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day9-emotions.png"],
+         topImages:[]},
       ];
-      for(var _d=9;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+
+      for(var _d=10;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
@@ -1923,10 +1932,12 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                     {day.link&&(
                       <div style={{marginBottom:20}}>
                         <a href={day.link.url} target="_blank" rel="noreferrer"
-                          style={{display:"block",textAlign:"center",padding:"14px 18px",borderRadius:13,background:"#c8913c",color:"#1a1410",fontWeight:800,fontSize:14,textDecoration:"none",marginBottom:day.link.note?8:0}}>
+                          style={{display:"block",textAlign:"center",padding:"14px 18px",borderRadius:13,background:"#c8913c",color:"#1a1410",fontWeight:800,fontSize:14,textDecoration:"none",marginBottom:8}}>
                           {day.link.label}
                         </a>
-                        {day.link.note&&<div style={{fontSize:12,color:"#7a7068",textAlign:"center",lineHeight:1.5}}>{day.link.note}</div>}
+                        {day.link.note&&(
+                          <div style={{fontSize:12,color:"#7a7068",textAlign:"center",lineHeight:1.5}}>{day.link.note}</div>
+                        )}
                       </div>
                     )}
 
