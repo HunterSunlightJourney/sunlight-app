@@ -1742,7 +1742,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          ],
          tasksLabel:"4 THINGS TO DO TODAY",
          tasks:["Delete all your social medias for 30 days","Plug your phone charger outside of your room","Go buy an alarm clock (if needed) and a NICE journal","Go introduce yourself in the community"],
-         journals:[],images:[]},
+         journals:[],images:[],topImages:[]},
         {day:2,videoType:"loom",videoId:"37a75eda2d8b408b9df65a1bd4962716",title:"Understanding Your Habit",comingSoon:false,
          textBlocks:[
            {t:"To break a habit we need to FIRST understand the habit.",bold:false,gold:false},
@@ -1753,13 +1753,14 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          ],
          tasksLabel:"TODAY'S CHALLENGE",
          tasks:["Call up one friend and tell them about your current habit"],
-         journals:[],images:[]},
+         journals:[],images:[],topImages:[]},
         {day:3,videoType:"vimeo",videoId:"1233424124",title:"Porn Isn't Your Problem",comingSoon:false,
          textBlocks:[
            {t:"Gentlemen, porn isn't your problem. The real issue is what you're using porn to escape from. Once you understand this you'll spend less time trying to 'quit porn' and more time on the actual ROOT of the issue.",bold:false,gold:false},
          ],
          tasksLabel:"TODAY'S CHALLENGE",
          tasks:[],
+         topImages:[],
          journals:[
            {prompt:"What am I using porn to escape from?"},
            {prompt:"How else do you cope with negative emotions? (food, scrolling, video games)"},
@@ -1773,9 +1774,25 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          tasksLabel:"",
          tasks:[],
          journals:[],
-         images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/urge-surfing.png"]},
+         images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/urge-surfing.png"],
+         topImages:[]},
+        {day:5,videoType:null,videoId:null,title:"Finding Your Patterns",comingSoon:false,
+         topImages:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day5-brain.png"],
+         textBlocks:[
+           {t:"Today we're looking for patterns.",bold:true,gold:false},
+           {t:"Think about your last few urges… What do they have in common? Write it down below and then post it in the community with the title \"My Patterns - Day 5\". Let's go!!",bold:false,gold:false},
+         ],
+         tasksLabel:"",
+         tasks:[],
+         journals:[
+           {prompt:"Same time? When do urges tend to hit?"},
+           {prompt:"Same place? Where are you usually when it happens?"},
+           {prompt:"Same emotion? What are you feeling before the urge?"},
+           {prompt:"Same social media triggers? What were you looking at?"},
+         ],
+         images:[]},
       ];
-      for(var _d=5;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[]});
+      for(var _d=6;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
@@ -1836,16 +1853,27 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
 
               return(
                 <div key={dayId} style={{background:"#1e1b17",borderRadius:20,overflow:"hidden",border:"1.5px solid rgba(255,210,140,0.08)"}}>
-                  {/* Video */}
-                  <div style={{position:"relative",paddingBottom:"56.25%",height:0,background:"#000"}}>
-                    <iframe
-                      src={day.videoType==="loom"?"https://www.loom.com/embed/"+day.videoId:"https://player.vimeo.com/video/"+day.videoId+"?autoplay=0&title=0&byline=0&portrait=0"}
-                      style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
-                      allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
-                  </div>
+                  {/* Video — only shown when videoId exists */}
+                  {day.videoId&&(
+                    <div style={{position:"relative",paddingBottom:"56.25%",height:0,background:"#000"}}>
+                      <iframe
+                        src={day.videoType==="loom"?"https://www.loom.com/embed/"+day.videoId:"https://player.vimeo.com/video/"+day.videoId+"?autoplay=0&title=0&byline=0&portrait=0"}
+                        style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
+                        allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
+                    </div>
+                  )}
                   <div style={{padding:"18px 18px"}}>
                     <div style={{fontSize:11,fontWeight:800,color:"#c8913c",letterSpacing:"0.08em",marginBottom:4}}>{"DAY "+day.day}</div>
                     <div style={{fontWeight:800,fontSize:17,color:"#ede4d0",letterSpacing:"-0.01em",marginBottom:16}}>{day.title}</div>
+
+                    {/* Top images */}
+                    {day.topImages&&day.topImages.length>0&&(
+                      <div style={{marginBottom:16,display:"flex",flexDirection:"column",gap:12}}>
+                        {day.topImages.map(function(src,ii){
+                          return <img key={ii} src={src} alt="" style={{width:"100%",borderRadius:14,display:"block",background:"#fff"}}/>;
+                        })}
+                      </div>
+                    )}
 
                     {/* Text blocks — data-driven */}
                     <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
