@@ -1846,9 +1846,19 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          tasksLabel:"TODAY'S CHALLENGE",
          tasks:["Complete a 5K (walk or run)","Post your screenshot to the main group titled \"5k Challenge\""],
          journals:[],images:[],},
+        {day:11,videoType:"loom",videoId:"40af07dd7f3f4b238a17d4a8069bf15f",title:"Day 11 - Reflection",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"Take time today to reflect on what's changed so far.",bold:true,gold:false},
+           {t:"Notice shifts in your mindset, energy, confidence, habits, and overall well-being.",bold:false,gold:false},
+           {t:"Write your reflections below — then share them with the group.",bold:false,gold:true},
+         ],
+         tasksLabel:"",tasks:[],journals:[],
+         images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day11-dontquit.png"],
+         chatPost:true},
       ];
 
-      for(var _d=11;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=12;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
@@ -2004,6 +2014,36 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                         {day.images.map(function(src,ii){
                           return <img key={ii} src={src} alt="" style={{width:"100%",borderRadius:14,display:"block"}}/>;
                         })}
+                      </div>
+                    )}
+
+                    {/* Post to chat */}
+                    {day.chatPost&&(
+                      <div style={{marginBottom:20}}>
+                        <div style={{fontSize:13,fontWeight:700,color:"#ede4d0",marginBottom:8,lineHeight:1.45}}>Share your reflections with the group:</div>
+                        <textarea
+                          value={effectiveChecks[dayId+"-chatpost"]||""}
+                          onChange={function(e){setThirtyText(dayId+"-chatpost",e.target.value);}}
+                          rows={5}
+                          placeholder="Day 11 Reflections&#10;&#10;What's shifted for you so far? Mindset, energy, habits..."
+                          style={{width:"100%",background:"#141210",border:"1.5px solid rgba(255,210,140,0.25)",borderRadius:12,padding:"12px 14px",fontSize:14,color:"#ede4d0",fontFamily:"inherit",lineHeight:1.65,resize:"none",outline:"none",boxSizing:"border-box",marginBottom:10}}
+                        />
+                        <button
+                          onClick={function(){
+                            var postText=effectiveChecks[dayId+"-chatpost"]||"";
+                            if(!postText.trim()){alert("Write something first!");return;}
+                            var fullText="Day 11 Reflections\n\n"+postText.trim();
+                            sb.from("channels").select("id").eq("slug","general").single().then(function(res){
+                              if(res.error||!res.data){alert("Could not find #general channel.");return;}
+                              sb.from("group_messages").insert({user_id:me.id,text:fullText,is_anonymous:false,is_announcement:false,channel_id:res.data.id}).then(function(r2){
+                                if(r2.error){alert("Failed to post: "+r2.error.message);}
+                                else{alert("Posted to #general ✅");}
+                              });
+                            });
+                          }}
+                          style={{width:"100%",padding:14,borderRadius:13,fontSize:15,fontWeight:800,border:"none",background:"#4a7fc4",color:"#fff",cursor:"pointer",letterSpacing:"-0.01em"}}>
+                          Post to Chat
+                        </button>
                       </div>
                     )}
 
