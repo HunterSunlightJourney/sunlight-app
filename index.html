@@ -1979,8 +1979,18 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          ],
          tasksLabel:"",tasks:[],journals:[],images:[],
          chatPost:{prefix:"30 Day Challenge - My relationship with Social Media:",placeholder:"How are you going to shift your relationship with social media moving forward?"}},
+        {day:22,videoType:"loom",videoId:"ac0d62a1991e45029e1e3c2d2df106c2",title:"Support the Homies",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"You're not in this alone — and neither are they.",bold:true,gold:false},
+           {t:"Someone just joined this challenge and they need to hear from you.",bold:false,gold:false},
+         ],
+         tasksLabel:"TODAY'S TASK",
+         tasks:["Go encourage someone who has just joined the challenge — drop a message in the community."],
+         journals:[],
+         images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day22-homies.png"]},
       ];
-      for(var _d=22;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=23;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
