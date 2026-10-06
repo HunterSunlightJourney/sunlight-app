@@ -1731,16 +1731,29 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
     // ── First 30 Days: video-based daily training ──
     if(subPage.id==="first-30-days"){
       const DAYS_DATA=[
-        {day:1,vimeoId:"1233414310",title:"Welcome to the 30 Day Challenge",comingSoon:false},
+        {day:1,videoType:"vimeo",videoId:"1233414310",title:"Welcome to the 30 Day Challenge",comingSoon:false,
+         textBlocks:[
+           {t:"Guys so stoked you're here. You've trusted us with a lot — your time, your money, and your energy. Our goal is to bring ACTUAL VALUE to your life and give you tools to not only make it 30 days but also overcome this long term.",bold:false,gold:false},
+           {t:"The Rules:",bold:true,gold:false},
+           {t:"1. Go 30 days without SEARCHING for porn",bold:false,gold:false},
+           {t:"2. Complete all the challenges (4 big challenges) and fill out the check-in forms",bold:false,gold:false},
+           {t:"3. Book and show up to the 30 min Graduation Call",bold:false,gold:false},
+           {t:"That's it to get your $500 back.",bold:true,gold:true},
+         ],
+         tasksLabel:"4 THINGS TO DO TODAY",
+         tasks:["Delete all your social medias for 30 days","Plug your phone charger outside of your room","Go buy an alarm clock (if needed) and a NICE journal","Go introduce yourself in the community"]},
+        {day:2,videoType:"loom",videoId:"37a75eda2d8b408b9df65a1bd4962716",title:"Understanding Your Habit",comingSoon:false,
+         textBlocks:[
+           {t:"To break a habit we need to FIRST understand the habit.",bold:false,gold:false},
+           {t:"Shame plays such a huge role in all of this and the fastest way to get rid of shame is to bring it to the light.",bold:false,gold:false},
+           {t:"The convo could go something like this:",bold:true,gold:false},
+           {t:"\"Hey man, I just wanted to open up about something that I've been struggling with for awhile. You don't need to do anything for me with this — I really just want someone to talk to. I have struggled with porn for the last X amount of years and I am really trying to overcome this right now. I know shame fuels the problem so I just wanted to talk to someone about it.\"",bold:false,gold:false},
+           {t:"This is a powerful step in overcoming this so make sure you get this done today!",bold:true,gold:true},
+         ],
+         tasksLabel:"TODAY'S CHALLENGE",
+         tasks:["Call up one friend and tell them about your current habit"]},
       ];
-      for(var _d=2;_d<=30;_d++) DAYS_DATA.push({day:_d,vimeoId:null,title:"Day "+_d,comingSoon:true});
-
-      const DAY1_TASKS=[
-        "Delete all your social medias for 30 days",
-        "Plug your phone charger outside of your room",
-        "Go buy an alarm clock (if needed) and a NICE journal",
-        "Go introduce yourself in the community",
-      ];
+      for(var _d=3;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
@@ -1788,7 +1801,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                   {/* Video */}
                   <div style={{position:"relative",paddingBottom:"56.25%",height:0,background:"#000"}}>
                     <iframe
-                      src={"https://player.vimeo.com/video/"+day.vimeoId+"?autoplay=0&title=0&byline=0&portrait=0"}
+                      src={day.videoType==="loom"?"https://www.loom.com/embed/"+day.videoId:"https://player.vimeo.com/video/"+day.videoId+"?autoplay=0&title=0&byline=0&portrait=0"}
                       style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
                       allow="autoplay; fullscreen; picture-in-picture" allowFullScreen/>
                   </div>
@@ -1796,44 +1809,43 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                     <div style={{fontSize:11,fontWeight:800,color:"#c8913c",letterSpacing:"0.08em",marginBottom:4}}>{"DAY "+day.day}</div>
                     <div style={{fontWeight:800,fontSize:17,color:"#ede4d0",letterSpacing:"-0.01em",marginBottom:16}}>{day.title}</div>
 
-                    {/* Intro text */}
-                    <div style={{fontSize:14,color:"#c0b8a8",lineHeight:1.75,marginBottom:20}}>
-                      <div style={{marginBottom:12}}>Guys so stoked you're here. You've trusted us with a lot — your time, your money, and your energy. Our goal is to bring ACTUAL VALUE to your life and give you tools to not only make it 30 days but also overcome this long term.</div>
-                      <div style={{fontWeight:800,color:"#ede4d0",marginBottom:8}}>The Rules:</div>
-                      <div style={{marginBottom:6}}>1. Go 30 days without SEARCHING for porn</div>
-                      <div style={{marginBottom:6}}>2. Complete all the challenges (4 big challenges) and fill out the check-in forms</div>
-                      <div style={{marginBottom:12}}>3. Book and show up to the 30 min Graduation Call</div>
-                      <div style={{color:"#c8913c",fontWeight:700}}>That's it to get your $500 back.</div>
-                    </div>
-
-                    {/* 4 action checkboxes */}
-                    <div style={{marginBottom:20}}>
-                      <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em",marginBottom:12}}>4 THINGS TO DO TODAY</div>
-                      {DAY1_TASKS.map(function(task,ti){
-                        var tid=dayId+"-task-"+ti;
-                        var checked=!!effectiveChecks[tid];
-                        return(
-                          <button key={tid} onClick={()=>toggleThirty(tid)}
-                            style={{display:"flex",alignItems:"flex-start",gap:13,width:"100%",background:"none",border:"none",padding:"10px 0",cursor:"pointer",textAlign:"left",borderBottom:"0.5px solid rgba(255,210,140,0.06)"}}>
-                            <div style={{width:22,height:22,borderRadius:6,flexShrink:0,marginTop:1,
-                              border:"2px solid "+(checked?"#c8913c":"rgba(255,210,140,0.2)"),
-                              background:checked?"#c8913c":"transparent",
-                              display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s"}}>
-                              {checked&&<span style={{color:"#fff",fontSize:13,fontWeight:900,lineHeight:1}}>✓</span>}
-                            </div>
-                            <div style={{flex:1,fontSize:14,color:checked?"#c8913c":"#ede4d0",fontWeight:checked?700:500,lineHeight:1.45,textDecoration:checked?"line-through":"none",transition:"all 0.2s"}}>
-                              {(ti+1)+". "+task}
-                            </div>
-                          </button>
-                        );
+                    {/* Text blocks — data-driven */}
+                    <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:20}}>
+                      {day.textBlocks.map(function(tb,tbi){
+                        return <div key={tbi} style={{fontSize:14,lineHeight:1.75,fontWeight:tb.bold?800:400,color:tb.gold?"#c8913c":tb.bold?"#ede4d0":"#c0b8a8"}}>{tb.t}</div>;
                       })}
                     </div>
+
+                    {/* Checkboxes — data-driven */}
+                    {day.tasks.length>0&&(
+                      <div style={{marginBottom:20}}>
+                        <div style={{fontSize:11,fontWeight:800,color:"#7a7068",letterSpacing:"0.08em",marginBottom:12}}>{day.tasksLabel}</div>
+                        {day.tasks.map(function(task,ti){
+                          var tid=dayId+"-task-"+ti;
+                          var checked=!!effectiveChecks[tid];
+                          return(
+                            <button key={tid} onClick={()=>toggleThirty(tid)}
+                              style={{display:"flex",alignItems:"flex-start",gap:13,width:"100%",background:"none",border:"none",padding:"10px 0",cursor:"pointer",textAlign:"left",borderBottom:"0.5px solid rgba(255,210,140,0.06)"}}>
+                              <div style={{width:22,height:22,borderRadius:6,flexShrink:0,marginTop:1,
+                                border:"2px solid "+(checked?"#c8913c":"rgba(255,210,140,0.2)"),
+                                background:checked?"#c8913c":"transparent",
+                                display:"flex",alignItems:"center",justifyContent:"center",transition:"all 0.2s"}}>
+                                {checked&&<span style={{color:"#fff",fontSize:13,fontWeight:900,lineHeight:1}}>✓</span>}
+                              </div>
+                              <div style={{flex:1,fontSize:14,color:checked?"#c8913c":"#ede4d0",fontWeight:checked?700:500,lineHeight:1.45,textDecoration:checked?"line-through":"none",transition:"all 0.2s"}}>
+                                {day.tasks.length>1?(ti+1)+". "+task:task}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     {/* Mark day complete */}
                     <button onClick={()=>toggleThirty(dayId)}
                       style={{width:"100%",padding:15,borderRadius:13,fontSize:15,fontWeight:800,border:"none",letterSpacing:"-0.01em",
                         background:isDone?"rgba(200,145,60,0.14)":"#c8913c",color:isDone?"#c8913c":"#1a1410",transition:"all 0.2s"}}>
-                      {isDone?"✓ Day 1 Complete":"Mark Day 1 Complete"}
+                      {isDone?"✓ Day "+day.day+" Complete":"Mark Day "+day.day+" Complete"}
                     </button>
                   </div>
                 </div>
