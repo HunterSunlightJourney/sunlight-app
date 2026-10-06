@@ -1866,8 +1866,28 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          tasks:["View porn as neutral — it is not good or bad, it just is. Stop feeding it power."],
          journals:[],
          images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day12-1percent.png"]},
+        {day:13,videoType:"loom",videoId:"bf1450c6e9a94bcb8d6a993d086e027e",title:"Identity",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"The words we use matter.",bold:true,gold:false},
+           {t:"How do you label yourself when you look at porn?",bold:true,gold:false},
+           {t:"Out of control  ·  Weak  ·  A weirdo or pervert  ·  Disgusting  ·  Unworthy of love",bold:false,gold:false},
+           {t:"These labels are making it worse, not better.",bold:true,gold:false},
+           {t:"What could you say instead:",bold:true,gold:false},
+           {t:"I am healing  ·  I didn't have the right tools to stop earlier  ·  I learn and grow from every mistake  ·  I am loved even when I'm not perfect",bold:false,gold:true},
+           {t:"We need to be kinder to ourselves through this journey.",bold:false,gold:false},
+         ],
+         tasksLabel:"TODAY'S TASKS",
+         tasks:[
+           "Stop calling it an addiction — call it a bad habit from now on.",
+           "If you mess up, don't say \"relapse.\" Say: I chose to look at porn, and I'm going to learn and grow from it.",
+         ],
+         journals:[
+           {prompt:"Journal: How else do you label yourself when you look at porn? And what kinder, truer thing could you say instead?"},
+         ],
+         images:[]},
       ];
-      for(var _d=13;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=14;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
