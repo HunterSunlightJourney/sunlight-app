@@ -1951,8 +1951,28 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          tasksLabel:"TODAY'S TASK",
          tasks:["Plan something fun with your people — a date night, a hangout with the homies, anything. Get it on the calendar."],
          journals:[],images:[]},
+        {day:19,videoType:"loom",videoId:"8ea93101b0ec4b50b8004364f2093b33",title:"Sexual Energy",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"Your sexual energy is one of the most powerful forces you have.",bold:true,gold:false},
+           {t:"Today we discuss how to redirect it — into purpose, creativity, discipline, and meaningful action instead of unconscious habits.",bold:false,gold:false},
+           {t:"You don't kill the energy. You aim it.",bold:false,gold:true},
+         ],
+         tasksLabel:"",tasks:[],journals:[],images:[]},
+        {day:20,videoType:null,videoId:null,title:"2/3 BIG CHALLENGE 🟠 — One Hour of Stillness",comingSoon:false,
+         topImages:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day20-stillness.png"],
+         textBlocks:[
+           {t:"Today's challenge is to sit alone.",bold:true,gold:false},
+           {t:"For one hour.",bold:true,gold:true},
+           {t:"Without distractions. No phone, no talking, no music.",bold:false,gold:false},
+           {t:"This is about slowing down, becoming present, and increasing self-awareness.",bold:false,gold:false},
+           {t:"Take a selfie after and post about your experience in the group. Bonus points if you take a time-lapse of the 60 mins — it doesn't count as using your phone if it's just recording you.",bold:false,gold:false},
+         ],
+         tasksLabel:"TODAY'S CHALLENGE",
+         tasks:["Sit alone for one hour — no phone, no music, no talking","Take a selfie or time-lapse and post about your experience in the group"],
+         journals:[],images:[]},
       ];
-      for(var _d=19;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=21;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
