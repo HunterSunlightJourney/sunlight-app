@@ -1934,8 +1934,25 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          ],
          tasksLabel:"",tasks:[],journals:[],images:[],
          chatPost:{prefix:"30 Day Challenge - Half way reflection:",placeholder:"What have some of your biggest takeaways been? What has shifted? How do you feel?"}},
+        {day:18,videoType:"loom",videoId:"fc2186bd9ff345b4a052a094a81ea449",title:"Plan Connection",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"When we are connected to others, we have less desire to turn to porn.",bold:true,gold:false},
+           {t:"Plan something. Get it on the calendar. Here are some ideas:",bold:false,gold:false},
+           {t:"• Go bowling, go-karting, or to an arcade",bold:false,gold:false},
+           {t:"• Set up spikeball, kickball, or volleyball at the park",bold:false,gold:false},
+           {t:"• Plan a hike",bold:false,gold:false},
+           {t:"• Plan a lunch or dinner",bold:false,gold:false},
+           {t:"• Go classic skating",bold:false,gold:false},
+           {t:"• Do an art night",bold:false,gold:false},
+           {t:"• Play pickleball or basketball",bold:false,gold:false},
+           {t:"There are so many ideas. Pick one and lock it in.",bold:false,gold:true},
+         ],
+         tasksLabel:"TODAY'S TASK",
+         tasks:["Plan something fun with your people — a date night, a hangout with the homies, anything. Get it on the calendar."],
+         journals:[],images:[]},
       ];
-      for(var _d=18;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=19;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
