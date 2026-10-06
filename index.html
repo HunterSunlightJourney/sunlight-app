@@ -1855,7 +1855,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          ],
          tasksLabel:"",tasks:[],journals:[],
          images:[],
-         chatPost:true},
+         chatPost:{prefix:"30 day challenge - 10 day Reflection:",placeholder:"What's shifted for you so far? Mindset, energy, habits..."}},
         {day:12,videoType:"loom",videoId:"6d864a62f23b41cfa0432ed813be6a95",title:"Not Good or Bad",comingSoon:false,
          topImages:[],
          textBlocks:[
@@ -1926,8 +1926,16 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          tasksLabel:"TODAY'S TASK",
          tasks:["Carve out 30 minutes for yourself and do something you genuinely enjoy."],
          journals:[],images:[]},
+        {day:17,videoType:"loom",videoId:"8c75191f063f4e52b8e7851148be0af8",title:"Halfway Reflection",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"You're halfway there!",bold:true,gold:true},
+           {t:"Take a moment to look back at how far you've already come. This is real progress.",bold:false,gold:false},
+         ],
+         tasksLabel:"",tasks:[],journals:[],images:[],
+         chatPost:{prefix:"30 Day Challenge - Half way reflection:",placeholder:"What have some of your biggest takeaways been? What has shifted? How do you feel?"}},
       ];
-      for(var _d=17;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=18;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
@@ -2121,14 +2129,15 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                               value={effectiveChecks[dayId+"-chatpost"]||""}
                               onChange={function(e){setThirtyText(dayId+"-chatpost",e.target.value);}}
                               rows={5}
-                              placeholder="What's shifted for you so far? Mindset, energy, habits..."
+                              placeholder={day.chatPost.placeholder||"Write your thoughts..."}
                               style={{width:"100%",background:"rgba(20,30,50,0.9)",border:"1.5px solid rgba(74,127,196,0.35)",borderRadius:12,padding:"12px 14px",fontSize:14,color:"#cde0ff",fontFamily:"inherit",lineHeight:1.65,resize:"none",outline:"none",boxSizing:"border-box",marginBottom:10}}
                             />
                             <button
                               onClick={function(){
                                 var postText=effectiveChecks[dayId+"-chatpost"]||"";
                                 if(!postText.trim()){alert("Write something first!");return;}
-                                var fullText="30 day challenge - 10 day Reflection:\n\n"+postText.trim();
+                                var chatPrefix=day.chatPost.prefix||"Reflection:";
+                                var fullText=chatPrefix+"\n\n"+postText.trim();
                                 sb.from("channels").select("id").eq("slug","general").single().then(function(res){
                                   if(res.error||!res.data){alert("Could not find #general channel.");return;}
                                   sb.from("group_messages").insert({user_id:me.id,text:fullText,is_anonymous:false,is_announcement:false,channel_id:res.data.id}).then(function(r2){
