@@ -1971,8 +1971,16 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          tasksLabel:"TODAY'S CHALLENGE",
          tasks:["Sit alone for one hour — no phone, no music, no talking","Take a selfie or time-lapse and post about your experience in the group"],
          journals:[],images:[]},
+        {day:21,videoType:"loom",videoId:"5fd6f9123bfc4fe1a4f4014919e821b3",title:"Social Media",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"How are you going to shift your relationship with social media moving forward?",bold:true,gold:false},
+           {t:"Write it out below and share it with the group.",bold:false,gold:false},
+         ],
+         tasksLabel:"",tasks:[],journals:[],images:[],
+         chatPost:{prefix:"30 Day Challenge - My relationship with Social Media:",placeholder:"How are you going to shift your relationship with social media moving forward?"}},
       ];
-      for(var _d=21;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=22;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
