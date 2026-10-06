@@ -2007,8 +2007,34 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
            "https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day23-meme7.png",
          ],
          bottomText:"Haha I hope you enjoyed these as much as I did 😂"},
+        {day:24,videoType:"loom",videoId:"e5ecc92e2a7a466e8c0f2c90d51098bc",title:"Planning",comingSoon:false,
+         topImages:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day24-misogi.png"],
+         textBlocks:[
+           {t:"Plan out something you can look forward to this week, this month, and this year!",bold:true,gold:false},
+           {t:"There is this thing called the Misogi Challenge. You do something so hard once a year that it has an impact on the other 364 days.",bold:false,gold:false},
+           {t:"Take on challenges that radically expand your sense of what's possible. Two rules: you have a 50% chance of success at best, and it doesn't kill you. Does it make your jaw drop? That's the litmus test. — Dr. Marcus Elliott",bold:false,gold:true},
+           {t:"This year I'm doing a 21-mile mountain ridge climb in Utah. It's scary and it will be super hard. What could YOUR Misogi be?",bold:false,gold:false},
+           {t:"If you're not ready for a Misogi, here are some ideas to get excited about life ↓",bold:true,gold:false},
+         ],
+         tasksLabel:"TODAY'S TASK",
+         tasks:["Plan one thing to look forward to this week","Plan one thing to look forward to this month","Pick your big thing this year — could this be your Misogi?"],
+         journals:[],images:[],
+         dropdown:{
+           label:"Ideas — Things to Look Forward To",
+           sections:[
+             {title:"This Week (Next 3–7 Days)",items:[
+               "Dinner with friends (make a reservation)","Game night (cards, poker, Catan, Mario Kart)","Movie night (theater or at home)","Gym session with a friend","Group fitness class (yoga, CrossFit, spin)","Local event (trivia, open mic, church, campus)","Coffee or lunch 1-on-1","Double date or group hangout","Casual night out (bars, pool hall, arcade)","Try a new restaurant","Sunset hike or walk","Host a small hangout at your place","Go to a bookstore + coffee combo","Late-night dessert run (ice cream, donuts, etc.)","Pick-up sports (basketball, soccer, volleyball)","Sauna / cold plunge session","Go to a mall or walkable area with friends","Attend a local class (drop-in yoga, dance)","Visit a farmer's market","Go thrifting or shopping with someone",
+             ]},
+             {title:"This Month (Next 2–4 Weeks)",items:[
+               "Buy tickets to a concert","Plan a club night with a group","Go to a comedy show","Take a day trip (nearby city, hike, etc.)","Book a weekend Airbnb with friends","Go to a sports game (pro, college, minor league)","Try a new activity (boxing, dance, climbing)","Join a run club or fitness group","Attend a networking event or meetup","Group activity (escape room, bowling, Topgolf)","Take a short class (cooking, photography)","Go to a festival or local fair","Do a beach/lake day trip","Plan a themed party (dress-up, decade theme, etc.)","Go to a car show or expo","Try a new restaurant that's more upscale","Do a spontaneous road trip day","Visit a museum or art gallery","Go to a rooftop bar or nice lounge","Book a massage or spa day","Take a dance class series (salsa, bachata, etc.)","Volunteer at an event or cause","Go to a live podcast or speaker event","Attend a workshop (business, fitness, personal growth)",
+             ]},
+             {title:"This Year / Next 6–12 Months",items:[
+               "Plan a trip to another country","Travel to a major U.S. city you've never explored","Buy tickets to a festival or rave","Book a fitness or yoga retreat","Join a men's retreat / personal growth event","Sign up for a race (5k, half marathon, Spartan)","Plan a big group trip with friends","Go backpacking or camping in national parks","Attend a major concert you care about","Learn a new skill seriously (language, instrument)","Commit to a martial art or fighting gym","Set a physique goal and train toward it","Launch a business or side project","Take a solo trip","Go on a multi-day road trip","Attend a major conference or convention","Do something extreme (skydiving, bungee, etc.)","Spend time living in another city for a month","Take a certification course (fitness, coaching, etc.)","Go on a spiritual or meditation retreat","Visit a place you've always talked about","Train for and complete a big physical challenge","Build something meaningful (brand, community, etc.)","Create a life milestone you're proud of",
+             ]},
+           ],
+         }},
       ];
-      for(var _d=24;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=25;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
@@ -2183,6 +2209,34 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                     {/* Bottom text */}
                     {day.bottomText&&(
                       <div style={{marginBottom:20,fontSize:15,color:"#c8913c",fontWeight:700,textAlign:"center",lineHeight:1.5}}>{day.bottomText}</div>
+                    )}
+
+                    {/* Collapsible ideas dropdown */}
+                    {day.dropdown&&(
+                      <div style={{marginBottom:20}}>
+                        <button
+                          onClick={function(){setThirtyText(dayId+"-dropdown",effectiveChecks[dayId+"-dropdown"]?"":"open");}}
+                          style={{width:"100%",padding:"13px 16px",borderRadius:13,fontSize:14,fontWeight:700,border:"1.5px solid rgba(200,145,60,0.25)",background:"rgba(200,145,60,0.07)",color:"#c8913c",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between",boxSizing:"border-box"}}>
+                          <span>{day.dropdown.label}</span>
+                          <span style={{fontSize:11}}>{effectiveChecks[dayId+"-dropdown"]?"▲ Hide":"▼ Show"}</span>
+                        </button>
+                        {effectiveChecks[dayId+"-dropdown"]&&(
+                          <div style={{marginTop:12,background:"#1a1714",borderRadius:14,padding:"16px 16px",border:"1px solid rgba(200,145,60,0.1)"}}>
+                            {day.dropdown.sections.map(function(sec,si){
+                              return(
+                                <div key={si} style={{marginBottom:si<day.dropdown.sections.length-1?20:0}}>
+                                  <div style={{fontSize:11,fontWeight:800,color:"#c8913c",letterSpacing:"0.07em",textTransform:"uppercase",marginBottom:10}}>{sec.title}</div>
+                                  <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                                    {sec.items.map(function(item,ii){
+                                      return <div key={ii} style={{fontSize:13,color:"#ede4d0",lineHeight:1.5,paddingLeft:4}}>{"• "+item}</div>;
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* Post to chat */}
