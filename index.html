@@ -1894,8 +1894,31 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          tasksLabel:"TODAY'S TASK",
          tasks:["Call your mama, a friend, or whoever. Build connection with someone you care about."],
          journals:[],images:[]},
+        {day:15,videoType:"loom",videoId:"695d5768c0924418added4fe43ccf877",title:"Passion",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"Find something you can do daily or weekly that you are passionate about.",bold:true,gold:false},
+           {t:"You don't need to be productive all the time.",bold:false,gold:false},
+           {t:"If you don't know what that is... GET BORED. Put the phone down. Let yourself sit with nothing. Your passions will find you.",bold:false,gold:true},
+           {t:"For me, I allow myself every week to go to the thrift store. There is nothing productive about it — it's simply something I enjoy. I also love trail running on Saturdays.",bold:false,gold:false},
+           {t:"Here are some ideas:",bold:true,gold:false},
+           {t:"• Build that clothing brand you've been thinking about",bold:false,gold:false},
+           {t:"• Work on a project at home — garden, build something",bold:false,gold:false},
+           {t:"• Learn an instrument or how to create music",bold:false,gold:false},
+           {t:"• Make art",bold:false,gold:false},
+           {t:"• Buy a bike",bold:false,gold:false},
+           {t:"• Learn calisthenics",bold:false,gold:false},
+         ],
+         tasksLabel:"TODAY'S TASK",
+         tasks:["Find one thing you are passionate about and commit to doing it this week."],
+         journals:[
+           {prompt:"What did you use to love as a kid?"},
+           {prompt:"What excites you?"},
+           {prompt:"What would you do for work if money wasn't a thing?"},
+         ],
+         images:[]},
       ];
-      for(var _d=15;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=16;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
