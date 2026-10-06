@@ -1791,8 +1791,19 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
            {prompt:"Same social media triggers? What were you looking at?"},
          ],
          images:[]},
+        {day:6,videoType:"loom",videoId:"b8cbde0702a84083886e5f01f8cec950",title:"Your Self-Talk",comingSoon:false,
+         topImages:[],
+         textBlocks:[],
+         tasksLabel:"",tasks:[],
+         journals:[
+           {prompt:"What does [your name] think about [your name] when he looks at porn?"},
+           {prompt:"Are those things helping us or hurting us long term? Why or why not?"},
+           {prompt:"How could we talk to ourselves differently instead?"},
+           {prompt:"How can you define success without describing perfection?"},
+         ],
+         images:[]},
       ];
-      for(var _d=6;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=7;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
