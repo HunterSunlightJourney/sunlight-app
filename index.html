@@ -1989,8 +1989,26 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          tasks:["Go encourage someone who has just joined the challenge — drop a message in the community."],
          journals:[],
          images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day22-homies.png"]},
+        {day:23,videoType:null,videoId:null,title:"Humor",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"Humor is a powerful tool for overcoming this.",bold:true,gold:false},
+           {t:"When you can laugh at something it means you accept it. When you accept it, you can leave it behind.",bold:false,gold:false},
+           {t:"Today's task: enjoy some of these funny memes 😂",bold:false,gold:true},
+         ],
+         tasksLabel:"",tasks:[],journals:[],
+         images:[
+           "https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day23-meme1.png",
+           "https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day23-meme2.png",
+           "https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day23-meme3.png",
+           "https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day23-meme4.png",
+           "https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day23-meme5.png",
+           "https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day23-meme6.png",
+           "https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day23-meme7.png",
+         ],
+         bottomText:"Haha I hope you enjoyed these as much as I did 😂"},
       ];
-      for(var _d=23;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=24;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
@@ -2160,6 +2178,11 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                           return <img key={ii} src={src} alt="" style={{width:"100%",borderRadius:14,display:"block"}}/>;
                         })}
                       </div>
+                    )}
+
+                    {/* Bottom text */}
+                    {day.bottomText&&(
+                      <div style={{marginBottom:20,fontSize:15,color:"#c8913c",fontWeight:700,textAlign:"center",lineHeight:1.5}}>{day.bottomText}</div>
                     )}
 
                     {/* Post to chat */}
