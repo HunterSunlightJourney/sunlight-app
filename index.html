@@ -1856,9 +1856,18 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          tasksLabel:"",tasks:[],journals:[],
          images:[],
          chatPost:true},
+        {day:12,videoType:"loom",videoId:"6d864a62f23b41cfa0432ed813be6a95",title:"Not Good or Bad",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"View porn as neutral.",bold:true,gold:false},
+           {t:"STOP GIVING PORN MORE POWER THAN IT DESERVES.",bold:true,gold:true},
+         ],
+         tasksLabel:"TODAY'S TASK",
+         tasks:["View porn as neutral — it is not good or bad, it just is. Stop feeding it power."],
+         journals:[],
+         images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day12-1percent.png"]},
       ];
-
-      for(var _d=12;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=13;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
