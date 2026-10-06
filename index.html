@@ -2113,7 +2113,29 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          images:[],
          chatPost:{prefix:"My 90 Day Vision:",placeholder:"Share your #1 goal for the next 90 days with the group..."}},
       ];
-      for(var _d=30;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      DAYS_DATA.push(
+        {day:30,videoType:"vimeo",videoId:"1233481541",title:"Day 30 — You Did It 🎉",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"30 days. You actually did it.",bold:true,gold:true},
+           {t:"Let that land for a second.",bold:false,gold:false},
+           {t:"You showed up every single day. You did the work. You sat with discomfort, faced things you'd been running from, and chose differently — over and over again.",bold:false,gold:false},
+           {t:"That's not nothing. That's everything.",bold:true,gold:true},
+           {t:"Most people talk about changing. You actually did it.",bold:false,gold:false},
+           {t:"You've built something real here — discipline, self-awareness, identity, confidence. Nobody can take that from you.",bold:false,gold:false},
+           {t:"💰 Did you invest $500 in this challenge and complete all 30 days?",bold:true,gold:false},
+           {t:"Remind Hunter on your next 1:1 call and he will get that money back to you. You earned it.",bold:false,gold:false},
+           {t:"What Now?",bold:true,gold:true},
+           {t:"This doesn't end here. The momentum you've built is the most valuable thing — don't let it sit.",bold:false,gold:false},
+           {t:"There are more trainings inside this app built specifically for your growth. Explore them on your own time and keep the work going. The tools are here. You know how to use them now.",bold:false,gold:false},
+           {t:"The version of you that started Day 1 would be proud of where you're standing right now.",bold:true,gold:false},
+           {t:"Keep going. 🔥",bold:true,gold:true},
+         ],
+         tasksLabel:"Today's Task",
+         tasks:["Go celebrate yourself. Seriously — do something today that honors the work you've put in. You earned it."],
+         journals:[],images:[],chatPost:null}
+      );
+      // all 30 days complete
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
