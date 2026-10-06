@@ -2079,8 +2079,19 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
          ],
          tasksLabel:"",tasks:[],journals:[],images:[],
          chatPost:{prefix:"Confidence - Day 27:",placeholder:"Write 3 things that make you feel the most confident...\n\n1.\n2.\n3."}},
+        {day:28,videoType:"loom",videoId:"1951136fa1f14cca9cd827546068b474",title:"Letter to Younger Self",comingSoon:false,
+         topImages:[],
+         textBlocks:[],
+         tasksLabel:"Today's Task",
+         tasks:[],
+         journals:[
+           {prompt:"Write a letter to your younger self — when he was first exposed to porn. How did he feel? What do you think he needed at that time?"},
+           {prompt:"Now write a letter to your future son."},
+         ],
+         images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day28-innerchild.png"],
+         chatPost:null},
       ];
-      for(var _d=28;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=29;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
