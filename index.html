@@ -1802,8 +1802,21 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
            {prompt:"How can you define success without describing perfection?"},
          ],
          images:[]},
+        {day:7,videoType:"loom",videoId:"71ae0c0487f64743b8b36bee36663f48",title:"Your Nightly Routine",comingSoon:false,
+         topImages:[],
+         textBlocks:[
+           {t:"Nightly routine: No phones 30 mins before bed. ABSOLUTELY no scrolling in bed.",bold:true,gold:false},
+           {t:"Your environment at night is where most guys slip up. Let's lock it down.",bold:false,gold:false},
+         ],
+         tasksLabel:"TONIGHT'S COMMITMENTS",
+         tasks:[
+           "I commit to putting my phone away 30 minutes before bed and not scrolling in bed — starting tonight",
+           "Clean and organize my space tonight",
+         ],
+         journals:[],
+         images:[]},
       ];
-      for(var _d=7;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=8;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
