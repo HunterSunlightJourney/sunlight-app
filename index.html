@@ -2050,8 +2050,19 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
            {prompt:"What are some daily ways you can calm your nervous system? Write your own list:"},
          ],
          images:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day25-nervoussystem.png"]},
+        {day:26,videoType:null,videoId:null,title:"3/3 BIG CHALLENGE 🔵 — Cold Exposure",comingSoon:false,
+         topImages:["https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/day26-icebath.png"],
+         textBlocks:[
+           {t:"Today's challenge is about learning to stay calm in discomfort.",bold:true,gold:false},
+           {t:"Cold exposure trains emotional resilience and nervous system regulation. The same skill you use to stay calm in an ice bath is the same skill you use to stay calm when an urge hits.",bold:false,gold:false},
+           {t:"Go cold plunge somewhere — ice bath, cold river, lake, cold shower — for at least 3 minutes.",bold:true,gold:true},
+           {t:"Take a picture or video of you doing it and post it to the group!",bold:false,gold:false},
+         ],
+         tasksLabel:"TODAY'S CHALLENGE",
+         tasks:["Complete a cold plunge for at least 3 minutes (ice bath, cold river, lake, or cold shower)","Take a photo or video and post it to the group"],
+         journals:[],images:[]},
       ];
-      for(var _d=26;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
+      for(var _d=27;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[],images:[],topImages:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
