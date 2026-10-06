@@ -1741,7 +1741,8 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
            {t:"That's it to get your $500 back.",bold:true,gold:true},
          ],
          tasksLabel:"4 THINGS TO DO TODAY",
-         tasks:["Delete all your social medias for 30 days","Plug your phone charger outside of your room","Go buy an alarm clock (if needed) and a NICE journal","Go introduce yourself in the community"]},
+         tasks:["Delete all your social medias for 30 days","Plug your phone charger outside of your room","Go buy an alarm clock (if needed) and a NICE journal","Go introduce yourself in the community"],
+         journals:[]},
         {day:2,videoType:"loom",videoId:"37a75eda2d8b408b9df65a1bd4962716",title:"Understanding Your Habit",comingSoon:false,
          textBlocks:[
            {t:"To break a habit we need to FIRST understand the habit.",bold:false,gold:false},
@@ -1751,9 +1752,21 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
            {t:"This is a powerful step in overcoming this so make sure you get this done today!",bold:true,gold:true},
          ],
          tasksLabel:"TODAY'S CHALLENGE",
-         tasks:["Call up one friend and tell them about your current habit"]},
+         tasks:["Call up one friend and tell them about your current habit"],
+         journals:[]},
       ];
-      for(var _d=3;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[]});
+        {day:3,videoType:"vimeo",videoId:"1233424124",title:"Porn Isn't Your Problem",comingSoon:false,
+         textBlocks:[
+           {t:"Gentlemen, porn isn't your problem. The real issue is what you're using porn to escape from. Once you understand this you'll spend less time trying to 'quit porn' and more time on the actual ROOT of the issue.",bold:false,gold:false},
+         ],
+         tasksLabel:"TODAY'S CHALLENGE",
+         tasks:[],
+         journals:[
+           {prompt:"What am I using porn to escape from?"},
+           {prompt:"How else do you cope with negative emotions? (food, scrolling, video games)"},
+         ]},
+      ];
+      for(var _d=4;_d<=30;_d++) DAYS_DATA.push({day:_d,videoType:null,videoId:null,title:"Day "+_d,comingSoon:true,textBlocks:[],tasksLabel:"",tasks:[],journals:[]});
 
       const daysDone=DAYS_DATA.filter(function(d){return!!effectiveChecks["thirty-"+d.day];}).length;
 
@@ -1761,6 +1774,10 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
         var nv=!effectiveChecks[id];
         setLevelChecks(function(p){var o=Object.assign({},p);o[id]=nv;return o;});
         if(onCheckChange) onCheckChange(id,nv);
+      };
+      const setThirtyText=function(id,val){
+        setLevelChecks(function(p){var o=Object.assign({},p);o[id]=val;return o;});
+        if(onCheckChange) onCheckChange(id,val);
       };
 
       return(
@@ -1848,6 +1865,28 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                                 {day.tasks.length>1?(ti+1)+". "+task:task}
                               </div>
                             </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Journal text boxes */}
+                    {day.journals&&day.journals.length>0&&(
+                      <div style={{marginBottom:20,display:"flex",flexDirection:"column",gap:16}}>
+                        {day.journals.map(function(j,ji){
+                          var jid=dayId+"-journal-"+ji;
+                          var jval=effectiveChecks[jid]||"";
+                          return(
+                            <div key={jid}>
+                              <div style={{fontSize:13,fontWeight:700,color:"#ede4d0",marginBottom:8,lineHeight:1.45}}>{j.prompt}</div>
+                              <textarea
+                                value={jval}
+                                onChange={function(e){setThirtyText(jid,e.target.value);}}
+                                rows={4}
+                                placeholder="Write your thoughts here — no one else sees this..."
+                                style={{width:"100%",background:"#141210",border:"1.5px solid rgba(255,210,140,0.12)",borderRadius:12,padding:"12px 14px",fontSize:14,color:"#ede4d0",fontFamily:"inherit",lineHeight:1.65,resize:"none",outline:"none",boxSizing:"border-box"}}
+                              />
+                            </div>
                           );
                         })}
                       </div>
