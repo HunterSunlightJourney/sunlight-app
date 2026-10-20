@@ -261,6 +261,9 @@ const MOODS      = [{emoji:"😔",label:"Rough"},{emoji:"😐",label:"Okay"},{em
 
 const FOUNDATION_WEEKS=[
   {id:"week-1",title:"Week 1: Foundations",emoji:"🔑",lessons:[
+    {id:"f-1-4",title:"Two Parts of You",videoType:"vimeo",videoId:"1237725117",
+     image:"https://raw.githubusercontent.com/HunterSunlightJourney/sunlight-app/main/foundation-twoparts.png",
+     questions:["How can we describe success right now without describing perfection?","How have you been labeling yourself because of this struggle?","How could we talk to ourselves in a way that is actually helpful?"]},
     {id:"f-1-1",title:"The Truth About What's Really Happening",loomId:"18b2596435b94ffc8a11c2c3bccd3841",
      questions:["What emotions do you usually try to avoid or escape from?","What would change in your life if you could sit with those emotions instead of running from them?"]},
     {id:"f-1-2",title:"Rethinking Success: Freedom vs. Counting Days",loomId:"1ced8455701144ff85701544ff172823",
@@ -1595,8 +1598,12 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
           <div style={{fontWeight:800,fontSize:20,color:"#ede4d0",letterSpacing:"-0.02em",lineHeight:1.3}}>{lesson.title}</div>
           {/* Video */}
           <div style={{position:"relative",paddingBottom:"56.25%",height:0,background:"#000",borderRadius:18,overflow:"hidden",boxShadow:"0 8px 32px rgba(0,0,0,0.4)"}}>
-            <iframe src={`https://www.loom.com/embed/${lesson.loomId}`} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}} allowFullScreen/>
+            <iframe src={lesson.videoType==="vimeo"?`https://player.vimeo.com/video/${lesson.videoId}?autoplay=0&title=0&byline=0&portrait=0`:`https://www.loom.com/embed/${lesson.loomId}`} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}} allowFullScreen/>
           </div>
+          {/* Lesson image */}
+          {lesson.image&&(
+            <img src={lesson.image} alt="" style={{width:"100%",borderRadius:16,display:"block"}}/>
+          )}
           {/* Reflection questions */}
           <div style={{background:"#1e1b17",borderRadius:18,padding:"18px 18px",display:"flex",flexDirection:"column",gap:14}}>
             <div style={{fontSize:11,fontWeight:800,color:"#6496dc",letterSpacing:"0.08em"}}>REFLECTION QUESTIONS</div>
