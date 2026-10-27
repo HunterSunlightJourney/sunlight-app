@@ -2517,6 +2517,12 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                done:0,total:0,
                action:()=>setSubPage({type:"card",id:"first-30-days"})},
 
+              {title:["MASTERY"],badge:"🔒 Locked",locked:true,
+               bg:"linear-gradient(145deg,#111111 0%,#0a0a0a 60%,#080808 100%)",
+               border:"rgba(255,255,255,0.06)",glow:"rgba(255,255,255,0.04)",badgeBg:"rgba(80,80,80,0.7)",
+               done:0,total:0,
+               action:()=>alert("Talk to Hunter about the 12 month Mastery extension program")},
+
             ].map((card,i)=>(
               <button key={i} onClick={card.action}
                 style={{flex:"0 0 158px",height:215,background:card.bg,
@@ -2527,14 +2533,20 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
                 {/* Corner glow */}
                 <div style={{position:"absolute",top:-18,right:-18,width:70,height:70,borderRadius:"50%",
                   background:card.glow,filter:"blur(18px)",pointerEvents:"none"}}/>
+                {/* Lock overlay for locked cards */}
+                {card.locked&&(
+                  <div style={{position:"absolute",inset:0,borderRadius:22,background:"rgba(0,0,0,0.45)",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}>
+                    <div style={{fontSize:32,opacity:0.7}}>🔒</div>
+                  </div>
+                )}
                 {/* Completion ring */}
-                <CompletionRingBadge done={card.done} total={card.total}/>
+                {!card.locked&&<CompletionRingBadge done={card.done} total={card.total}/>}
                 {/* Title */}
                 <div style={{flex:1,display:"flex",alignItems:"flex-end",paddingBottom:10}}>
-                  <div style={{fontSize:22,fontWeight:900,color:"#fff",letterSpacing:"-0.03em",lineHeight:1.1,textTransform:"uppercase"}}>
+                  <div style={{fontSize:22,fontWeight:900,color:card.locked?"rgba(255,255,255,0.3)":"#fff",letterSpacing:"-0.03em",lineHeight:1.1,textTransform:"uppercase"}}>
                     {card.title.map((line,li)=>(
                       <React.Fragment key={li}>
-                        <span style={{color:(card.titleColorLine===li&&card.titleColor)?card.titleColor:"#fff"}}>{line}</span>
+                        <span style={{color:(card.titleColorLine===li&&card.titleColor)?card.titleColor:(card.locked?"rgba(255,255,255,0.3)":"#fff")}}>{line}</span>
                         {li<card.title.length-1&&<br/>}
                       </React.Fragment>
                     ))}
