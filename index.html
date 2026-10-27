@@ -2475,17 +2475,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
     <div style={{height:"100%",overflowY:"auto",background:"#141210"}}>
       <div style={{padding:"14px 16px 56px",display:"flex",flexDirection:"column",gap:20}}>
 
-        {/* ── Hunter DM notification banner ── */}
-        {hunterUnread>0&&(
-          <div onClick={()=>onTabChange("messages")} style={{background:"rgba(200,145,60,0.1)",border:"1px solid rgba(200,145,60,0.3)",borderRadius:16,padding:"13px 16px",display:"flex",alignItems:"center",gap:12,cursor:"pointer",animation:"slideUp 0.3s ease"}}>
-            <div style={{fontSize:26}}>👑</div>
-            <div style={{flex:1}}>
-              <div style={{fontWeight:800,fontSize:14,color:"#c8913c",letterSpacing:"-0.01em"}}>Coach Hunter messaged you</div>
-              <div style={{fontSize:12,color:"#7a7068",marginTop:2}}>Tap to see {hunterUnread} new message{hunterUnread>1?"s":""}</div>
-            </div>
-            <div style={{color:"#c8913c",fontSize:20,fontWeight:300}}>→</div>
-          </div>
-        )}
+        {/* ── Hunter DM notification banner ── (hidden) */}
 
         {/* ── Training Cards (horizontal scroll) ── */}
         <div>
@@ -2623,7 +2613,7 @@ function Dashboard({me,logs,library,users,urges,groupMsgs,onTabChange,onProfile,
 
         {/* ── Accountability partner ── */}
         {partner&&(
-          <div className="card" style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:13,cursor:"pointer"}} onClick={()=>onTabChange("messages")}>
+          <div className="card" style={{padding:"13px 16px",display:"flex",alignItems:"center",gap:13}}>
             <div style={{position:"relative"}}>
               <Avatar user={partner} size={46} ring/>
               <div style={{position:"absolute",bottom:1,right:1,width:12,height:12,borderRadius:"50%",background:"#c8913c",border:"2.5px solid #1e1b17"}}/>
@@ -4377,7 +4367,6 @@ function TrackScreen({logs,onStartUrge}){
 
 const TABS=[
   {id:"home",     label:"Home"},
-  {id:"messages", label:"Messages"},
   {id:"urge",     label:"Track"},
   {id:"calendar", label:"Calendar"},
   {id:"library",  label:"Library"},
