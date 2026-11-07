@@ -286,7 +286,7 @@ const LEVELS = [
      {id:"charger",    type:"check", label:"Move your charger out of the bedroom", detail:"Charge your phone in the hallway or kitchen tonight."},
      {id:"timelimits", type:"check", label:"Set app time limits with a passcode", detail:"Go to Screen Time → App Limits. Set a passcode someone else knows.", taskVideo:"https://vimeo.com/1219627744?share=copy&fl=sv&fe=ci"},
      {id:"firsturge",  type:"check", label:"Log your first urge", detail:"Hit the red button next time an urge hits — no matter the outcome."},
-     {id:"introduce",  type:"check", label:"Introduce yourself in #general", detail:"Go to the Messages tab and say hi to the group."},
+     {id:"introduce",  type:"check", label:"Join the group chat & introduce yourself", detail:"Tap the link below to get added to our group chat, then drop a quick message and say what's up to everyone — they're rooting for you.", taskLink:"https://m.me/j/gRx4CJok_5MxVxzX/?send_source=gc:copy_invite_link_c"},
    ]},
   {id:"fighter",  name:"Fighter",  emoji:"🥊", tagline:"Learn the tools that actually work.",
    items:[
@@ -3445,6 +3445,18 @@ function Library({me,library,setLibrary,callLink,onBadgeEarned}){
             <div style={{fontSize:12,color:"#7a7068"}}>30 minutes · Free for members</div>
           </div>
           <div style={{color:"#c8913c",fontSize:18,fontWeight:300,flexShrink:0}}>→</div>
+        </a>
+
+        {/* ── Group chat card ── */}
+        <a href="https://m.me/j/gRx4CJok_5MxVxzX/?send_source=gc:copy_invite_link_c" target="_blank" rel="noreferrer"
+          style={{display:"flex",alignItems:"center",gap:14,background:"linear-gradient(135deg,#0d1520,#0a1018)",borderRadius:18,padding:"16px 18px",textDecoration:"none",border:"1.5px solid rgba(24,119,242,0.25)",boxShadow:"0 4px 20px rgba(0,0,0,0.3)"}}>
+          <div style={{width:52,height:52,borderRadius:14,background:"rgba(24,119,242,0.15)",border:"1.5px solid rgba(24,119,242,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0}}>💬</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:10,fontWeight:800,color:"#4a90d9",letterSpacing:"0.07em",marginBottom:3}}>COMMUNITY</div>
+            <div style={{fontSize:16,fontWeight:800,color:"#ede4d0",letterSpacing:"-0.02em",lineHeight:1.2,marginBottom:3}}>Join the Group Chat</div>
+            <div style={{fontSize:12,color:"#7a7068"}}>Facebook Messenger · Say what's up</div>
+          </div>
+          <div style={{color:"#4a90d9",fontSize:18,fontWeight:300,flexShrink:0}}>→</div>
         </a>
 
         {/* ── Podcast card ── */}
