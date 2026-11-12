@@ -4509,11 +4509,11 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
       .then(({data})=>{ if(data) setLogs(data.map(rowToLog)); });
 
     // Level checks
-    sb.from("level_checks").select("check_id").eq("user_id",initMe.id)
+    sb.from("level_checks").select("check_id,value").eq("user_id",initMe.id)
       .then(({data})=>{
         if(data){
           const checks={};
-          data.forEach(r=>{ checks[r.check_id]=true; });
+          data.forEach(r=>{ checks[r.check_id]=(r.value!==null&&r.value!==undefined)?r.value:true; });
           setLevelChecks(checks);
         }
       });
@@ -4645,7 +4645,7 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
 
   // Save urge log to Supabase
   const handleLogSaved=async(log)=>{
-    const {data}=await sb.from("urge_logs").insert({
+    var {data,error}=await sb.from("urge_logs").insert({
       user_id:    initMe.id,
       outcome:    log.outcome,
       emotion:    log.emotion,
@@ -4656,13 +4656,16 @@ function MainApp({me:initMe,allUsers,setAllUsers,showOnboarding,setShowOnboardin
       next_time:  log.nx,
       log_time:   log.logTime,
     }).select().single();
+    if(error){ alert("Urge log failed to save: "+error.message); return; }
     if(data) setLogs(p=>[...p,rowToLog(data)]);
   };
 
   // Save level check to Supabase
   const handleLevelCheckChange=async(id,checked)=>{
     if(checked){
-      await sb.from("level_checks").upsert({user_id:initMe.id,check_id:id},{onConflict:"user_id,check_id"});
+      var val=typeof checked==="string"?checked:null;
+      var {error}=await sb.from("level_checks").upsert({user_id:initMe.id,check_id:id,value:val},{onConflict:"user_id,check_id"});
+      if(error) alert("Save failed: "+error.message+"\n\nPlease check that the level_checks table has a 'value' column in Supabase.");
     } else {
       await sb.from("level_checks").delete().eq("user_id",initMe.id).eq("check_id",id);
     }
