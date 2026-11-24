@@ -13115,6 +13115,21 @@ function App() {
           });
         });
       }
+      // Admin: shrink every member's oversized photo now, one at a time
+      if (_me.isAdmin) {
+        (async () => {
+          for (const u of _all) {
+            if (u.id === userId || !u.photo || !u.photo.startsWith("data:") || u.photo.length <= BIG_PHOTO) continue;
+            try {
+              const ph = await shrinkPhoto(u.photo);
+              if (ph.length >= u.photo.length) continue;
+              const { data: upd, error } = await sb.from("profiles").update({ photo_url: ph }).eq("id", u.id).select("id");
+              if (error || !upd || !upd.length) { console.log("[Sunlight] photo shrink not allowed for", u.id); break; }
+              setAllUsers(p => p.map(x => x.id === u.id ? { ...x, photo: ph } : x));
+            } catch (e) {}
+          }
+        })();
+      }
     } else {
       console.log("[Sunlight] no profile found, retrying in 2s");
       setTimeout(async () => {
