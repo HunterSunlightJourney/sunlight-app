@@ -109,7 +109,35 @@ const {
 // ─── Supabase ─────────────────────────────────────────────────────────────────
 const SUPABASE_URL = "https://bjqwmftypthuqvnzhvoh.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqcXdtZnR5cHRodXF2bnpodm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1NjYyMDIsImV4cCI6MjEwMDE0MjIwMn0.iqHMTv1n0yKgb_oLs4Zulozq4GtHsT5PKHMHQTMssU4";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Startup diagnostics: every database request is logged so the loading screen
+// can show what it's waiting on if it takes too long.
+window.__slLog = [];
+const slNote = text => {
+  window.__slLog.push({ text, t: Math.round(performance.now()) });
+};
+const tracedFetch = (input, init) => {
+  const url = typeof input === "string" ? input : input && input.url || "";
+  const path = url.replace(SUPABASE_URL, "").split("?")[0];
+  const sel = (decodeURIComponent(url).match(/select=([^&]*)/) || [])[1];
+  const entry = { text: path + (sel ? " [" + (sel.length > 24 ? sel.slice(0, 24) + "…" : sel) + "]" : ""), t: Math.round(performance.now()), status: "waiting" };
+  window.__slLog.push(entry);
+  return fetch(input, init).then(res => {
+    entry.status = String(res.status);
+    entry.ms = Math.round(performance.now()) - entry.t;
+    const len = res.headers.get("content-length");
+    if (len) entry.kb = Math.round(len / 1024);
+    return res;
+  }, err => {
+    entry.status = "failed: " + (err && err.message || err);
+    entry.ms = Math.round(performance.now()) - entry.t;
+    throw err;
+  });
+};
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  global: {
+    fetch: tracedFetch
+  }
+});
 
 // Helper: convert DB row → app profile shape
 const rowToProfile = r => ({
@@ -13098,6 +13126,14 @@ function MainApp({
 
 // ─── Loading screen ───────────────────────────────────────────────────────────
 function LoadingScreen() {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => tick(n => n + 1), 500);
+    return () => clearInterval(id);
+  }, []);
+  const secs = Math.round(performance.now() / 1000);
+  const slow = secs >= 6;
+  const log = window.__slLog || [];
   return /*#__PURE__*/React.createElement("div", {
     style: {
       height: "100%",
@@ -13106,7 +13142,8 @@ function LoadingScreen() {
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      gap: 18
+      gap: 18,
+      padding: "0 16px"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -13114,14 +13151,45 @@ function LoadingScreen() {
       filter: "drop-shadow(0 4px 20px rgba(255,180,0,0.35))",
       animation: "breathe 2s infinite"
     }
-  }, "☀️"), /*#__PURE__*/React.createElement("div", {
+  }, "\u2600\uFE0F"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 15,
       color: "#7a7068",
       fontWeight: 500,
       letterSpacing: "0.02em"
     }
-  }, "Loading…"));
+  }, "Loading\u2026"), slow && /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: "100%",
+      maxWidth: 380,
+      background: "#141210",
+      borderRadius: 12,
+      padding: "10px 12px",
+      fontFamily: "monospace",
+      fontSize: 11,
+      color: "#9a9088",
+      lineHeight: 1.5,
+      wordBreak: "break-all"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "#c8913c",
+      marginBottom: 4
+    }
+  }, "Taking longer than usual (" + secs + "s). Screenshot this for Hunter:"), log.map((e, k) => /*#__PURE__*/React.createElement("div", {
+    key: k
+  }, (e.t / 1000).toFixed(1) + "s " + e.text + (e.status ? " \u2192 " + e.status + (e.ms != null ? " " + (e.ms / 1000).toFixed(1) + "s" : "") + (e.kb != null ? " " + e.kb + "KB" : "") : "")))), slow && /*#__PURE__*/React.createElement("button", {
+    onClick: () => location.reload(),
+    style: {
+      background: "#c8541a",
+      color: "#fff",
+      border: "none",
+      borderRadius: 12,
+      padding: "10px 22px",
+      fontWeight: 700,
+      fontSize: 14
+    }
+  }, "Try again"));
 }
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
@@ -13135,16 +13203,32 @@ function App() {
   // Load profile from Supabase by user id
   const loadProfile = async userId => {
     console.log("[Sunlight] loadProfile called:", userId);
+    slNote("loadProfile start (cache " + (localStorage.getItem('sl_p_' + userId) ? "yes" : "no") + ")");
     try{var _c=localStorage.getItem('sl_p_'+userId);if(_c){var _d=JSON.parse(_c);setMe(_d.me);setAllUsers(_d.all);setScreen("app");var sp=document.getElementById("splash");if(sp)sp.remove();}}catch(e){}
     // Fetch your own full profile plus everyone else's profile WITHOUT photos (small and
     // fast), show the app, then fill in other members' photos in the background.
-    const LIGHT_COLS = "id,name,email,phone,bio,color,urges_count,badges,is_admin,partner_id,why";
+    // If the database lacks one of these columns, drop it and ask again (never fall back
+    // to downloading every member's full photo, which is very slow on phones).
+    const fetchLight = async () => {
+      let cols = ["id", "name", "email", "phone", "bio", "color", "urges_count", "badges", "is_admin", "partner_id", "why"];
+      for (let i = 0; i < cols.length; i++) {
+        const res = await sb.from("profiles").select(cols.join(","));
+        if (!res.error) return res;
+        const missing = ((res.error.message || "").match(/column [\w."]*?\.?"?(\w+)"? does not exist/) || [])[1];
+        if (!missing || missing === "id" || !cols.includes(missing)) return res;
+        console.log("[Sunlight] profiles column missing, skipping:", missing);
+        cols = cols.filter(c => c !== missing);
+      }
+      return { error: { message: "no usable columns" } };
+    };
     const [{
       data: profile
-    }, light] = await Promise.all([sb.from("profiles").select("*").eq("id", userId), sb.from("profiles").select(LIGHT_COLS)]);
+    }, light] = await Promise.all([sb.from("profiles").select("*").eq("id", userId), fetchLight()]);
+    if (light.error) console.log("[Sunlight] light profiles query failed:", light.error);
     const photosPending = !light.error;
     const all = photosPending ? light.data : (await sb.from("profiles").select("*")).data;
     console.log("[Sunlight] profile result:", profile);
+    slNote("profiles done: me " + (profile ? profile.length : "null") + ", all " + (all ? all.length : "null") + (light.error ? ", light err: " + light.error.message : ""));
     if (profile && profile.length > 0) {
       console.log("[Sunlight] profile found, switching to app");
       const _me = rowToProfile(profile[0]);
@@ -13231,6 +13315,7 @@ function App() {
       }
     }) => {
       console.log("[Sunlight] getSession:", session?.user?.id);
+      slNote("session " + (session ? "found" : "none"));
       if(session){loadProfile(session.user.id);}else{try{Object.keys(localStorage).filter(k=>k.startsWith('sl_')).forEach(k=>localStorage.removeItem(k));}catch(e){}setMe(null);setAllUsers([]);setScreen("login");}
       if(!_shown){var sp=document.getElementById("splash");if(sp)sp.remove();}
     });
