@@ -13065,6 +13065,7 @@ function App() {
   // Load profile from Supabase by user id
   const loadProfile = async userId => {
     console.log("[Sunlight] loadProfile called:", userId);
+    try{var _c=localStorage.getItem('sl_p_'+userId);if(_c){var _d=JSON.parse(_c);setMe(_d.me);setAllUsers(_d.all);setScreen("app");var sp=document.getElementById("splash");if(sp)sp.remove();}}catch(e){}
     const [{
       data: profile
     }, {
@@ -13073,9 +13074,9 @@ function App() {
     console.log("[Sunlight] profile result:", profile);
     if (profile && profile.length > 0) {
       console.log("[Sunlight] profile found, switching to app");
-      setMe(rowToProfile(profile[0]));
-      setAllUsers((all || []).map(rowToProfile));
-      setScreen("app");
+      const _me=rowToProfile(profile[0]);const _all=(all||[]).map(rowToProfile);
+      try{localStorage.setItem('sl_uid',userId);localStorage.setItem('sl_p_'+userId,JSON.stringify({me:_me,all:_all}));}catch(e){}
+      setMe(_me);setAllUsers(_all);setScreen("app");
     } else {
       console.log("[Sunlight] no profile found, retrying in 2s");
       setTimeout(async () => {
@@ -13100,14 +13101,16 @@ function App() {
   // On mount: restore existing session; sign-out listener
   useEffect(() => {
     // Check for a persisted session (returning visitor)
+    var _shown=false;
+    try{var _uid=localStorage.getItem('sl_uid');var _cp=_uid&&localStorage.getItem('sl_p_'+_uid);if(_cp){var _cd=JSON.parse(_cp);setMe(_cd.me);setAllUsers(_cd.all);setScreen("app");var sp=document.getElementById("splash");if(sp)sp.remove();_shown=true;}}catch(e){}
     sb.auth.getSession().then(({
       data: {
         session
       }
     }) => {
       console.log("[Sunlight] getSession:", session?.user?.id);
-      var sp=document.getElementById("splash");if(sp)sp.remove();
-      if (session) loadProfile(session.user.id);else setScreen("login");
+      if(session){loadProfile(session.user.id);}else{try{Object.keys(localStorage).filter(k=>k.startsWith('sl_')).forEach(k=>localStorage.removeItem(k));}catch(e){}setMe(null);setAllUsers([]);setScreen("login");}
+      if(!_shown){var sp=document.getElementById("splash");if(sp)sp.remove();}
     });
     // Only watch for sign-out events; login() handles sign-in directly
     const {
@@ -13204,6 +13207,7 @@ function App() {
   };
   const logout = async () => {
     await sb.auth.signOut();
+    try{Object.keys(localStorage).filter(k=>k.startsWith('sl_')).forEach(k=>localStorage.removeItem(k));}catch(e){}
     setMe(null);
     setAllUsers([]);
     setScreen("login");
