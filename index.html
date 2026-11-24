@@ -7220,7 +7220,48 @@ function Dashboard({
     }
   }, "→")), /*#__PURE__*/React.createElement(CoachingHomework, {
     userId: me.id
-  }), callLink && /*#__PURE__*/React.createElement("a", {
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 14,
+      background: "#1a1814",
+      borderRadius: 18,
+      padding: "16px 20px",
+      border: "1px solid rgba(200,145,60,0.18)",
+      boxShadow: "0 4px 16px rgba(0,0,0,0.18)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 28,
+      lineHeight: 1
+    }
+  }, "\u{1F3D5}\uFE0F"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      fontWeight: 800,
+      color: "rgba(255,210,140,0.4)",
+      letterSpacing: "0.1em",
+      marginBottom: 3
+    }
+  }, "COMING SOON"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 15,
+      fontWeight: 700,
+      color: "#ede4d0",
+      letterSpacing: "-0.01em"
+    }
+  }, "Retreat in March"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#7a7068",
+      marginTop: 2
+    }
+  }, "Dates to be determined"))), callLink && /*#__PURE__*/React.createElement("a", {
     href: callLink,
     target: "_blank",
     rel: "noreferrer",
@@ -13095,16 +13136,29 @@ function App() {
   const loadProfile = async userId => {
     console.log("[Sunlight] loadProfile called:", userId);
     try{var _c=localStorage.getItem('sl_p_'+userId);if(_c){var _d=JSON.parse(_c);setMe(_d.me);setAllUsers(_d.all);setScreen("app");var sp=document.getElementById("splash");if(sp)sp.remove();}}catch(e){}
-    const {
-      data: all
-    } = await sb.from("profiles").select("*");
-    const profile = (all || []).filter(r => r.id === userId);
+    // Fetch your own full profile plus everyone else's profile WITHOUT photos (small and
+    // fast), show the app, then fill in other members' photos in the background.
+    const LIGHT_COLS = "id,name,email,phone,bio,color,urges_count,badges,is_admin,partner_id,why";
+    const [{
+      data: profile
+    }, light] = await Promise.all([sb.from("profiles").select("*").eq("id", userId), sb.from("profiles").select(LIGHT_COLS)]);
+    const photosPending = !light.error;
+    const all = photosPending ? light.data : (await sb.from("profiles").select("*")).data;
     console.log("[Sunlight] profile result:", profile);
     if (profile && profile.length > 0) {
       console.log("[Sunlight] profile found, switching to app");
-      const _me=rowToProfile(profile[0]);const _all=(all||[]).map(rowToProfile);
-      try{localStorage.setItem('sl_uid',userId);localStorage.setItem('sl_p_'+userId,cacheableProfiles(_me,_all));}catch(e){}
-      setMe(_me);setAllUsers(_all);setScreen("app");
+      const _me = rowToProfile(profile[0]);
+      const _all = (all || []).map(r => r.id === userId ? _me : rowToProfile(r));
+      setMe(_me);
+      // While photos load, keep any photos already on screen (from the cache)
+      setAllUsers(prev => _all.map(u => photosPending && u.id !== userId && !u.photo ? {
+        ...u,
+        photo: (prev.find(x => x.id === u.id) || {}).photo || null
+      } : u));
+      setScreen("app");
+      if (!photosPending) {
+        try{localStorage.setItem('sl_uid',userId);localStorage.setItem('sl_p_'+userId,cacheableProfiles(_me,_all));}catch(e){}
+      }
       // One-time fix: shrink an oversized profile photo so everyone's app loads faster
       if (_me.photo && _me.photo.startsWith("data:") && _me.photo.length > BIG_PHOTO) {
         shrinkPhoto(_me.photo).then(ph => {
@@ -13114,6 +13168,36 @@ function App() {
             setAllUsers(p => p.map(u => u.id === userId ? { ...u, photo: ph } : u));
           });
         });
+      }
+      // Admin: shrink every member's oversized photo now, one at a time
+      const shrinkOthers = async users => {
+        if (!_me.isAdmin) return;
+        for (const u of users) {
+          if (u.id === userId || !u.photo || !u.photo.startsWith("data:") || u.photo.length <= BIG_PHOTO) continue;
+          try {
+            const ph = await shrinkPhoto(u.photo);
+            if (ph.length >= u.photo.length) continue;
+            const { data: upd, error } = await sb.from("profiles").update({ photo_url: ph }).eq("id", u.id).select("id");
+            if (error || !upd || !upd.length) { console.log("[Sunlight] photo shrink not allowed for", u.id); break; }
+            setAllUsers(p => p.map(x => x.id === u.id ? { ...x, photo: ph } : x));
+          } catch (e) {}
+        }
+      };
+      if (photosPending) {
+        sb.from("profiles").select("id,photo_url").then(({
+          data: photos
+        }) => {
+          const byId = {};
+          (photos || []).forEach(r => {
+            byId[r.id] = r.photo_url || null;
+          });
+          const full = _all.map(u => u.id === userId ? u : { ...u, photo: byId[u.id] || null });
+          setAllUsers(p => p.map(u => u.id !== userId && u.id in byId ? { ...u, photo: byId[u.id] } : u));
+          try{localStorage.setItem('sl_uid',userId);localStorage.setItem('sl_p_'+userId,cacheableProfiles(_me,full));}catch(e){}
+          shrinkOthers(full);
+        });
+      } else {
+        shrinkOthers(_all);
       }
     } else {
       console.log("[Sunlight] no profile found, retrying in 2s");
